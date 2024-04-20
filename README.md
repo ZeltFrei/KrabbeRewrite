@@ -64,3 +64,7 @@
 
 - 一鍵設置指令，機器人會自動完成有關這個伺服器的所有設置
 - 每個面板都會有獨立的指令方便傳送
+
+## 使用授權
+
+透過 [EvanlauOauthServer](https://github.com/ZeltFrei/EvanlauOauthServer) 存取 Qlipoth 的成員驗證資料庫，僅限已驗證的成員可以使用
