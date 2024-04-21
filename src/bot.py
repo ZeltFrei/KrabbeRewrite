@@ -1,7 +1,7 @@
 import logging
 
 from colorlog import ColoredFormatter
-from disnake import Intents
+from disnake import Intents, Event
 from disnake.ext.commands import InteractionBot
 
 
@@ -44,6 +44,8 @@ class Krabbe(InteractionBot):
         self.logger = setup_logging()
         self.__load_extensions()
 
+        self.add_listener(self.__on_ready, Event.ready)
+
     def __load_extensions(self) -> None:
         """
         Load all extensions from extensions.json
@@ -56,3 +58,9 @@ class Krabbe(InteractionBot):
             self.logger.info(f"Loading extension {extension}")
             self.load_extension(extension)
             self.logger.info(f"Loaded extension {extension}")
+
+    async def __on_ready(self):
+        """
+        Trigger when bot is ready
+        """
+        self.logger.info(f"Logged in as {str(self.user)} (ID:{str(self.user.id)})")
