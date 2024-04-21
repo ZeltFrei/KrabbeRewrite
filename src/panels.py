@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, TYPE_CHECKING, Union
 
 from disnake import Embed, ButtonStyle, MessageInteraction, ui
 from disnake.ui import View, Button
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 @dataclass
 class Panel:
     embed: Embed
-    view: View
+    view: Union[View, type]
 
 
 class JoinPanelView(View):
@@ -34,17 +34,20 @@ panels: Dict[str, Panel] = {
             title="加入頻道",
             description="點擊下方按鈕來加入一個私人頻道！"  # TODO: Design this
         ),
-        view=JoinPanelView()
+        view=JoinPanelView
     )
 }
 
 
-def register_views(bot: "Krabbe"):
+def setup_views(bot: "Krabbe"):
     """
-    Register views to the bot. This should be called once the bot is started.
+    Initialize and register the views to the bot. This should only be called once after bot is started.
 
     :param bot: The bot instance.
     :return: None
     """
     for panel in panels.values():
+        if isinstance(panel.view, type):
+            panel.view = panel.view()
+
         bot.add_view(panel.view)

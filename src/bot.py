@@ -5,7 +5,7 @@ from colorlog import ColoredFormatter
 from disnake import Intents, Event
 from disnake.ext.commands import InteractionBot, CommandSyncFlags
 
-from src.panels import register_views
+from src.panels import setup_views
 
 
 def setup_logging() -> logging.Logger:
@@ -73,6 +73,6 @@ class Krabbe(InteractionBot):
         """
         self.logger.info(f"Logged in as {self.user.name} ({self.user.id})")
 
-        register_views(self)
+        setup_views(self)
 
         self.remove_listener(self.__on_ready, Event.ready)
