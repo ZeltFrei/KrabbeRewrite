@@ -65,6 +65,8 @@ class Krabbe(InteractionBot):
 
     async def __on_ready(self):
         """
-        Trigger when bot is ready
+        Trigger when bot is ready then removes itself from the listeners
         """
         self.logger.info(f"Logged in as {str(self.user)} (ID:{str(self.user.id)})")
+
+        self.remove_listener(self.__on_ready, Event.ready)
