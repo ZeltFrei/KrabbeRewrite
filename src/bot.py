@@ -5,6 +5,8 @@ from colorlog import ColoredFormatter
 from disnake import Intents, Event
 from disnake.ext.commands import InteractionBot, CommandSyncFlags
 
+from src.panels import register_views
+
 
 def setup_logging() -> logging.Logger:
     """
@@ -65,8 +67,12 @@ class Krabbe(InteractionBot):
 
     async def __on_ready(self):
         """
-        Trigger when bot is ready then removes itself from the listeners
+        Method executed when the bot is ready to start receiving events.
+
+        :return: None
         """
-        self.logger.info(f"Logged in as {str(self.user)} (ID:{str(self.user.id)})")
+        self.logger.info(f"Logged in as {self.user.name} ({self.user.id})")
+
+        register_views(self)
 
         self.remove_listener(self.__on_ready, Event.ready)
