@@ -34,6 +34,8 @@ class Panels(Cog):
             view=panel_to_send.view
         )
 
+        await interaction.response.send_message("✅ 完成", ephemeral=True)
+
 
 def setup(bot: Krabbe):
     bot.add_cog(Panels(bot))
