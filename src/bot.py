@@ -2,7 +2,7 @@ import logging
 
 from colorlog import ColoredFormatter
 from disnake import Intents, Event
-from disnake.ext.commands import InteractionBot
+from disnake.ext.commands import InteractionBot, CommandSyncFlags
 
 
 def setup_logging() -> logging.Logger:
@@ -39,7 +39,10 @@ def setup_logging() -> logging.Logger:
 
 class Krabbe(InteractionBot):
     def __init__(self):
-        super().__init__(intents=Intents.all())
+        super().__init__(
+            intents=Intents.all(),
+            command_sync_flags=CommandSyncFlags.all()
+        )
 
         self.logger = setup_logging()
         self.__load_extensions()
