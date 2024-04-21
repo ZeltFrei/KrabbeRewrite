@@ -54,7 +54,7 @@ class Krabbe(InteractionBot):
         Load all extensions from extensions.json
         :return: Boolean if function was successful
         """
-        with open("configs/icons.json", "r", encoding="utf-8") as f:
+        with open("extensions.json", "r", encoding="utf-8") as f:
             extensions = f.read()
 
         for extension in extensions:
