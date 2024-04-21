@@ -1,3 +1,4 @@
+import json
 import logging
 
 from colorlog import ColoredFormatter
@@ -55,7 +56,7 @@ class Krabbe(InteractionBot):
         :return: Boolean if function was successful
         """
         with open("extensions.json", "r", encoding="utf-8") as f:
-            extensions = f.read()
+            extensions = json.load(f)
 
         for extension in extensions:
             self.logger.info(f"Loading extension {extension}")
