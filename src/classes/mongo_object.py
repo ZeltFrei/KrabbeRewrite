@@ -78,12 +78,12 @@ class MongoObject(ABC, Generic[T]):
 
         document = await database.get_collection(cls.collection_name).find_one(kwargs)
 
+        if not document:
+            return None
+
         del document["_id"]
 
-        if document:
-            return cls(bot=bot, database=database, **document)
-
-        return None
+        return cls(bot=bot, database=database, **document)
 
     @classmethod
     async def find(cls: Type[T], bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator[T]:
