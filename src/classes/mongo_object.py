@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import Generic, TypeVar, Type, Optional, AsyncIterator
+from typing import Generic, TypeVar, Type, Optional, AsyncIterator, TYPE_CHECKING
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
 
-from src.bot import Krabbe
+if TYPE_CHECKING:
+    from src.bot import Krabbe
 
 T = TypeVar("T", bound="MongoObject")
 
@@ -14,8 +15,8 @@ class MongoObject(ABC, Generic[T]):
     collection_name: str
     __logger = getLogger("krabbe.mongo")
 
-    def __init__(self, bot: Krabbe, database: AsyncIOMotorDatabase):
-        self.bot: Krabbe = bot
+    def __init__(self, bot: "Krabbe", database: AsyncIOMotorDatabase):
+        self.bot: "Krabbe" = bot
         self.database: AsyncIOMotorDatabase = database
 
     @abstractmethod
@@ -69,19 +70,23 @@ class MongoObject(ABC, Generic[T]):
         )
 
     @classmethod
-    async def find_one(cls: Type[T], bot: Krabbe, database: AsyncIOMotorDatabase, **kwargs) -> Optional[T]:
+    async def find_one(cls: Type[T], bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> Optional[T]:
         """
         Find a document in the collection that matches the specified query.
         """
         cls.__logger.info(f"Finding one {cls.collection_name} document: {kwargs}")
 
         document = await database.get_collection(cls.collection_name).find_one(kwargs)
+
+        del document["_id"]
+
         if document:
             return cls(bot=bot, database=database, **document)
+
         return None
 
     @classmethod
-    async def find(cls: Type[T], bot: Krabbe, database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator[T]:
+    async def find(cls: Type[T], bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator[T]:
         """
         Find all documents in the collection that match the specified query.
         """
@@ -89,5 +94,7 @@ class MongoObject(ABC, Generic[T]):
 
         cursor = database.get_collection(cls.collection_name).find(kwargs)
 
-        async for doc in cursor:
-            yield cls(bot=bot, database=database, **doc)
+        async for document in cursor:
+            del document["_id"]
+
+            yield cls(bot=bot, database=database, **document)

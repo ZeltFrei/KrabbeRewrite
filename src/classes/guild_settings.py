@@ -1,10 +1,12 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from disnake import Guild, CategoryChannel, VoiceChannel
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from src.bot import Krabbe
 from src.classes.mongo_object import MongoObject
+
+if TYPE_CHECKING:
+    from src.bot import Krabbe
 
 
 class GuildSettings(MongoObject):
@@ -12,7 +14,7 @@ class GuildSettings(MongoObject):
 
     def __init__(
             self,
-            bot: Krabbe,
+            bot: "Krabbe",
             database: AsyncIOMotorDatabase,
             guild_id: int,
             category_channel_id: int,
@@ -27,6 +29,8 @@ class GuildSettings(MongoObject):
         self._guild: Optional[Guild] = None
         self._category_channel: Optional[CategoryChannel] = None
         self._root_channel: Optional[VoiceChannel] = None
+
+        self.resolved: bool = False
 
     def unique_identifier(self) -> dict:
         return {"guild_id": self.guild_id}
@@ -56,6 +60,13 @@ class GuildSettings(MongoObject):
             raise ValueError("Root channel is not resolved yet. Consider calling the resolve method.")
         return self._root_channel
 
+    def is_resolved(self) -> bool:
+        """
+        Returns whether the guild, category channel, and root channel objects are resolved.
+        :return: Boolean indicating whether the objects are resolved.
+        """
+        return self.resolved
+
     async def resolve(self) -> "GuildSettings":
         """
         Resolves the guild, category channel, and root channel objects.
@@ -65,5 +76,10 @@ class GuildSettings(MongoObject):
         self._guild = self.bot.get_guild(self.guild_id)
         self._category_channel = self._guild.get_channel(self.category_channel_id)
         self._root_channel = self._guild.get_channel(self.root_channel_id)
+
+        if any([not self._guild, not self._category_channel, not self._root_channel]):
+            raise ValueError("One or more objects could not be resolved.")
+
+        self.resolved = True
 
         return self

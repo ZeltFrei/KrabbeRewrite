@@ -4,7 +4,7 @@ from os import getenv
 from typing import Dict
 
 from colorlog import ColoredFormatter
-from disnake import Intents, Event, VoiceState, Member
+from disnake import Intents, Event, VoiceState, Member, NotFound
 from disnake.ext.commands import InteractionBot, CommandSyncFlags
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.server_api import ServerApi
@@ -86,7 +86,14 @@ class Krabbe(InteractionBot):
         :return: None
         """
         async for voice_channel in VoiceChannel.find(self, self.database):
-            await voice_channel.resolve()
+            try:
+                await voice_channel.resolve()
+            except Exception as error:
+                self.logger.warning(f"Failed to resolve voice channel {voice_channel.channel_id}: {error}, removing.")
+                await voice_channel.remove()
+                self.logger.info(f"Removed voice channel {voice_channel.channel_id}")
+
+                continue
 
             self.voice_channels[voice_channel.channel_id] = voice_channel
 
@@ -113,18 +120,18 @@ class Krabbe(InteractionBot):
         :param after: The voice state after the update.
         :return: None
         """
-        if before.channel.id == after.channel.id:
+        if before.channel == after.channel:
             return
-
-        if (before.channel is not None) and (after.channel is None):
-            self.logger.info(f"{member.display_name} left voice channel {before.channel.name}")
-
-            self.dispatch("voice_channel_leave", member, before)
 
         if (before.channel is None) and (after.channel is not None):
             self.logger.info(f"{member.display_name} joined voice channel {after.channel.name}")
 
             self.dispatch("voice_channel_join", member, after)
+
+        if (before.channel is not None) and (after.channel is None):
+            self.logger.info(f"{member.display_name} left voice channel {before.channel.name}")
+
+            self.dispatch("voice_channel_leave", member, before)
 
         if (before.channel is not None) and (after.channel is not None):
             self.logger.info(f"{member.display_name} moved from {before.channel.name} to {after.channel.name}")
