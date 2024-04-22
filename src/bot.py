@@ -48,7 +48,7 @@ class Krabbe(InteractionBot):
     def __init__(self):
         super().__init__(
             intents=Intents.all(),
-            command_sync_flags=CommandSyncFlags.all()
+            command_sync_flags=CommandSyncFlags.sync_guild_commands()  # TODO: Change this to all() in production
         )
 
         self.database: AsyncIOMotorDatabase = AsyncIOMotorClient(
