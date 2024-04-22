@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import Generic, TypeVar, Type, Optional, List
+from typing import Generic, TypeVar, Type, Optional, List, AsyncIterator
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
@@ -78,11 +78,13 @@ class MongoObject(ABC, Generic[T]):
         return None
 
     @classmethod
-    async def find(cls: Type[T], database: AsyncIOMotorDatabase, **kwargs) -> List[T]:
+    async def find(cls: Type[T], database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator[T]:
         """
         Find all documents in the collection that match the specified query.
         """
         cls.__logger.info(f"Finding {cls.collection_name} documents: {kwargs}")
 
         cursor = database.get_collection(cls.collection_name).find(kwargs)
-        return [cls(database=database, **doc) async for doc in cursor]
+
+        async for doc in cursor:
+            yield cls(database=database, **doc)
