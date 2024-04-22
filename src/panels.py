@@ -168,7 +168,7 @@ class VoiceSettings(View):
 panels: Dict[str, Panel] = {
     "join_channel": Panel(
         embed=Embed(
-            title="加入頻道",
+            title="➕ 加入頻道",
             description="點擊下方按鈕來加入一個私人頻道！"
         ),
         view_class=JoinChannel
@@ -182,14 +182,14 @@ panels: Dict[str, Panel] = {
     ),
     "member_settings": Panel(
         embed=Embed(
-            title="成員設定",
+            title="👥 成員設定",
             description="管理頻道成員！"
         ),
         view_class=MemberSettings
     ),
     "voice_settings": Panel(
         embed=Embed(
-            title="語音設定",
+            title="🔊 語音設定",
             description="調整語音相關設定！"
         ),
         view_class=VoiceSettings
