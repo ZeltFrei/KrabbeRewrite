@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
+from logging import getLogger
 from typing import Generic, TypeVar, Type, Optional, List
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
-
-from src.bot import Krabbe
 
 T = TypeVar("T", bound="MongoObject")
 
 
 class MongoObject(ABC, Generic[T]):
     collection_name: str
+    __logger = getLogger("krabbe.mongo")
 
     def __init__(self, database: AsyncIOMotorDatabase):
         self.database: AsyncIOMotorDatabase = database
@@ -39,6 +39,10 @@ class MongoObject(ABC, Generic[T]):
 
         :return: The UpdateResult of the update operation.
         """
+        self.__logger.info(
+            f"Upserting {self.__class__.collection_name} document: {self.to_dict()}"
+        )
+
         data = self.to_dict()
 
         return await self.database.get_collection(self.__class__.collection_name).update_one(
@@ -53,6 +57,10 @@ class MongoObject(ABC, Generic[T]):
 
         :return: The DeleteResult of the delete operation.
         """
+        self.__logger.info(
+            f"Deleting {self.__class__.collection_name} document: {self.unique_identifier()}"
+        )
+
         return await self.database.get_collection(self.__class__.collection_name).delete_one(
             self.unique_identifier()
         )
@@ -62,6 +70,8 @@ class MongoObject(ABC, Generic[T]):
         """
         Find a document in the collection that matches the specified query.
         """
+        cls.__logger.info(f"Finding one {cls.collection_name} document: {kwargs}")
+
         document = await database.get_collection(cls.collection_name).find_one(kwargs)
         if document:
             return cls(database=database, **document)
@@ -72,5 +82,7 @@ class MongoObject(ABC, Generic[T]):
         """
         Find all documents in the collection that match the specified query.
         """
+        cls.__logger.info(f"Finding {cls.collection_name} documents: {kwargs}")
+
         cursor = database.get_collection(cls.collection_name).find(kwargs)
         return [cls(database=database, **doc) async for doc in cursor]
