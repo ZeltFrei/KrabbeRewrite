@@ -1,16 +1,18 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import disnake
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from src.bot import Krabbe
 from src.classes.mongo_object import MongoObject
+
+if TYPE_CHECKING:
+    from src.bot import Krabbe
 
 
 class ChannelSettings(MongoObject):
     collection_name = "channel_settings"
 
-    def __init__(self, bot: Krabbe, database: AsyncIOMotorDatabase, user_id: int):
+    def __init__(self, bot: "Krabbe", database: AsyncIOMotorDatabase, user_id: int):
         super().__init__(bot, database)
 
         self.user_id: int = user_id
