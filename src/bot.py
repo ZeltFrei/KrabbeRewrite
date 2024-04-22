@@ -4,7 +4,7 @@ from os import getenv
 from typing import Dict
 
 from colorlog import ColoredFormatter
-from disnake import Intents, Event, VoiceState, Member, NotFound
+from disnake import Intents, Event, VoiceState, Member
 from disnake.ext.commands import InteractionBot, CommandSyncFlags
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.server_api import ServerApi
@@ -96,6 +96,7 @@ class Krabbe(InteractionBot):
                 continue
 
             self.voice_channels[voice_channel.channel_id] = voice_channel
+            voice_channel.start()
 
     async def __on_ready(self):
         """
