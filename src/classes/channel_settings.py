@@ -10,8 +10,8 @@ from src.classes.mongo_object import MongoObject
 class ChannelSettings(MongoObject):
     collection_name = "channel_settings"
 
-    def __init__(self, database: AsyncIOMotorDatabase, user_id: int):
-        super().__init__(database)
+    def __init__(self, bot: Krabbe, database: AsyncIOMotorDatabase, user_id: int):
+        super().__init__(bot, database)
 
         self.user_id: int = user_id
 

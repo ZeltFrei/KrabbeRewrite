@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import Generic, TypeVar, Type, Optional, List, AsyncIterator
+from typing import Generic, TypeVar, Type, Optional, AsyncIterator
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
+
+from src.bot import Krabbe
 
 T = TypeVar("T", bound="MongoObject")
 
@@ -12,7 +14,8 @@ class MongoObject(ABC, Generic[T]):
     collection_name: str
     __logger = getLogger("krabbe.mongo")
 
-    def __init__(self, database: AsyncIOMotorDatabase):
+    def __init__(self, bot: Krabbe, database: AsyncIOMotorDatabase):
+        self.bot: Krabbe = bot
         self.database: AsyncIOMotorDatabase = database
 
     @abstractmethod

@@ -12,12 +12,13 @@ class GuildSettings(MongoObject):
 
     def __init__(
             self,
+            bot: Krabbe,
             database: AsyncIOMotorDatabase,
             guild_id: int,
             category_channel_id: int,
             root_channel_id: int
     ):
-        super().__init__(database)
+        super().__init__(bot, database)
 
         self.guild_id: int = guild_id
         self.category_channel_id: int = category_channel_id
