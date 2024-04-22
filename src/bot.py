@@ -4,7 +4,7 @@ from os import getenv
 from typing import Dict
 
 from colorlog import ColoredFormatter
-from disnake import Intents, Event
+from disnake import Intents, Event, VoiceState, Member
 from disnake.ext.commands import InteractionBot, CommandSyncFlags
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.server_api import ServerApi
@@ -63,6 +63,7 @@ class Krabbe(InteractionBot):
         self.voice_channels: Dict[int, VoiceChannel] = {}
 
         self.add_listener(self.__on_ready, Event.ready)
+        self.add_listener(self.__on_voice_state_update, Event.voice_state_update)
 
     def __load_extensions(self) -> None:
         """
@@ -101,4 +102,31 @@ class Krabbe(InteractionBot):
 
         setup_views(self)
 
-        self.remove_listener(self.__on_ready, Event.ready)
+        await self.__load_channels()
+
+    async def __on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
+        """
+        Method executed when a voice state update event is received.
+
+        :param member: The member whose voice state was updated.
+        :param before: The voice state before the update.
+        :param after: The voice state after the update.
+        :return: None
+        """
+        if before.channel.id == after.channel.id:
+            return
+
+        if (before.channel is not None) and (after.channel is None):
+            self.logger.info(f"{member.display_name} left voice channel {before.channel.name}")
+
+            self.dispatch("voice_channel_leave", member, before)
+
+        if (before.channel is None) and (after.channel is not None):
+            self.logger.info(f"{member.display_name} joined voice channel {after.channel.name}")
+
+            self.dispatch("voice_channel_join", member, after)
+
+        if (before.channel is not None) and (after.channel is not None):
+            self.logger.info(f"{member.display_name} moved from {before.channel.name} to {after.channel.name}")
+
+            self.dispatch("voice_channel_move", member, before, after)
