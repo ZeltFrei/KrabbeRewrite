@@ -31,12 +31,12 @@ class ChannelSettings(MongoObject):
             raise ValueError("User is not resolved yet. Consider calling the resolve method.")
         return self._user
 
-    async def resolve(self, bot: Krabbe):
+    async def resolve(self) -> "ChannelSettings":
         """
         Resolves the user object.
 
-        :param bot: The Krabbe bot instance.
+        :return: The resolved ChannelSettings object.
         """
-        self._user = await bot.getch_user(self.user_id)
+        self._user = await self.bot.getch_user(self.user_id)
 
         return self

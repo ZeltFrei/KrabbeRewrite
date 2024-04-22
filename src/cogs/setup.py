@@ -23,6 +23,7 @@ class Setup(Cog):
         root = await interaction.guild.create_voice_channel("🔊 建立語音頻道", category=category)
 
         guild_settings = GuildSettings(
+            bot=self.bot,
             database=self.bot.database,
             guild_id=interaction.guild.id,
             category_channel_id=category.id,

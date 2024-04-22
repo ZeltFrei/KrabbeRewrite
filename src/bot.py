@@ -85,8 +85,8 @@ class Krabbe(InteractionBot):
 
         :return: None
         """
-        async for voice_channel in VoiceChannel.find(self.database):
-            await voice_channel.resolve(self)
+        async for voice_channel in VoiceChannel.find(self, self.database):
+            await voice_channel.resolve()
 
             self.voice_channels[voice_channel.channel_id] = voice_channel
 

@@ -54,14 +54,13 @@ class VoiceChannel(MongoObject):
         """
         await self.delete()
 
-    async def resolve(self, bot: Krabbe) -> "VoiceChannel":
+    async def resolve(self) -> "VoiceChannel":
         """
         Resolves the channel and owner objects.
 
-        :param bot: The Krabbe bot instance.
         :return: The resolved VoiceChannel object.
         """
-        self._channel = bot.get_channel(self.channel_id)
+        self._channel = self.bot.get_channel(self.channel_id)
         self._owner = self.channel.guild.get_member(self.owner_id)
 
         return self

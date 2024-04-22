@@ -69,7 +69,7 @@ class MongoObject(ABC, Generic[T]):
         )
 
     @classmethod
-    async def find_one(cls: Type[T], database: AsyncIOMotorDatabase, **kwargs) -> Optional[T]:
+    async def find_one(cls: Type[T], bot: Krabbe, database: AsyncIOMotorDatabase, **kwargs) -> Optional[T]:
         """
         Find a document in the collection that matches the specified query.
         """
@@ -77,11 +77,11 @@ class MongoObject(ABC, Generic[T]):
 
         document = await database.get_collection(cls.collection_name).find_one(kwargs)
         if document:
-            return cls(database=database, **document)
+            return cls(bot=bot, database=database, **document)
         return None
 
     @classmethod
-    async def find(cls: Type[T], database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator[T]:
+    async def find(cls: Type[T], bot: Krabbe, database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator[T]:
         """
         Find all documents in the collection that match the specified query.
         """
@@ -90,4 +90,4 @@ class MongoObject(ABC, Generic[T]):
         cursor = database.get_collection(cls.collection_name).find(kwargs)
 
         async for doc in cursor:
-            yield cls(database=database, **doc)
+            yield cls(bot=bot, database=database, **doc)

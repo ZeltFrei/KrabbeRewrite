@@ -56,14 +56,13 @@ class GuildSettings(MongoObject):
             raise ValueError("Root channel is not resolved yet. Consider calling the resolve method.")
         return self._root_channel
 
-    async def resolve(self, bot: Krabbe) -> "GuildSettings":
+    async def resolve(self) -> "GuildSettings":
         """
         Resolves the guild, category channel, and root channel objects.
 
-        :param bot: The Krabbe bot instance.
         :return: The resolved GuildSettings object.
         """
-        self._guild = bot.get_guild(self.guild_id)
+        self._guild = self.bot.get_guild(self.guild_id)
         self._category_channel = self._guild.get_channel(self.category_channel_id)
         self._root_channel = self._guild.get_channel(self.root_channel_id)
 
