@@ -1,9 +1,12 @@
 import json
 import logging
+from os import getenv
 
 from colorlog import ColoredFormatter
 from disnake import Intents, Event
 from disnake.ext.commands import InteractionBot, CommandSyncFlags
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo.server_api import ServerApi
 
 from src.panels import setup_views
 
@@ -11,6 +14,7 @@ from src.panels import setup_views
 def setup_logging() -> logging.Logger:
     """
     Set up the logging for the bot
+
     :return: The default logger for Krabbe
     """
     formatter = ColoredFormatter(
@@ -47,6 +51,10 @@ class Krabbe(InteractionBot):
             command_sync_flags=CommandSyncFlags.all()
         )
 
+        self.database: AsyncIOMotorDatabase = AsyncIOMotorClient(
+            getenv("MONGODB_URL"), server_api=ServerApi('1')
+        ).get_database("krabbe")
+
         self.logger = setup_logging()
         self.__load_extensions()
 
@@ -55,6 +63,7 @@ class Krabbe(InteractionBot):
     def __load_extensions(self) -> None:
         """
         Load all extensions from extensions.json
+
         :return: Boolean if function was successful
         """
         with open("extensions.json", "r", encoding="utf-8") as f:
