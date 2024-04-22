@@ -1,6 +1,7 @@
 import json
 import logging
 from os import getenv
+from typing import Dict
 
 from colorlog import ColoredFormatter
 from disnake import Intents, Event
@@ -8,6 +9,7 @@ from disnake.ext.commands import InteractionBot, CommandSyncFlags
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.server_api import ServerApi
 
+from src.classes.voice_channel import VoiceChannel
 from src.panels import setup_views
 
 
@@ -58,6 +60,8 @@ class Krabbe(InteractionBot):
         self.logger = setup_logging()
         self.__load_extensions()
 
+        self.voice_channels: Dict[int, VoiceChannel] = {}
+
         self.add_listener(self.__on_ready, Event.ready)
 
     def __load_extensions(self) -> None:
@@ -74,12 +78,25 @@ class Krabbe(InteractionBot):
             self.load_extension(extension)
             self.logger.info(f"Loaded extension {extension}")
 
+    async def __load_channels(self):
+        """
+        Load all voice channels from the database.
+
+        :return: None
+        """
+        async for voice_channel in VoiceChannel.find(self.database):
+            await voice_channel.resolve(self)
+
+            self.voice_channels[voice_channel.channel_id] = voice_channel
+
     async def __on_ready(self):
         """
         Method executed when the bot is ready to start receiving events.
 
         :return: None
         """
+        self.remove_listener(self.__on_ready, Event.ready)  # To prevent this from being called again
+
         self.logger.info(f"Logged in as {self.user.name} ({self.user.id})")
 
         setup_views(self)
