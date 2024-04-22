@@ -1,3 +1,4 @@
 [
+    "src.cogs.channels",
     "src.cogs.setup"
 ]
