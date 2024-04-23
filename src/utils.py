@@ -2,8 +2,10 @@ import uuid
 from typing import Union, Dict, Tuple, TYPE_CHECKING, List, Optional
 
 from disnake import PermissionOverwrite, Member, Role, Interaction, ModalInteraction, TextInputStyle, Event, User, \
-    MessageInteraction
-from disnake.ui import Modal, TextInput, UserSelect
+    MessageInteraction, ButtonStyle, SelectOption
+from disnake.ui import Modal, TextInput, UserSelect, Button, StringSelect
+
+from src.embeds import WarningEmbed
 
 if TYPE_CHECKING:
     from src.classes.guild_settings import GuildSettings
@@ -21,11 +23,99 @@ def generate_permission_overwrites(
     return {}
 
 
+async def confirm_button(
+        interaction: Interaction,
+        message: str,
+        timeout: int = 30
+) -> Tuple[Optional[MessageInteraction], bool]:
+    """
+    Send a confirmation message with a button.
+    :param interaction: The interaction object.
+    :param message: The message to send.
+    :param timeout: The timeout of the button.
+    :return: The interaction object and a boolean indicating if the user confirmed the action.
+    """
+    custom_id = uuid.uuid1().hex
+
+    await interaction.response.send_message(
+        embed=WarningEmbed(
+            title="你確定嗎？",
+            description=message
+        ),
+        components=[
+            Button(
+                style=ButtonStyle.green,
+                label="確定",
+                custom_id=f"{custom_id}.confirm"
+            ),
+            Button(
+                style=ButtonStyle.red,
+                label="取消",
+                custom_id=f"{custom_id}.cancel"
+            )
+        ],
+        ephemeral=True
+    )
+
+    message_interaction = await interaction.bot.wait_for(
+        Event.button_click,
+        check=lambda i: i.data.custom_id.startswith(custom_id),
+        timeout=timeout
+    )
+
+    if message_interaction.data.custom_id.endswith(".confirm"):
+        return message_interaction, True
+
+    return message_interaction, False
+
+
+async def string_select(
+        interaction: Interaction,
+        placeholder: str,
+        options: List[SelectOption],
+        min_values: int = 1,
+        max_values: int = 1,
+        timeout=60
+) -> Tuple[MessageInteraction, List[str]]:
+    """
+    Prompt the user to select a string.
+    :param interaction: The interaction object.
+    :param placeholder: The placeholder of the string select.
+    :param options: The options of the string select.
+    :param min_values: The minimum number of strings that can be selected.
+    :param max_values: The maximum number of strings that can be selected.
+    :param timeout: The timeout of the string select.
+    :raise asyncio.TimeoutError: If the string select interaction times out.
+    :return: The interaction object and the selected string.
+    """
+    custom_id = uuid.uuid1().hex
+
+    await interaction.response.send_message(
+        components=[StringSelect(
+            custom_id=custom_id,
+            placeholder=placeholder,
+            options=options,
+            min_values=min_values,
+            max_values=max_values
+        )],
+        ephemeral=True
+    )
+
+    string_select_interaction: MessageInteraction = await interaction.bot.wait_for(
+        Event.message_interaction,
+        check=lambda i: i.data.custom_id == custom_id,
+        timeout=timeout
+    )
+
+    return string_select_interaction, string_select_interaction.values
+
+
 async def user_select(
         interaction: Interaction,
         placeholder: str,
         min_values: int = 1,
-        max_values: int = 1
+        max_values: int = 1,
+        timeout=60
 ) -> Tuple[MessageInteraction, List[Union[Member, User]]]:
     """
     Prompt the user to select a user.
@@ -33,6 +123,8 @@ async def user_select(
     :param placeholder: The placeholder of the user select.
     :param min_values: The minimum number of users that can be selected.
     :param max_values: The maximum number of users that can be selected.
+    :param timeout: The timeout of the user select.
+    :raise asyncio.TimeoutError: If the user select interaction times out.
     :return: The interaction object and the selected user.
     """
     custom_id = uuid.uuid1().hex
@@ -43,11 +135,14 @@ async def user_select(
             placeholder=placeholder,
             min_values=min_values,
             max_values=max_values
-        )]
+        )],
+        ephemeral=True
     )
 
     user_select_interaction: MessageInteraction = await interaction.bot.wait_for(
-        Event.message_interaction, check=lambda i: i.data.custom_id == custom_id
+        Event.message_interaction,
+        check=lambda i: i.data.custom_id == custom_id,
+        timeout=timeout
     )
 
     return user_select_interaction, user_select_interaction.resolved_values
@@ -77,7 +172,7 @@ async def quick_modal(
     :param required: If the field is required.
     :param style: The style of the text input.
     :param timeout: The timeout of the modal.
-    :raise TimeoutError: If the modal interaction times out.
+    :raise asyncio.TimeoutError: If the modal interaction times out.
     :return: The modal interaction object and the value of the field.
     """
     custom_id = uuid.uuid1().hex
