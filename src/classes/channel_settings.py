@@ -34,6 +34,8 @@ class ChannelSettings(MongoObject):
 
         self._user: Optional[disnake.User] = None
 
+        self.resolved: bool = False
+
         self.channel_name: Optional[str] = channel_name
 
         self.password: Optional[str] = password
@@ -86,6 +88,14 @@ class ChannelSettings(MongoObject):
             raise ValueError("User is not resolved yet. Consider calling the resolve method.")
         return self._user
 
+    def is_resolved(self) -> bool:
+        """
+        Check if the channel settings object is resolved.
+
+        :return: True if the channel settings object is resolved, False otherwise.
+        """
+        return self.resolved
+
     async def resolve(self) -> "ChannelSettings":
         """
         Resolves the user object.
@@ -93,6 +103,8 @@ class ChannelSettings(MongoObject):
         :return: The resolved ChannelSettings object.
         """
         self._user = await self.bot.getch_user(self.user_id)
+
+        self.resolved = True
 
         return self
 
