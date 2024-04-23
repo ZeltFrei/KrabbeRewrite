@@ -202,7 +202,7 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-            is_owner_back = await self.wait_for_user(self.owner_id, timeout=5)
+            is_owner_back = await self.wait_for_user(self.owner_id, timeout=60)
 
             if is_owner_back:
                 await self.notify(
@@ -237,7 +237,7 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-            is_anyone_joined = await self.wait_for_user(None, timeout=5)
+            is_anyone_joined = await self.wait_for_user(None, timeout=60)
 
             if is_anyone_joined:
                 await self.notify(
@@ -268,11 +268,11 @@ class VoiceChannel(MongoObject):
     async def setup(self):
         """
         Apply the settings, start the listeners, then wait for owner to join and set state to ACTIVE.
-        Note that if owner didn't join in 5 seconds, the channel will be removed.
+        Note that if owner didn't join in 60 seconds, the channel will be removed.
         """
         await self.apply_settings()
 
-        if not await self.wait_for_user(self.owner_id, timeout=5):
+        if not await self.wait_for_user(self.owner_id, timeout=60):
             await self.remove()
             return
 
