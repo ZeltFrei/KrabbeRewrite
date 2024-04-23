@@ -39,9 +39,9 @@ class SuccessEmbed(Embed):
         super().__init__(title=f"✅ | {title}", description=description, color=Color.green())
 
 
-class NotifyEmbed(Embed):
+class InfoEmbed(Embed):
     """
-    The embed used when notifying something
+    The embed used when bot needs to inform something
     """
 
     def __init__(self, title: str, description: Optional[str]):
