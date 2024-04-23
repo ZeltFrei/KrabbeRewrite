@@ -33,7 +33,8 @@ class VoiceChannel(MongoObject):
             self, bot: "Krabbe",
             database: AsyncIOMotorDatabase,
             channel_id: int,
-            owner_id: int
+            owner_id: int,
+            channel_settings: ChannelSettings
     ):
         super().__init__(bot, database)
 
@@ -48,6 +49,8 @@ class VoiceChannel(MongoObject):
         self.state: VoiceChannelState = VoiceChannelState.PREPARING
         self.state_change_event: Event = Event()
 
+        self.channel_settings: ChannelSettings = channel_settings
+
     def unique_identifier(self) -> dict:
         return {"channel_id": self.channel_id}
 
@@ -57,12 +60,23 @@ class VoiceChannel(MongoObject):
             "owner_id": self.owner_id
         }
 
-    async def apply_settings(self) -> None:
+    async def apply_settings(self, guild_settings: Optional[GuildSettings] = None) -> None:
         """
         Applies the settings to the channel.
+        :param guild_settings: The guild settings object. If not specified, it will be fetched from the database.
         """
-        # TODO: Apply the settings to the channel
-        pass
+        await self.channel.edit(
+            name=self.channel_settings.channel_name or f"{self.owner.name} 的頻道",
+            bitrate=self.channel_settings.bitrate or 64000,
+            user_limit=self.channel_settings.user_limit or 0,
+            rtc_region=self.channel_settings.rtc_region or None,
+            nsfw=self.channel_settings.nsfw or False,
+            slowmode_delay=self.channel_settings.slowmode_delay or 0,
+            overwrites=generate_permission_overwrites(
+                self.channel_settings,
+                guild_settings or await GuildSettings.find_one(self.bot, self.database, guild_id=self.channel.guild.id)
+            )
+        )
 
     async def transfer_ownership(self, new_owner: Member) -> None:
         """
@@ -76,15 +90,16 @@ class VoiceChannel(MongoObject):
         self.owner_id = new_owner.id
 
         await self.resolve()
-
-        # TODO: Apply the settings of new owner to the channel
-
         await self.upsert()
+
+        self.channel_settings = await ChannelSettings.get_settings(self.bot, self.database, user_id=new_owner.id)
+        await self.apply_settings()
 
         await self.notify(
             embed=SuccessEmbed(
                 title="轉移所有權",
-                description=f"{new_owner.mention} 成為了頻道的新擁有者！"
+                description=f"{new_owner.mention} 成為了頻道的新擁有者！\n"
+                            f"已套用新擁有者的頻道設定！"
             )
         )
 
@@ -342,10 +357,18 @@ class VoiceChannel(MongoObject):
 
         cls.logger.info(f"Creating a new voice channel for {owner.name} in {guild_settings.guild.name}.")
 
-        # TODO: Load owner's channel settings here for initial settings for channel creation
+        channel_settings = await ChannelSettings.get_settings(bot, database, owner.id)
 
         created_channel = await guild_settings.category_channel.create_voice_channel(
-            name=f"{owner.display_name}'s Channel"
+            name=channel_settings.channel_name or f"{owner.name} 的頻道",
+            overwrites=generate_permission_overwrites(
+                channel_settings, guild_settings
+            ),
+            bitrate=channel_settings.bitrate or 64000,
+            user_limit=channel_settings.user_limit or 0,
+            rtc_region=channel_settings.rtc_region or None,
+            nsfw=channel_settings.nsfw or False,
+            slowmode_delay=channel_settings.slowmode_delay or 0
         )
 
         voice_channel = cls(
@@ -353,10 +376,13 @@ class VoiceChannel(MongoObject):
             database=database,
             channel_id=created_channel.id,
             owner_id=owner.id,
+            channel_settings=channel_settings
         )
 
         await voice_channel.resolve()
         await voice_channel.upsert()
+
+        await voice_channel.apply_settings()
 
         bot.voice_channels[voice_channel.channel_id] = voice_channel
 
