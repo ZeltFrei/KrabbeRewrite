@@ -1,17 +1,17 @@
 import uuid
-from typing import Union, Dict, Optional, Tuple
+from typing import Union, Dict, Tuple, TYPE_CHECKING
 
 from disnake import PermissionOverwrite, Member, Role, Interaction, ModalInteraction, TextInputStyle, Event
 from disnake.ui import Modal, TextInput
 
-from src.classes.guild_settings import GuildSettings
-from src.classes.voice_channel import VoiceChannel
-from src.panels import ChannelSettings
+if TYPE_CHECKING:
+    from src.classes.guild_settings import GuildSettings
+    from src.classes.channel_settings import ChannelSettings
 
 
 def generate_permission_overwrites(
-        channel_settings: ChannelSettings,
-        guild_settings: GuildSettings
+        channel_settings: "ChannelSettings",
+        guild_settings: "GuildSettings"
 ) -> Dict[Union[Role, Member], PermissionOverwrite]:
     """
     Generate
@@ -28,7 +28,7 @@ async def quick_modal(
         value: str,
         max_length: int = 256,
         min_length: int = 2,
-        style: TextInputStyle = TextInputStyle.SHORT,
+        style: TextInputStyle = TextInputStyle.short,
         timeout: int = 180
 ) -> Tuple[ModalInteraction, str]:
     """
@@ -72,21 +72,3 @@ async def quick_modal(
     )
 
     return modal_interaction, modal_interaction.text_values.get("text_field")
-
-
-async def get_owned_voice_channel_from_interaction(interaction: Interaction) -> Optional[VoiceChannel]:
-    """
-    Get the voice channel object owned by the interaction author.
-    :param interaction: The interaction object.
-    :return: The voice channel object if found.
-    """
-    voice_channel = await VoiceChannel.find_one(
-        interaction.bot, interaction.bot.database, owner_id=interaction.author.id
-    )
-
-    if not voice_channel:
-        return None
-
-    await voice_channel.resolve()
-
-    return voice_channel

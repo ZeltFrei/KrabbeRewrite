@@ -5,7 +5,7 @@ from logging import getLogger
 from typing import Optional, TYPE_CHECKING, AsyncIterator
 
 import disnake
-from disnake import Member, NotFound, VoiceState, Message
+from disnake import Member, NotFound, VoiceState, Message, Interaction
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.channel_settings import ChannelSettings
@@ -333,6 +333,33 @@ class VoiceChannel(MongoObject):
 
         await self.delete()
 
+    def is_resolved(self) -> bool:
+        """
+        Returns whether the channel and owner objects are resolved.
+        :return: Boolean indicating whether the objects are resolved.
+        """
+        return self.resolved
+
+    async def resolve(self) -> "VoiceChannel":
+        """
+        Resolves the channel and owner objects.
+
+        :return: The resolved VoiceChannel object.
+        """
+        self._channel = self.bot.get_channel(self.channel_id)
+
+        if not self._channel:
+            raise ValueError("Channel is not found. Please check if the channel is still in the guild.")
+
+        self._owner = self._channel.guild.get_member(self.owner_id)
+
+        if not self._owner:
+            raise ValueError("Owner is not found. Please check if the owner is still in the guild.")
+
+        self.resolved = True
+
+        return self
+
     @classmethod
     async def new(
             cls,
@@ -390,32 +417,23 @@ class VoiceChannel(MongoObject):
 
         return voice_channel
 
-    def is_resolved(self) -> bool:
+    @classmethod
+    async def get_owned_channel_from_interaction(cls, interaction: Interaction) -> Optional["VoiceChannel"]:
         """
-        Returns whether the channel and owner objects are resolved.
-        :return: Boolean indicating whether the objects are resolved.
+        Get the voice channel object owned by the interaction author.
+        :param interaction: The interaction object.
+        :return: The voice channel object if found.
         """
-        return self.resolved
+        voice_channel = await VoiceChannel.find_one(
+            interaction.bot, interaction.bot.database, owner_id=interaction.author.id
+        )
 
-    async def resolve(self) -> "VoiceChannel":
-        """
-        Resolves the channel and owner objects.
+        if not voice_channel:
+            return None
 
-        :return: The resolved VoiceChannel object.
-        """
-        self._channel = self.bot.get_channel(self.channel_id)
+        await voice_channel.resolve()
 
-        if not self._channel:
-            raise ValueError("Channel is not found. Please check if the channel is still in the guild.")
-
-        self._owner = self._channel.guild.get_member(self.owner_id)
-
-        if not self._owner:
-            raise ValueError("Owner is not found. Please check if the owner is still in the guild.")
-
-        self.resolved = True
-
-        return self
+        return voice_channel
 
     @classmethod
     async def find_one(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> Optional["VoiceChannel"]:
