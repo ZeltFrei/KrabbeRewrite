@@ -12,7 +12,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, WarningEmbed
-from src.utils import generate_permission_overwrites
+from src.utils import generate_channel_metadata
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -67,16 +67,19 @@ class VoiceChannel(MongoObject):
         Applies the settings to the channel.
         :param guild_settings: The guild settings object. If not specified, it will be fetched from the database.
         """
+        guild_settings = guild_settings or await GuildSettings.find_one(
+            self.bot, self.database, guild_id=self.channel.guild.id
+        )
+
+        if not guild_settings.is_resolved():
+            await guild_settings.resolve()
+
         await self.channel.edit(
-            name=self.channel_settings.channel_name or f"{self.owner.name} 的頻道",
-            bitrate=self.channel_settings.bitrate or 64000,
-            user_limit=self.channel_settings.user_limit or 0,
-            rtc_region=self.channel_settings.rtc_region or None,
-            nsfw=self.channel_settings.nsfw or False,
-            slowmode_delay=self.channel_settings.slowmode_delay or 0,
-            overwrites=generate_permission_overwrites(
-                self.channel_settings,
-                guild_settings or await GuildSettings.find_one(self.bot, self.database, guild_id=self.channel.guild.id)
+            **generate_channel_metadata(
+                channel_settings=self.channel_settings,
+                guild_settings=guild_settings or await GuildSettings.find_one(
+                    self.bot, self.database, guild_id=self.channel.guild.id
+                )
             )
         )
 
@@ -409,15 +412,7 @@ class VoiceChannel(MongoObject):
         channel_settings = await ChannelSettings.get_settings(bot, database, owner.id)
 
         created_channel = await guild_settings.category_channel.create_voice_channel(
-            name=channel_settings.channel_name or f"{owner.name} 的頻道",
-            overwrites=generate_permission_overwrites(
-                channel_settings, guild_settings
-            ),
-            bitrate=channel_settings.bitrate or 64000,
-            user_limit=channel_settings.user_limit or 0,
-            rtc_region=channel_settings.rtc_region or None,
-            nsfw=channel_settings.nsfw or False,
-            slowmode_delay=channel_settings.slowmode_delay or 0
+            **generate_channel_metadata(channel_settings, guild_settings)
         )
 
         voice_channel = cls(
