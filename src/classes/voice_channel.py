@@ -5,11 +5,12 @@ from logging import getLogger
 from typing import Optional, TYPE_CHECKING
 
 import disnake
-from disnake import Member, NotFound, VoiceState
+from disnake import Member, NotFound, VoiceState, Message
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
+from src.embeds import SuccessEmbed, WarningEmbed
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -78,6 +79,13 @@ class VoiceChannel(MongoObject):
 
         await self.upsert()
 
+        await self.notify(
+            embed=SuccessEmbed(
+                title="轉移所有權",
+                description=f"{new_owner.mention} 成為了頻道的新擁有者！"
+            )
+        )
+
     @property
     def channel(self):
         if self._channel is None:
@@ -89,6 +97,21 @@ class VoiceChannel(MongoObject):
         if self._owner is None:
             raise ValueError("Owner is not resolved yet. Consider calling the resolve method.")
         return self._owner
+
+    async def notify(self, wait: bool = False, *args, **kwargs) -> Optional[Message]:
+        """
+        Sends a message to the channel
+        :param wait: Whether to wait the message to be sent.
+        :param args: The args to pass to the `send()` method.
+        :param kwargs: The kwargs to pass to the `send()` method.
+        :return: The message sent. None if wait is False
+        """
+        if wait:
+            return await self.channel.send(*args, **kwargs)
+
+        _ = self.bot.loop.create_task(
+            self.channel.send(*args, **kwargs)
+        )
 
     async def check_state(self):
         """
@@ -171,9 +194,24 @@ class VoiceChannel(MongoObject):
             pass
 
         elif new_state == VoiceChannelState.OWNER_DISCONNECTED:
+            await self.notify(
+                embed=WarningEmbed(
+                    title="擁有者離開",
+                    description=f"頻道的擁有者 {self.owner.mention} 離開了頻道！\n"
+                                f"如果他沒有在 60 秒內加入，頻道所有權將被轉移給頻道內的隨機成員"
+                )
+            )
+
             is_owner_back = await self.wait_for_user(self.owner_id, timeout=5)
 
             if is_owner_back:
+                await self.notify(
+                    embed=SuccessEmbed(
+                        title="擁有者回歸",
+                        description=f"頻道的擁有者 {self.owner.mention} 回到了頻道內！"
+                    )
+                )
+
                 await self.update_state(VoiceChannelState.ACTIVE)
                 return
 
@@ -181,12 +219,34 @@ class VoiceChannel(MongoObject):
                 await self.update_state(VoiceChannelState.EMPTY)
                 return
 
+            await self.notify(
+                embed=WarningEmbed(
+                    title="擁有者離開",
+                    description=f"頻道的原擁有者 {self.owner.mention} 沒有在 60 秒內回來"
+                )
+            )
+
             await self.transfer_ownership(self.channel.members[0])
 
         elif new_state == VoiceChannelState.EMPTY:
+            await self.notify(
+                embed=WarningEmbed(
+                    title="頻道是空的",
+                    description="所有成員都離開了頻道！\n"
+                                "如果再 60 秒內沒有人加入這個頻道，這個頻道將會被刪除"
+                )
+            )
+
             is_anyone_joined = await self.wait_for_user(None, timeout=5)
 
             if is_anyone_joined:
+                await self.notify(
+                    embed=WarningEmbed(
+                        title="頻道重生",
+                        description=f"{self.channel.members[0]} 在頻道垂死之際加入了頻道！"
+                    )
+                )
+
                 await self.transfer_ownership(self.channel.members[0])
                 await self.update_state(VoiceChannelState.ACTIVE)
                 return
