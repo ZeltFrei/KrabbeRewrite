@@ -13,10 +13,11 @@ from src.classes.voice_channel import VoiceChannel
 from src.panels import setup_views
 
 
-def setup_logging() -> logging.Logger:
+def setup_logging(debug: bool) -> logging.Logger:
     """
     Set up the logging for the bot
 
+    :param debug: Whether to enable debug logging
     :return: The default logger for Krabbe
     """
     formatter = ColoredFormatter(
@@ -32,7 +33,7 @@ def setup_logging() -> logging.Logger:
     )
 
     stream_handler = logging.StreamHandler()
-    stream_handler.setLevel(logging.INFO)
+    stream_handler.setLevel(logging.DEBUG if debug else logging.INFO)
     stream_handler.setFormatter(formatter)
 
     file_handler = logging.FileHandler(filename="krabbe.log", encoding="utf-8", mode="w")
@@ -53,11 +54,13 @@ class Krabbe(InteractionBot):
             command_sync_flags=CommandSyncFlags.all()
         )
 
+        self.debug: bool = bool(getenv("DEBUG"))
+
         self.database: AsyncIOMotorDatabase = AsyncIOMotorClient(
             getenv("MONGODB_URL"), server_api=ServerApi('1')
         ).get_database("krabbe")
 
-        self.logger = setup_logging()
+        self.logger = setup_logging(self.debug)
         self.__load_extensions()
 
         self.voice_channels: Dict[int, VoiceChannel] = {}
