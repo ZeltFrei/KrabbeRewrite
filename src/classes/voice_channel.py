@@ -243,7 +243,7 @@ class VoiceChannel(MongoObject):
                 await self.notify(
                     embed=WarningEmbed(
                         title="頻道重生",
-                        description=f"{self.channel.members[0]} 在頻道垂死之際加入了頻道！"
+                        description=f"{self.channel.members[0].mention} 在頻道垂死之際加入了頻道！"
                     )
                 )
 
