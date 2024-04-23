@@ -8,7 +8,8 @@ import disnake
 from disnake import Member, NotFound, VoiceState
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from src.mongo_objects import MongoObject, GuildSettings
+from src.classes.guild_settings import GuildSettings
+from src.classes.mongo_object import MongoObject
 
 if TYPE_CHECKING:
     from src.bot import Krabbe

@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 import disnake
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from src.mongo_objects import MongoObject
+from src.classes.mongo_object import MongoObject
 
 if TYPE_CHECKING:
     from src.bot import Krabbe

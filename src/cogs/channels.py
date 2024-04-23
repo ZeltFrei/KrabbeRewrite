@@ -3,7 +3,8 @@ from disnake.abc import GuildChannel
 from disnake.ext.commands import Cog
 
 from src.bot import Krabbe
-from src.mongo_objects import VoiceChannel, GuildSettings
+from src.classes.guild_settings import GuildSettings
+from src.classes.voice_channel import VoiceChannel
 
 
 class Channels(Cog):
