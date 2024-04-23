@@ -388,3 +388,37 @@ class VoiceChannel(MongoObject):
         self.resolved = True
 
         return self
+
+    @classmethod
+    async def find_one(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> Optional["VoiceChannel"]:
+        """
+        Find a document in the collection that matches the specified query.
+        """
+        cls.logger.info(f"Finding one {cls.collection_name} document: {kwargs}")
+
+        document = await database.get_collection(cls.collection_name).find_one(kwargs)
+
+        if not document:
+            return None
+
+        del document["_id"]
+
+        channel_settings = await ChannelSettings.get_settings(bot, database, user_id=document["owner_id"])
+
+        return cls(bot=bot, database=database, channel_settings=channel_settings, **document)
+
+    @classmethod
+    async def find(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator["VoiceChannel"]:
+        """
+        Find all documents in the collection that match the specified query.
+        """
+        cls.logger.info(f"Finding {cls.collection_name} documents: {kwargs}")
+
+        cursor = database.get_collection(cls.collection_name).find(kwargs)
+
+        async for document in cursor:
+            del document["_id"]
+
+            channel_settings = await ChannelSettings.get_settings(bot, database, user_id=document["owner_id"])
+
+            yield cls(bot=bot, database=database, channel_settings=channel_settings, **document)
