@@ -1,5 +1,5 @@
 import uuid
-from typing import Union, Dict, Tuple, TYPE_CHECKING, List
+from typing import Union, Dict, Tuple, TYPE_CHECKING, List, Optional
 
 from disnake import PermissionOverwrite, Member, Role, Interaction, ModalInteraction, TextInputStyle, Event, User, \
     MessageInteraction
@@ -61,9 +61,10 @@ async def quick_modal(
         value: str = "",
         max_length: int = 256,
         min_length: int = 2,
+        required: bool = True,
         style: TextInputStyle = TextInputStyle.short,
         timeout: int = 180
-) -> Tuple[ModalInteraction, str]:
+) -> Tuple[ModalInteraction, Optional[str]]:
     """
     Quickly create a modal interaction with a single text field.
     :param interaction: The interaction object.
@@ -73,6 +74,7 @@ async def quick_modal(
     :param value: The value of the field.
     :param max_length: The maximum length of the field.
     :param min_length: The minimum length of the field.
+    :param required: If the field is required.
     :param style: The style of the text input.
     :param timeout: The timeout of the modal.
     :raise TimeoutError: If the modal interaction times out.
@@ -92,7 +94,7 @@ async def quick_modal(
                     custom_id="text_field",
                     max_length=max_length,
                     min_length=min_length,
-                    required=True
+                    required=required
                 )
             ],
             custom_id=custom_id
