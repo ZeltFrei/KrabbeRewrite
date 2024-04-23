@@ -6,7 +6,7 @@ from disnake.ui import View, Button
 
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed, SuccessEmbed
-from src.utils import quick_modal, confirm_modal, user_select, confirm_button, string_select
+from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
