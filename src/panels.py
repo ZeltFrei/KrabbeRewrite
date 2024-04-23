@@ -5,8 +5,9 @@ from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, Sel
 from disnake.ui import View, Button
 
 from src.classes.voice_channel import VoiceChannel
-from src.embeds import ErrorEmbed, SuccessEmbed
+from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
+from src.utils import max_bitrate
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -218,6 +219,18 @@ class MemberSettings(View):
             required=True
         )
 
+        if int(limit) < 0:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("人數限制必須大於 0"),
+                ephemeral=True
+            )
+
+        if int(limit) >= 100:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("人數限制必須小於 100"),
+                ephemeral=True
+            )
+
         channel.channel_settings.user_limit = int(limit)
 
         await channel.channel_settings.upsert()
@@ -246,17 +259,29 @@ class VoiceSettings(View):
             field_name="比特率 (bit/s)",
             placeholder="輸入比特率",
             value=str(channel.channel_settings.bitrate or 64000),
-            max_length=3,
-            min_length=1,
+            max_length=6,
+            min_length=5,
             required=True
         )
+
+        if int(bitrate) < 8000 or int(bitrate) > 384000:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("比特率必須介於 8000 和 384000 之間"),
+                ephemeral=True
+            )
 
         channel.channel_settings.bitrate = int(bitrate)
 
         await channel.channel_settings.upsert()
         await channel.apply_settings()
 
-        await interaction.response.send_message(embed=SuccessEmbed(f"已設定比特率為 {bitrate}"), ephemeral=True)
+        await interaction.response.send_message(
+            embeds=[SuccessEmbed(f"已設定比特率為 {bitrate}")] +
+                   [
+                       WarningEmbed("注意", "這個伺服器的加成等級可能限制了比特率")
+                   ] if int(bitrate) > max_bitrate(interaction.guild) else [],
+            ephemeral=True
+        )
 
     @ui.button(
         label="NSFW",
@@ -352,6 +377,18 @@ class VoiceSettings(View):
             min_length=1,
             required=True
         )
+
+        if int(slowmode_delay) < 0:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("慢速模式秒數必須大於 0"),
+                ephemeral=True
+            )
+
+        if int(slowmode_delay) > 21600:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("慢速模式秒數必須小於 21600"),
+                ephemeral=True
+            )
 
         channel.channel_settings.slowmode_delay = int(slowmode_delay)
 
