@@ -9,7 +9,7 @@ from disnake.ext.commands import InteractionBot, CommandSyncFlags
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.server_api import ServerApi
 
-from src.classes.voice_channel import VoiceChannel
+from src.mongo_objects import VoiceChannel
 from src.panels import setup_views
 
 
