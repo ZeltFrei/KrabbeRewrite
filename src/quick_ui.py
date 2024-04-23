@@ -138,7 +138,7 @@ async def quick_modal(
         title: str,
         field_name: str,
         placeholder: str,
-        value: str = "",
+        value: Optional[str] = None,
         max_length: int = 256,
         min_length: int = 2,
         required: bool = True,
