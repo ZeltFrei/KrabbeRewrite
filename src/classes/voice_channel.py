@@ -2,15 +2,17 @@ import asyncio
 from asyncio import Event
 from enum import Enum
 from logging import getLogger
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, AsyncIterator
 
 import disnake
 from disnake import Member, NotFound, VoiceState, Message
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
+from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, WarningEmbed
+from src.utils import generate_permission_overwrites
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
