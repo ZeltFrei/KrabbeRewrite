@@ -96,7 +96,9 @@ class Krabbe(InteractionBot):
                 continue
 
             self.voice_channels[voice_channel.channel_id] = voice_channel
-            voice_channel.start()
+            voice_channel.start_listeners()
+
+            await voice_channel.check_state()
 
     async def __on_ready(self):
         """
@@ -124,17 +126,12 @@ class Krabbe(InteractionBot):
         if before.channel == after.channel:
             return
 
-        if (before.channel is None) and (after.channel is not None):
+        if after.channel is not None:
             self.logger.info(f"{member.display_name} joined voice channel {after.channel.name}")
 
             self.dispatch("voice_channel_join", member, after)
 
-        if (before.channel is not None) and (after.channel is None):
+        if before.channel is not None:
             self.logger.info(f"{member.display_name} left voice channel {before.channel.name}")
 
             self.dispatch("voice_channel_leave", member, before)
-
-        if (before.channel is not None) and (after.channel is not None):
-            self.logger.info(f"{member.display_name} moved from {before.channel.name} to {after.channel.name}")
-
-            self.dispatch("voice_channel_move", member, before, after)
