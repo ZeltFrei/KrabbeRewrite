@@ -18,7 +18,6 @@ class ChannelSettings(MongoObject):
             database: AsyncIOMotorDatabase,
             user_id: int,
             channel_name: Optional[str] = None,
-            channel_activity: Optional[str] = None,
             password: Optional[str] = None,
             user_limit: Optional[int] = None,
             bitrate: Optional[int] = None,
@@ -36,7 +35,6 @@ class ChannelSettings(MongoObject):
         self._user: Optional[disnake.User] = None
 
         self.channel_name: Optional[str] = channel_name
-        self.channel_activity: Optional[str] = channel_activity
 
         self.password: Optional[str] = password
         self.user_limit: Optional[int] = user_limit
@@ -56,7 +54,6 @@ class ChannelSettings(MongoObject):
         return {
             "user_id": self.user_id,
             "channel_name": self.channel_name,
-            "channel_activity": self.channel_activity,
             "password": self.password,
             "user_limit": self.user_limit,
             "bitrate": self.bitrate,
@@ -74,7 +71,6 @@ class ChannelSettings(MongoObject):
         This method does not update the database. Use the upsert method to update the database.
         """
         self.channel_name = None
-        self.channel_activity = None
         self.password = None
         self.user_limit = None
         self.bitrate = None
