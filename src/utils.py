@@ -62,7 +62,7 @@ async def quick_modal(
                     required=True
                 )
             ],
-            custom_id=uuid.uuid1().hex
+            custom_id=custom_id
         )
     )
 
