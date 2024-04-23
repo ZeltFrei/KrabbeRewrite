@@ -35,7 +35,7 @@ def setup_logging() -> logging.Logger:
     stream_handler.setLevel(logging.INFO)
     stream_handler.setFormatter(formatter)
 
-    file_handler = logging.FileHandler(filename="lava.log", encoding="utf-8", mode="w")
+    file_handler = logging.FileHandler(filename="krabbe.log", encoding="utf-8", mode="w")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
 
