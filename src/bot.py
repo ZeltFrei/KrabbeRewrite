@@ -79,7 +79,7 @@ class Krabbe(InteractionBot):
             self.load_extension(extension)
             self.logger.info(f"Loaded extension {extension}")
 
-    async def __load_channels(self):
+    async def __load_channels(self) -> None:
         """
         Load all voice channels from the database.
 
@@ -100,7 +100,7 @@ class Krabbe(InteractionBot):
 
             await voice_channel.check_state()
 
-    async def __on_ready(self):
+    async def __on_ready(self) -> None:
         """
         Method executed when the bot is ready to start receiving events.
 
@@ -114,7 +114,7 @@ class Krabbe(InteractionBot):
 
         await self.__load_channels()
 
-    async def __on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
+    async def __on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState) -> None:
         """
         Method executed when a voice state update event is received.
 

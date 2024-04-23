@@ -28,7 +28,7 @@ class ChannelSettings(MongoObject):
         }
 
     @property
-    def user(self):
+    def user(self) -> disnake.User:
         if self._user is None:
             raise ValueError("User is not resolved yet. Consider calling the resolve method.")
         return self._user

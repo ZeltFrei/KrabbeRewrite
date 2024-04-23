@@ -12,7 +12,7 @@ class Channels(Cog):
         self.bot: Krabbe = bot
 
     @Cog.listener(name="on_voice_channel_join")
-    async def on_voice_channel_join(self, member: Member, voice_state: VoiceState):
+    async def on_voice_channel_join(self, member: Member, voice_state: VoiceState) -> None:
         guild_settings = await GuildSettings.find_one(
             self.bot, self.bot.database, root_channel_id=voice_state.channel.id
         )
@@ -32,7 +32,7 @@ class Channels(Cog):
         await member.move_to(voice_channel.channel)
 
     @Cog.listener(name=Event.guild_channel_delete)
-    async def on_guild_channel_delete(self, channel: GuildChannel):
+    async def on_guild_channel_delete(self, channel: GuildChannel) -> None:
         if channel.id not in self.bot.voice_channels:
             return
 
@@ -42,5 +42,5 @@ class Channels(Cog):
         await voice_channel.remove()
 
 
-def setup(bot: Krabbe):
+def setup(bot: Krabbe) -> None:
     bot.add_cog(Channels(bot))

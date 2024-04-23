@@ -16,7 +16,7 @@ class Setup(Cog):
         description="快捷設定",
         guild_ids=[975244147730546758]
     )
-    async def setup(self, interaction: ApplicationCommandInteraction):
+    async def setup(self, interaction: ApplicationCommandInteraction) -> None:
         await interaction.response.defer(ephermal=True)
 
         category = await interaction.guild.create_category("🔊 動態語音頻道")
@@ -48,7 +48,7 @@ class Setup(Cog):
         ],
         guild_ids=[975244147730546758]
     )
-    async def panel(self, interaction: ApplicationCommandInteraction, panel: str):
+    async def panel(self, interaction: ApplicationCommandInteraction, panel: str) -> None:
         panel_to_send = panels.get(panel)
 
         await interaction.channel.send(
@@ -59,5 +59,5 @@ class Setup(Cog):
         await interaction.response.send_message("✅ 完成", ephemeral=True)
 
 
-def setup(bot: Krabbe):
+def setup(bot: Krabbe) -> None:
     bot.add_cog(Setup(bot))

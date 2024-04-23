@@ -55,14 +55,14 @@ class VoiceChannel(MongoObject):
             "owner_id": self.owner_id
         }
 
-    async def apply_settings(self):
+    async def apply_settings(self) -> None:
         """
         Applies the settings to the channel.
         """
         # TODO: Apply the settings to the channel
         pass
 
-    async def transfer_ownership(self, new_owner: Member):
+    async def transfer_ownership(self, new_owner: Member) -> None:
         """
         Transfers the ownership of the channel to the new owner.
         Does nothing if the new owner is the same as the current owner.
@@ -87,13 +87,13 @@ class VoiceChannel(MongoObject):
         )
 
     @property
-    def channel(self):
+    def channel(self) -> disnake.VoiceChannel:
         if self._channel is None:
             raise ValueError("Channel is not resolved yet. Consider calling the resolve method.")
         return self._channel
 
     @property
-    def owner(self):
+    def owner(self) -> Member:
         if self._owner is None:
             raise ValueError("Owner is not resolved yet. Consider calling the resolve method.")
         return self._owner
@@ -113,7 +113,7 @@ class VoiceChannel(MongoObject):
             self.channel.send(*args, **kwargs)
         )
 
-    async def check_state(self):
+    async def check_state(self) -> None:
         """
         Manually checks and update the state of the channel. Useful when launching the bot.
         """
@@ -127,7 +127,7 @@ class VoiceChannel(MongoObject):
 
         await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)  # Owner is not in the channel but someone else is
 
-    async def update_state(self, new_state: VoiceChannelState):
+    async def update_state(self, new_state: VoiceChannelState) -> None:
         """
         Updates the state of the channel.
         """
@@ -184,7 +184,7 @@ class VoiceChannel(MongoObject):
 
         return True
 
-    async def on_state_change(self, new_state: VoiceChannelState):
+    async def on_state_change(self, new_state: VoiceChannelState) -> None:
         """
         Called when the state of the channel changes.
         """
@@ -253,11 +253,11 @@ class VoiceChannel(MongoObject):
 
             await self.remove()
 
-    async def on_member_join(self, member: Member, voice_state: VoiceState):
+    async def on_member_join(self, member: Member, voice_state: VoiceState) -> None:
         if voice_state.channel.id != self.channel_id:
             return
 
-    async def on_member_leave(self, member: Member, voice_state: VoiceState):
+    async def on_member_leave(self, member: Member, voice_state: VoiceState) -> None:
         if voice_state.channel.id != self.channel_id:
             return
 
@@ -265,7 +265,7 @@ class VoiceChannel(MongoObject):
             await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)
             return
 
-    async def setup(self):
+    async def setup(self) -> None:
         """
         Apply the settings, start the listeners, then wait for owner to join and set state to ACTIVE.
         Note that if owner didn't join in 60 seconds, the channel will be removed.
@@ -280,14 +280,14 @@ class VoiceChannel(MongoObject):
 
         self.start_listeners()
 
-    def start_listeners(self):
+    def start_listeners(self) -> None:
         """
         Register the listeners then start the state loop.
         """
         self.bot.add_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.add_listener(self.on_member_leave, "on_voice_channel_leave")
 
-    def stop_listeners(self):
+    def stop_listeners(self) -> None:
         """
         Remove the listeners and stop the state loop.
         :return:

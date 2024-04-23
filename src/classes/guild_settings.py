@@ -43,19 +43,19 @@ class GuildSettings(MongoObject):
         }
 
     @property
-    def guild(self):
+    def guild(self) -> Guild:
         if self._guild is None:
             raise ValueError("Guild is not resolved yet. Consider calling the resolve method.")
         return self._guild
 
     @property
-    def category_channel(self):
+    def category_channel(self) -> CategoryChannel:
         if self._category_channel is None:
             raise ValueError("Category channel is not resolved yet. Consider calling the resolve method.")
         return self._category_channel
 
     @property
-    def root_channel(self):
+    def root_channel(self) -> VoiceChannel:
         if self._root_channel is None:
             raise ValueError("Root channel is not resolved yet. Consider calling the resolve method.")
         return self._root_channel

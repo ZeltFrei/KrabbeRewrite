@@ -25,7 +25,7 @@ class JoinChannel(View):
         style=ButtonStyle.green,
         emoji="🔊"
     )
-    async def join_channel(self, button: Button, interaction: MessageInteraction):
+    async def join_channel(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement join channel functionality
         pass
 
@@ -40,7 +40,7 @@ class ChannelSettings(View):
         style=ButtonStyle.secondary,
         emoji="✒️"
     )
-    async def rename_channel(self, button: Button, interaction: MessageInteraction):
+    async def rename_channel(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement rename channel functionality
         pass
 
@@ -50,7 +50,7 @@ class ChannelSettings(View):
         style=ButtonStyle.secondary,
         emoji="🔧"
     )
-    async def set_channel_activity(self, button: Button, interaction: MessageInteraction):
+    async def set_channel_activity(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement set channel activity functionality
         pass
 
@@ -60,7 +60,7 @@ class ChannelSettings(View):
         style=ButtonStyle.secondary,
         emoji="👥"
     )
-    async def transfer_ownership(self, button: Button, interaction: MessageInteraction):
+    async def transfer_ownership(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement transfer ownership functionality
         pass
 
@@ -70,7 +70,7 @@ class ChannelSettings(View):
         style=ButtonStyle.secondary,
         emoji="🗑️"
     )
-    async def remove_channel(self, button: Button, interaction: MessageInteraction):
+    async def remove_channel(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement functionality to remove channel
         pass
 
@@ -85,7 +85,7 @@ class MemberSettings(View):
         style=ButtonStyle.green,
         emoji="👤"
     )
-    async def invite_member(self, button: Button, interaction: MessageInteraction):
+    async def invite_member(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement invite member functionality
         pass
 
@@ -95,7 +95,7 @@ class MemberSettings(View):
         style=ButtonStyle.danger,
         emoji="🚪"
     )
-    async def remove_member(self, button: Button, interaction: MessageInteraction):
+    async def remove_member(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement remove member functionality
         pass
 
@@ -105,7 +105,7 @@ class MemberSettings(View):
         style=ButtonStyle.secondary,
         emoji="🔒"
     )
-    async def lock_channel(self, button: Button, interaction: MessageInteraction):
+    async def lock_channel(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement channel lock functionality
         pass
 
@@ -115,7 +115,7 @@ class MemberSettings(View):
         style=ButtonStyle.secondary,
         emoji="🔢"
     )
-    async def limit_members(self, button: Button, interaction: MessageInteraction):
+    async def limit_members(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement member limit functionality
         pass
 
@@ -130,7 +130,7 @@ class VoiceSettings(View):
         style=ButtonStyle.secondary,
         emoji="🔊"
     )
-    async def toggle_sounds(self, button: Button, interaction: MessageInteraction):
+    async def toggle_sounds(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement sounds toggle functionality
         pass
 
@@ -140,7 +140,7 @@ class VoiceSettings(View):
         style=ButtonStyle.secondary,
         emoji="📝"
     )
-    async def toggle_text_channel(self, button: Button, interaction: MessageInteraction):
+    async def toggle_text_channel(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement text channel toggle functionality
         pass
 
@@ -150,7 +150,7 @@ class VoiceSettings(View):
         style=ButtonStyle.secondary,
         emoji="🎥"
     )
-    async def media_permission(self, button: Button, interaction: MessageInteraction):
+    async def media_permission(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement media sending permission functionality
         pass
 
@@ -160,7 +160,7 @@ class VoiceSettings(View):
         style=ButtonStyle.secondary,
         emoji="⏳"
     )
-    async def slow_mode(self, button: Button, interaction: MessageInteraction):
+    async def slow_mode(self, button: Button, interaction: MessageInteraction) -> None:
         # TODO: Implement slow mode functionality
         pass
 
