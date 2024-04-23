@@ -1,9 +1,8 @@
 import asyncio
-import random
-from asyncio import Task
+from asyncio import Event
 from enum import Enum
 from logging import getLogger
-from typing import Optional, TYPE_CHECKING, Callable
+from typing import Optional, TYPE_CHECKING
 
 import disnake
 from disnake import Member, NotFound, VoiceState
@@ -17,8 +16,8 @@ if TYPE_CHECKING:
 
 
 class VoiceChannelState(Enum):
-    READY = 0
-    USING = 1
+    PREPARING = 0
+    ACTIVE = 1
     OWNER_DISCONNECTED = 2
     EMPTY = 3
 
@@ -43,8 +42,8 @@ class VoiceChannel(MongoObject):
 
         self.resolved: bool = False
 
-        self.state: VoiceChannelState = VoiceChannelState.READY
-        self.loop: Optional[Task] = None
+        self.state: VoiceChannelState = VoiceChannelState.PREPARING
+        self.state_change_event: Event = Event()
 
     def unique_identifier(self) -> dict:
         return {"channel_id": self.channel_id}
@@ -65,8 +64,12 @@ class VoiceChannel(MongoObject):
     async def transfer_ownership(self, new_owner: Member):
         """
         Transfers the ownership of the channel to the new owner.
+        Does nothing if the new owner is the same as the current owner.
         :param new_owner: The new owner of the channel.
         """
+        if self.owner_id == new_owner.id:
+            return
+
         self.owner_id = new_owner.id
 
         await self.resolve()
@@ -87,121 +90,150 @@ class VoiceChannel(MongoObject):
             raise ValueError("Owner is not resolved yet. Consider calling the resolve method.")
         return self._owner
 
-    async def wait_for(self,
-                       user_id: Optional[int] = None,
-                       timeout: int = 5,
-                       escape: Optional[Callable[..., bool]] = lambda: False) -> bool:
+    async def check_state(self):
         """
-        Waits for a specific user to join the channel.
-        :param user_id: The user id to wait, any if not specified.
-        :param timeout: The times to wait, 5 if not specified.
-        :param escape: If the escape function returned True at any moment, directly return False
-        :return: Whether the user has joined the channel in time.
+        Manually checks and update the state of the channel. Useful when launching the bot.
         """
-        while timeout > 0:
-            if user_id in [m.id for m in self.channel.members]:
-                return True
+        if any(m.id == self.owner_id for m in self.channel.members):  # Owner is in the channel
+            await self.update_state(VoiceChannelState.ACTIVE)
+            return
 
-            if not user_id and len(self.channel.members) > 0:
-                return True
+        if len(self.channel.members) == 0:  # Channel is empty
+            await self.update_state(VoiceChannelState.EMPTY)
+            return
 
-            if escape():
+        await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)  # Owner is not in the channel but someone else is
+
+    async def update_state(self, new_state: VoiceChannelState):
+        """
+        Updates the state of the channel.
+        """
+        self.state = new_state
+
+        _ = self.bot.loop.create_task(self.on_state_change(new_state))
+
+        self.state_change_event.set()
+        self.state_change_event.clear()
+
+    async def wait_for_state(self, state: Optional[VoiceChannelState], timeout: int) -> bool:
+        """
+        Waits for the channel to reach the specified state. If no state is specified, it waits for the channel to reach any state.
+        :param state:
+        :param timeout:
+        :return: Boolean indicating whether the channel reached the specified state within the timeout.
+        """
+        end_time = asyncio.get_running_loop().time() + timeout
+        while True:
+            try:
+                remaining_time = end_time - asyncio.get_running_loop().time()
+
+                if remaining_time <= 0:
+                    return False
+
+                await asyncio.wait_for(self.state_change_event.wait(), timeout=remaining_time)
+            except asyncio.TimeoutError:
                 return False
 
-            timeout -= 1
-            await asyncio.sleep(1)
+            if not state or self.state == state:
+                return True
 
-        return False
+    async def wait_for_user(self, user_id: Optional[int], timeout: int) -> bool:
+        """
+        Waits for the user to join the channel.
+        :param user_id: The user ID to wait for. If not specified, waits for any user to join.
+        :param timeout: The timeout in seconds.
+        :return: Boolean indicating whether the user joined the channel.
+        """
+        if user_id and self.channel.members and any(m.id == user_id for m in self.channel.members):
+            return True
 
-    async def on_member_join(self, member: Member, voice_state: VoiceState):
-        pass
+        if not user_id and self.channel.members:
+            return True
 
-    async def on_member_leave(self, member: Member, voice_state: VoiceState):
-        pass
+        try:
+            await self.bot.wait_for(
+                "voice_channel_join",
+                check=lambda m, v: (m.id == user_id if user_id else True) and v.channel.id == self.channel_id,
+                timeout=timeout
+            )
+        except asyncio.TimeoutError:
+            return False
 
-    async def process_state(self):
-        if self.state == VoiceChannelState.READY:
-            self.logger.info(f"Channel {self.channel.name} is ready! Waiting for owner to join...")
-            owner_joined = await self.wait_for(self.owner_id, 5)
+        return True
 
-            if not owner_joined:
-                self.logger.info(f"The owner of {self.channel.name} didn't join within 5 seconds, removing...")
-                await self.remove()
-                return
+    async def on_state_change(self, new_state: VoiceChannelState):
+        """
+        Called when the state of the channel changes.
+        """
+        self.logger.info(f"State of {self.channel.name} updated to {new_state}")
 
-            self.logger.info(f"The owner of {self.channel.name} has joined!")
-            self.state = VoiceChannelState.USING
-            return
+        if new_state == VoiceChannelState.ACTIVE:
+            pass
 
-        if self.state == VoiceChannelState.USING:
-            if self.owner not in self.channel.members:
-                self.state = VoiceChannelState.OWNER_DISCONNECTED
-            return
+        elif new_state == VoiceChannelState.OWNER_DISCONNECTED:
+            is_owner_back = await self.wait_for_user(self.owner_id, timeout=5)
 
-        if self.state == VoiceChannelState.OWNER_DISCONNECTED:
-            self.logger.info(f"The owner of {self.channel.name} has disconnected, waiting him to rejoin...")
-            owner_joined = await self.wait_for(self.owner_id, 5)
-
-            if owner_joined:
-                self.logger.info(f"The owner of {self.channel.name} has joined back.")
-                self.state = VoiceChannelState.USING
+            if is_owner_back:
+                await self.update_state(VoiceChannelState.ACTIVE)
                 return
 
             if len(self.channel.members) == 0:
-                self.logger.info(f"{self.channel.name} has no members can be chose as new owner, escaping...")
-                self.state = VoiceChannelState.EMPTY
+                await self.update_state(VoiceChannelState.EMPTY)
                 return
 
-            await self.transfer_ownership(random.choice(self.channel.members))
-            return
-
-        if self.state == VoiceChannelState.EMPTY:
-            self.logger.info(f"{self.channel.name} has entered EMPTY state, pending deletion...")
-            member_joined = await self.wait_for(None, 5)
-
-            if not member_joined:
-                await self.remove()
-                return
-
-            self.logger.info(f"Someone has joined {self.channel.name}, reviving channel...")
             await self.transfer_ownership(self.channel.members[0])
 
-            self.state = VoiceChannelState.USING
+        elif new_state == VoiceChannelState.EMPTY:
+            is_anyone_joined = await self.wait_for_user(None, timeout=5)
+
+            if is_anyone_joined:
+                await self.transfer_ownership(self.channel.members[0])
+                await self.update_state(VoiceChannelState.ACTIVE)
+                return
+
+            await self.remove()
+
+    async def on_member_join(self, member: Member, voice_state: VoiceState):
+        if voice_state.channel.id != self.channel_id:
             return
 
-    async def state_loop(self):
-        while True:
-            await self.process_state()
+    async def on_member_leave(self, member: Member, voice_state: VoiceState):
+        if voice_state.channel.id != self.channel_id:
+            return
 
-            await asyncio.sleep(1)
+        if member.id == self.owner_id:
+            await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)
+            return
 
     async def setup(self):
         """
-        Sets up the channel.
+        Apply the settings, start the listeners, then wait for owner to join and set state to ACTIVE.
+        Note that if owner didn't join in 5 seconds, the channel will be removed.
         """
-        self.start()
-
         await self.apply_settings()
 
-    def start(self):
+        if not await self.wait_for_user(self.owner_id, timeout=5):
+            await self.remove()
+            return
+
+        await self.update_state(VoiceChannelState.ACTIVE)
+
+        self.start_listeners()
+
+    def start_listeners(self):
         """
         Register the listeners then start the state loop.
         """
         self.bot.add_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.add_listener(self.on_member_leave, "on_voice_channel_leave")
 
-        self.loop = self.bot.loop.create_task(self.state_loop())
-
-    def stop(self):
+    def stop_listeners(self):
         """
         Remove the listeners and stop the state loop.
         :return:
         """
         self.bot.remove_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.remove_listener(self.on_member_leave, "on_voice_channel_leave")
-
-        if self.loop:
-            self.loop.cancel()
 
     async def remove(self) -> None:
         """
@@ -210,6 +242,8 @@ class VoiceChannel(MongoObject):
 
         :return: None
         """
+        self.stop_listeners()
+
         try:
             self.bot.voice_channels.pop(self.channel_id)
         except KeyError:  # Forgive the channel if it's not in the bot's memory
@@ -221,8 +255,6 @@ class VoiceChannel(MongoObject):
             pass
 
         await self.delete()
-
-        self.stop()
 
     @classmethod
     async def new(
@@ -264,9 +296,9 @@ class VoiceChannel(MongoObject):
         await voice_channel.resolve()
         await voice_channel.upsert()
 
-        await voice_channel.setup()
-
         bot.voice_channels[voice_channel.channel_id] = voice_channel
+
+        _ = bot.loop.create_task(voice_channel.setup())
 
         return voice_channel
 
