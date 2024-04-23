@@ -284,6 +284,26 @@ class VoiceChannel(MongoObject):
             await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)
             return
 
+    async def add_member(self, member: Member) -> None:
+        """
+        Add a member to the channel. Like give them the permission to join the channel.
+        :param member: The member to add.
+        """
+        if member.id == self.owner_id:
+            return
+        # TODO: Deal with the channel lock
+
+    async def remove_member(self, member: Member) -> None:
+        """
+        Remove a member from the channel. Kick them from the channel and remove their permissions.
+        :param member: The member to remove.
+        """
+        # TODO: Deal with the channel lock
+        if member.id == self.owner_id:
+            raise ValueError("Owner cannot be removed from the channel.")
+
+        await member.move_to(None)
+
     async def setup(self) -> None:
         """
         Apply the settings, start the listeners, then wait for owner to join and set state to ACTIVE.
