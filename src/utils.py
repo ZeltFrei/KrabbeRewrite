@@ -9,9 +9,10 @@ if TYPE_CHECKING:
 
 def max_bitrate(guild: Guild) -> int:
     """
-    Get the maximum bitrate for a guild
-    :param guild: The guild to get the maximum bitrate for
-    :return: The maximum bitrate for the guild
+    Get the maximum bitrate for a guild.
+
+    :param guild: The guild to get the maximum bitrate for.
+    :return: The maximum bitrate for the guild.
     """
     match guild.premium_tier:
         case 0:
@@ -31,11 +32,11 @@ def generate_channel_metadata(
         guild_settings: "GuildSettings"
 ) -> Dict[str, Union[str, int]]:
     """
-    Generate the metadata for a channel
+    Generate the metadata for a channel.
 
-    :param channel_settings: The channel settings object
-    :param guild_settings: The guild settings object
-    :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method
+    :param channel_settings: The channel settings object.
+    :param guild_settings: The guild settings object.
+    :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method.
     """
     return {
         "name": channel_settings.channel_name or f"{channel_settings.user}'s Channel",
