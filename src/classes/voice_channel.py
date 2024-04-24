@@ -44,8 +44,6 @@ class VoiceChannel(MongoObject):
         self._channel: Optional[disnake.VoiceChannel] = None
         self._owner: Optional[disnake.Member] = None
 
-        self.resolved: bool = False
-
         self.state: VoiceChannelState = VoiceChannelState.PREPARING
         self.state_change_event: Event = Event()
 
@@ -94,7 +92,6 @@ class VoiceChannel(MongoObject):
 
         self.owner_id = new_owner.id
 
-        await self.resolve()
         await self.upsert()
 
         self.channel_settings = await ChannelSettings.get_settings(self.bot, self.database, user_id=new_owner.id)
@@ -109,15 +106,23 @@ class VoiceChannel(MongoObject):
         )
 
     @property
-    def channel(self) -> disnake.VoiceChannel:
+    def channel(self) -> Optional[disnake.VoiceChannel]:
         if self._channel is None:
-            raise ValueError("Channel is not resolved yet. Consider calling the resolve method.")
+            self._channel = self.bot.get_channel(self.channel_id)
+
+        if self._channel.id != self.channel_id:
+            self._channel = self.bot.get_channel(self.channel_id)
+
         return self._channel
 
     @property
-    def owner(self) -> Member:
+    def owner(self) -> Optional[Member]:
         if self._owner is None:
-            raise ValueError("Owner is not resolved yet. Consider calling the resolve method.")
+            self._owner = self.channel.guild.get_member(self.owner_id)
+
+        if self._owner.id != self.owner_id:
+            self._owner = self.channel.guild.get_member(self.owner_id)
+
         return self._owner
 
     async def notify(self, wait: bool = False, *args, **kwargs) -> Optional[Message]:
@@ -358,32 +363,7 @@ class VoiceChannel(MongoObject):
 
         await self.delete()
 
-    def is_resolved(self) -> bool:
-        """
-        Returns whether the channel and owner objects are resolved.
-        :return: Boolean indicating whether the objects are resolved.
-        """
-        return self.resolved
-
-    async def resolve(self) -> "VoiceChannel":
-        """
-        Resolves the channel and owner objects.
-
-        :return: The resolved VoiceChannel object.
-        """
-        self._channel = self.bot.get_channel(self.channel_id)
-
-        if not self._channel:
-            raise ValueError("Channel is not found. Please check if the channel is still in the guild.")
-
-        self._owner = self._channel.guild.get_member(self.owner_id)
-
-        if not self._owner:
-            raise ValueError("Owner is not found. Please check if the owner is still in the guild.")
-
-        self.resolved = True
-
-        return self
+        self.logger.info(f"Voice channel {self.channel_id} removed.")
 
     @classmethod
     async def new(
@@ -423,7 +403,6 @@ class VoiceChannel(MongoObject):
             channel_settings=channel_settings
         )
 
-        await voice_channel.resolve()
         await voice_channel.upsert()
 
         await voice_channel.apply_settings()
@@ -447,8 +426,6 @@ class VoiceChannel(MongoObject):
 
         if not voice_channel:
             return None
-
-        await voice_channel.resolve()
 
         return voice_channel
 

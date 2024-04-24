@@ -89,13 +89,9 @@ class Krabbe(InteractionBot):
         :return: None
         """
         async for voice_channel in VoiceChannel.find(self, self.database):
-            try:
-                await voice_channel.resolve()
-            except Exception as error:
-                self.logger.warning(f"Failed to resolve voice channel {voice_channel.channel_id}: {error}, removing.")
+            if not voice_channel.channel or not voice_channel.owner:
+                self.logger.warning(f"Failed to resolve voice channel {voice_channel.channel_id}, removing.")
                 await voice_channel.remove()
-                self.logger.info(f"Removed voice channel {voice_channel.channel_id}")
-
                 continue
 
             self.voice_channels[voice_channel.channel_id] = voice_channel
