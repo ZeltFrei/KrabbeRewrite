@@ -381,9 +381,6 @@ class VoiceChannel(MongoObject):
         :param owner: The owner of the channel.
         :return: The created VoiceChannel object.
         """
-        if not guild_settings.resolved:
-            raise ValueError("Guild settings must be resolved before creating a voice channel.")
-
         cls.logger.info(f"Creating a new voice channel for {owner.name} in {guild_settings.guild.name}.")
 
         channel_settings = await ChannelSettings.get_settings(bot, database, owner.id)

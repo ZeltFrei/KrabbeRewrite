@@ -1,6 +1,6 @@
 from typing import Optional, TYPE_CHECKING
 
-from disnake import Guild, CategoryChannel, VoiceChannel
+from disnake import Guild, CategoryChannel, VoiceChannel, Role
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.mongo_object import MongoObject
@@ -18,19 +18,20 @@ class GuildSettings(MongoObject):
             database: AsyncIOMotorDatabase,
             guild_id: int,
             category_channel_id: int,
-            root_channel_id: int
+            root_channel_id: int,
+            base_role_id: int
     ):
         super().__init__(bot, database)
 
         self.guild_id: int = guild_id
         self.category_channel_id: int = category_channel_id
         self.root_channel_id: int = root_channel_id
+        self.base_role_id: int = base_role_id
 
         self._guild: Optional[Guild] = None
         self._category_channel: Optional[CategoryChannel] = None
         self._root_channel: Optional[VoiceChannel] = None
-
-        self.resolved: bool = False
+        self._base_role: Optional[Role] = None
 
     def unique_identifier(self) -> dict:
         return {"guild_id": self.guild_id}
@@ -39,7 +40,8 @@ class GuildSettings(MongoObject):
         return {
             "guild_id": self.guild_id,
             "category_channel_id": self.category_channel_id,
-            "root_channel_id": self.root_channel_id
+            "root_channel_id": self.root_channel_id,
+            "base_role_id": self.base_role_id
         }
 
     @property
@@ -71,3 +73,13 @@ class GuildSettings(MongoObject):
             self._root_channel = self.guild.get_channel(self.root_channel_id)
 
         return self._root_channel
+
+    @property
+    def base_role(self) -> Optional[Role]:
+        if self._base_role is None:
+            self._base_role = self.guild.get_role(self.base_role_id)
+
+        if self._base_role.id != self.base_role_id:
+            self._base_role = self.guild.get_role(self.base_role_id)
+
+        return self._base_role
