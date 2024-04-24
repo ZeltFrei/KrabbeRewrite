@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass, field
 from typing import Dict, TYPE_CHECKING, Type, Optional
 
@@ -144,15 +145,34 @@ class ChannelSettings(View):
             required=False
         )
 
+        await interaction.response.defer(ephemeral=True)
+
         channel.channel_settings.channel_name = new_name
 
-        await channel.channel_settings.upsert()
-        await channel.apply_setting_and_permissions()
+        task = await channel.apply_setting_and_permissions()
 
-        await interaction.response.send_message(
-            embed=SuccessEmbed(f"頻道已重新命名為 {new_name}" if new_name else "已重設頻道名稱"),
-            ephemeral=True
-        )
+        try:
+            await asyncio.wait_for(task, timeout=5)
+
+            await channel.channel_settings.upsert()
+
+            await interaction.edit_original_message(
+                embed=SuccessEmbed(f"頻道已重新命名為 {new_name}" if new_name else "已重設頻道名稱"),
+            )
+
+            return
+        except asyncio.TimeoutError:
+            channel.channel_settings.channel_name = channel.channel.name
+
+            await interaction.edit_original_message(
+                embed=WarningEmbed(
+                    title="你太快了！",
+                    description="因為 Discord API 的限制，\n"
+                                "請稍後再試著更改頻道名稱！"
+                ),
+            )
+
+            return
 
     @ui.button(
         label="移交所有權",
