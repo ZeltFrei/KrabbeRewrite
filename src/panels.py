@@ -160,7 +160,7 @@ class MemberSettings(View):
         style=ButtonStyle.green,
         emoji="👤"
     )
-    async def invite_member(self, button: Button, interaction: MessageInteraction) -> None:
+    async def invite_member(self, _button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -203,7 +203,7 @@ class MemberSettings(View):
         style=ButtonStyle.danger,
         emoji="🚪"
     )
-    async def remove_member(self, button: Button, interaction: MessageInteraction) -> None:
+    async def remove_member(self, _button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -239,7 +239,7 @@ class MemberSettings(View):
         style=ButtonStyle.secondary,
         emoji="🔒"
     )
-    async def lock_channel(self, button: Button, interaction: MessageInteraction) -> None:
+    async def lock_channel(self, _button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -271,7 +271,7 @@ class MemberSettings(View):
         style=ButtonStyle.secondary,
         emoji="🔢"
     )
-    async def limit_members(self, button: Button, interaction: MessageInteraction) -> None:
+    async def limit_members(self, _button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -316,7 +316,7 @@ class VoiceSettings(View):
         style=ButtonStyle.secondary,
         emoji="📶"
     )
-    async def bitrate(self, button: Button, interaction: MessageInteraction) -> None:
+    async def bitrate(self, _button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -356,7 +356,7 @@ class VoiceSettings(View):
         style=ButtonStyle.secondary,
         emoji="🔞"
     )
-    async def nsfw(self, button: Button, interaction: MessageInteraction) -> None:
+    async def nsfw(self, _button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -376,7 +376,7 @@ class VoiceSettings(View):
         style=ButtonStyle.secondary,
         emoji="🌍"
     )
-    async def rtc_region(self, button: Button, interaction: MessageInteraction) -> None:
+    async def rtc_region(self, _button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
