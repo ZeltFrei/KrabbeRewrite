@@ -62,6 +62,37 @@ class VoiceChannel(MongoObject):
             "owner_id": self.owner_id
         }
 
+    @property
+    def channel(self) -> Optional[disnake.VoiceChannel]:
+        if self._channel is None:
+            self._channel = self.bot.get_channel(self.channel_id)
+
+        if self._channel.id != self.channel_id:
+            self._channel = self.bot.get_channel(self.channel_id)
+
+        return self._channel
+
+    @property
+    def owner(self) -> Optional[Member]:
+        if self._owner is None:
+            self._owner = self.channel.guild.get_member(self.owner_id)
+
+        if self._owner.id != self.owner_id:
+            self._owner = self.channel.guild.get_member(self.owner_id)
+
+        return self._owner
+
+    @property
+    def members(self) -> List[Union[User, Member]]:
+        members = self.channel.members.copy()
+
+        if self.owner in members:
+            members.remove(self.owner)
+
+        members.extend(self.member_queue)
+
+        return members
+
     async def apply_setting_and_permissions(self, guild_settings: Optional[GuildSettings] = None) -> None:
         """
         Apply the channel settings and permissions to the channel.
@@ -115,37 +146,6 @@ class VoiceChannel(MongoObject):
                             f"已套用新擁有者的頻道設定！"
             )
         )
-
-    @property
-    def channel(self) -> Optional[disnake.VoiceChannel]:
-        if self._channel is None:
-            self._channel = self.bot.get_channel(self.channel_id)
-
-        if self._channel.id != self.channel_id:
-            self._channel = self.bot.get_channel(self.channel_id)
-
-        return self._channel
-
-    @property
-    def owner(self) -> Optional[Member]:
-        if self._owner is None:
-            self._owner = self.channel.guild.get_member(self.owner_id)
-
-        if self._owner.id != self.owner_id:
-            self._owner = self.channel.guild.get_member(self.owner_id)
-
-        return self._owner
-
-    @property
-    def members(self) -> List[Union[User, Member]]:
-        members = self.channel.members.copy()
-
-        if self.owner in members:
-            members.remove(self.owner)
-
-        members.extend(self.member_queue)
-
-        return members
 
     async def notify(self, wait: bool = False, *args, **kwargs) -> Optional[Message]:
         """
