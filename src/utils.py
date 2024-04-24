@@ -55,7 +55,7 @@ def generate_permission_overwrites(
         guild_settings: "GuildSettings"
 ) -> Dict[Union[Role, Member], PermissionOverwrite]:
     """
-    Generate
-    :return:
+    Generate permission overwrites for a channel
+    :return: The permission overwrites for the channel
     """
     return {}
