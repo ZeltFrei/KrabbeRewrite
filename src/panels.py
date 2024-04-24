@@ -402,7 +402,7 @@ class VoiceSettings(View):
         super().__init__(timeout=None)
 
     @ui.button(
-        label="比特率",
+        label="語音位元率",
         custom_id="bitrate",
         style=ButtonStyle.secondary,
         emoji="📶"
@@ -432,6 +432,13 @@ class VoiceSettings(View):
 
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="位元率",
+                description=f"此語音頻道的位元率調整為：{int(bitrate) // 1000} kbps"
+            )
+        )
 
         await interaction.response.send_message(
             embeds=[SuccessEmbed(f"已設定比特率為 {bitrate}")] +
@@ -490,10 +497,17 @@ class VoiceSettings(View):
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
 
+        await channel.notify(
+            embed=InfoEmbed(
+                title="語音區域",
+                description=f"此語音頻道的伺服器區域調整為：{rtc_region[0]}"
+            )
+        )
+
         await interaction.response.edit_message(embed=SuccessEmbed(f"已設定語音區域為 {rtc_region[0]}"))
 
     @ui.button(
-        label="音效版開關",
+        label="音效板",
         custom_id="toggle_soundboard",
         style=ButtonStyle.secondary,
         emoji="🔊",
@@ -507,8 +521,15 @@ class VoiceSettings(View):
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
 
+        await channel.notify(
+            embed=InfoEmbed(
+                title="音效板",
+                description=f"此語音頻道的音效板調整為：{'啟用' if channel.channel_settings.soundboard_enabled else '關閉'}"
+            )
+        )
+
         await interaction.response.send_message(
-            embed=SuccessEmbed(f"音效版：{'開' if channel.channel_settings.soundboard_enabled else '關'}"),
+            embed=SuccessEmbed(f"音效板：{'開' if channel.channel_settings.soundboard_enabled else '關'}"),
             ephemeral=True
         )
 
@@ -526,6 +547,13 @@ class VoiceSettings(View):
 
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="媒體傳送",
+                description=f"此語音頻道的檔案上傳調整為：{'允許' if channel.channel_settings.media_allowed else '禁止'}"
+            )
+        )
 
         await interaction.response.send_message(
             embed=SuccessEmbed(f"媒體傳送許可：{'開' if channel.channel_settings.media_allowed else '關'}"),
@@ -569,6 +597,13 @@ class VoiceSettings(View):
 
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="慢速模式",
+                description=f"此語音頻道的文字頻道發言時速調整為：{slowmode_delay} 秒"
+            )
+        )
 
         await interaction.response.send_message(
             embed=SuccessEmbed(f"已設定慢速模式為 {slowmode_delay} 秒"), ephemeral=True
