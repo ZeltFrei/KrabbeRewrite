@@ -168,6 +168,17 @@ class ChannelSettings(View):
 
         new_owner = selected_users[0]
 
+        for active_voice_channel in interaction.bot.voice_channels.values():
+            if active_voice_channel.owner_id == new_owner.id:
+                return await interaction.response.edit_message(
+                    embed=ErrorEmbed(
+                        title="錯誤",
+                        description="這個成員已經擁有一個頻道了！"
+                                    "如果他剛來到這個頻道，"
+                                    "請等待他原有的頻道被刪除或是請他手動刪除頻道！"
+                    ), components=[]
+                )
+
         if new_owner.id == interaction.author.id:
             return await interaction.response.edit_message(
                 embed=ErrorEmbed("你不能將所有權移交給你自己"), components=[]
