@@ -97,7 +97,7 @@ class Krabbe(InteractionBot):
             self.voice_channels[voice_channel.channel_id] = voice_channel
             voice_channel.start_listeners()
 
-            await voice_channel.check_state()
+            await voice_channel.restore_state()
 
     async def __on_ready(self) -> None:
         """

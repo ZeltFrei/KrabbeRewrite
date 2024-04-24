@@ -5,7 +5,7 @@ from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, Sel
 from disnake.ui import View, Button
 
 from src.classes.voice_channel import VoiceChannel
-from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed
+from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
 from src.utils import max_bitrate
 
@@ -158,11 +158,44 @@ class MemberSettings(View):
         label="邀請成員",
         custom_id="invite_member",
         style=ButtonStyle.green,
-        emoji="👤",
-        disabled=True  # TODO: Implement invite functionality
+        emoji="👤"
     )
     async def invite_member(self, button: Button, interaction: MessageInteraction) -> None:
-        pass
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        if not channel.channel_settings.password:
+            invite = await channel.channel.create_invite(max_age=21600, unique=False)
+
+            return await interaction.response.send_message(
+                embed=InfoEmbed(
+                    title="這個頻道不是鎖定的！",
+                    description=f"如果你想要邀請成員，你可以直接複製這個一次性邀請連結 {invite.url}"
+                ),
+                ephemeral=True
+            )
+
+        interaction, selected_users = await user_select(interaction, "選擇要邀請的成員")
+
+        member = selected_users[0]
+
+        if member.id == interaction.author.id:
+            return await interaction.response.edit_message(
+                embed=ErrorEmbed("你不能邀請自己"), components=[]
+            )
+
+        invite = await channel.channel.create_invite(max_age=180, unique=True, max_uses=1)
+
+        _ = interaction.bot.loop.create_task(channel.add_member(member))
+
+        await interaction.response.edit_message(
+            embed=SuccessEmbed(
+                title=f"已邀請 {member.name}",
+                description=f"你可以使用這個連結來讓他們加入 {invite.url}\n"
+                            "如果他沒有在 180 秒內加入，你將需要再次邀請他！"
+            ),
+            components=[]
+        )
 
     @ui.button(
         label="移出成員",
@@ -177,6 +210,11 @@ class MemberSettings(View):
         interaction, selected_users = await user_select(interaction, "選擇要移出的成員")
 
         member = selected_users[0]
+
+        if member not in channel.channel.members + channel.member_queue:
+            return await interaction.response.edit_message(
+                embed=ErrorEmbed("找不到這個成員"), components=[]
+            )
 
         if member.id == interaction.author.id:
             return await interaction.response.edit_message(

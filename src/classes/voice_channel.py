@@ -2,10 +2,10 @@ import asyncio
 from asyncio import Event
 from enum import Enum
 from logging import getLogger
-from typing import Optional, TYPE_CHECKING, AsyncIterator, Union
+from typing import Optional, TYPE_CHECKING, AsyncIterator, Union, List, Dict
 
 import disnake
-from disnake import Member, NotFound, VoiceState, Message, Interaction, User, HTTPException
+from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.channel_settings import ChannelSettings
@@ -72,23 +72,25 @@ class VoiceChannel(MongoObject):
                 self.bot, self.database, guild_id=self.channel.guild.id
             )
 
-        members = self.channel.members.copy()
-
-        if self.owner in members:
-            members.remove(self.owner)
-            
-        members.extend(self.member_queue)
-
-        await self.channel.edit(
-            **generate_channel_metadata(
-                owner=self.owner,
-                members=members,
-                channel_settings=self.channel_settings,
-                guild_settings=guild_settings or await GuildSettings.find_one(
-                    self.bot, self.database, guild_id=self.channel.guild.id
-                )
-            )
+        new_metadata = generate_channel_metadata(
+            owner=self.owner,
+            members=self.members,
+            channel_settings=self.channel_settings,
+            guild_settings=guild_settings
         )
+
+        pending_edits: Dict[str, Union[str, int, PermissionOverwrite, bool]] = {}
+
+        for key in new_metadata:
+            if getattr(self.channel, key) != new_metadata[key]:
+                pending_edits[key] = new_metadata[key]
+
+        self.logger.info(f"Applying settings and permissions to {self.channel.name}: {pending_edits}")
+
+        if not pending_edits:
+            return
+
+        await self.channel.edit(**pending_edits)
 
     async def transfer_ownership(self, new_owner: Member) -> None:
         """
@@ -134,6 +136,17 @@ class VoiceChannel(MongoObject):
 
         return self._owner
 
+    @property
+    def members(self) -> List[Union[User, Member]]:
+        members = self.channel.members.copy()
+
+        if self.owner in members:
+            members.remove(self.owner)
+
+        members.extend(self.member_queue)
+
+        return members
+
     async def notify(self, wait: bool = False, *args, **kwargs) -> Optional[Message]:
         """
         Sends a message to the channel
@@ -149,10 +162,23 @@ class VoiceChannel(MongoObject):
             self.channel.send(*args, **kwargs)
         )
 
-    async def check_state(self) -> None:
+    async def restore_state(self) -> None:
         """
-        Manually checks and update the state of the channel. Useful when launching the bot.
+        Restores the state of the channel. Checks if the owner is in the channel or not.
+        This should only be called when bot is starting up.
         """
+        if self.channel_settings.password:
+            await self.notify(
+                embed=WarningEmbed(
+                    title="機器人剛重啟",
+                    description="所有等待中的邀請將被清除，\n"
+                                "如果你正在等待某個成員加入頻道，\n"
+                                "請將他重新邀請至這個頻道"
+                )
+            )
+
+        await self.apply_setting_and_permissions()
+
         if any(m.id == self.owner_id for m in self.channel.members):  # Owner is in the channel
             await self.update_state(VoiceChannelState.ACTIVE)
             return
@@ -293,6 +319,9 @@ class VoiceChannel(MongoObject):
         if voice_state.channel.id != self.channel_id:
             return
 
+        if member in self.member_queue:
+            self.member_queue.remove(member)
+
     async def on_member_leave(self, member: Member, voice_state: VoiceState) -> None:
         if voice_state.channel.id != self.channel_id:
             return
@@ -301,22 +330,21 @@ class VoiceChannel(MongoObject):
             await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)
             return
 
+        await self.apply_setting_and_permissions()
+
     async def add_member(self, member: Member) -> None:
         """
-        Add a member to the channel. Like give them the permission to join the channel.
+        Add a member to the channel. And wait for the member to join the channel.
         :param member: The member to add.
         """
         if member.id == self.owner_id:
             return
 
-        if self.channel_settings.password:
-            self.member_queue.append(member)
-            await self.apply_setting_and_permissions()
+        if not self.channel_settings.password:
+            raise ValueError("Channel is not password protected. Why are you adding a member?")
 
-        try:
-            await member.move_to(self.channel)
-        except HTTPException:
-            pass
+        self.member_queue.append(member)
+        await self.apply_setting_and_permissions()
 
     async def remove_member(self, member: Member) -> None:
         """
@@ -326,8 +354,12 @@ class VoiceChannel(MongoObject):
         if member.id == self.owner_id:
             raise ValueError("Owner cannot be removed from the channel.")
 
-        # noinspection PyTypeChecker
-        await member.move_to(None)
+        if member in self.member_queue:
+            self.member_queue.remove(member)
+
+        if member in self.channel.members:
+            # noinspection PyTypeChecker
+            await member.move_to(None)
 
         await self.apply_setting_and_permissions()
 

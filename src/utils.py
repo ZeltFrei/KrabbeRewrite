@@ -32,7 +32,7 @@ def generate_channel_metadata(
         members: List[Union[User, Member]],
         channel_settings: "ChannelSettings",
         guild_settings: "GuildSettings"
-) -> Dict[str, Union[str, int]]:
+) -> Dict[str, Union[str, int, PermissionOverwrite, bool]]:
     """
     Generate the metadata for a channel.
 
