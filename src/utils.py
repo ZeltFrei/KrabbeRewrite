@@ -34,6 +34,7 @@ def generate_channel_metadata(
     Generate the metadata for a channel
 
     :param channel_settings: The channel settings object
+    :param guild_settings: The guild settings object
     :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method
     """
     return {
