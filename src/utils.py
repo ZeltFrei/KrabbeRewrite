@@ -43,7 +43,7 @@ def generate_channel_metadata(
     :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method.
     """
     return {
-        "name": channel_settings.channel_name or f"{channel_settings.user}'s channel",
+        "name": channel_settings.channel_name or f"{channel_settings.user} 的語音頻道",
         "overwrites": generate_permission_overwrites(owner, members, channel_settings, guild_settings),
         "bitrate": max_bitrate(guild_settings.guild)
         if channel_settings.bitrate and channel_settings.bitrate >= max_bitrate(guild_settings.guild)
