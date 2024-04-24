@@ -87,7 +87,7 @@ class ChannelSettings(View):
         channel.channel_settings.channel_name = new_name
 
         await channel.channel_settings.upsert()
-        await channel.apply_settings()
+        await channel.apply_setting_and_permissions()
 
         await interaction.response.send_message(
             embed=SuccessEmbed(f"頻道已重新命名為 {new_name}" if new_name else "已重設頻道名稱"),
@@ -241,7 +241,7 @@ class MemberSettings(View):
         channel.channel_settings.user_limit = int(limit)
 
         await channel.channel_settings.upsert()
-        await channel.apply_settings()
+        await channel.apply_setting_and_permissions()
 
         await interaction.response.send_message(embed=SuccessEmbed(f"已設定人數限制為 {limit}"), ephemeral=True)
 
@@ -280,7 +280,7 @@ class VoiceSettings(View):
         channel.channel_settings.bitrate = int(bitrate)
 
         await channel.channel_settings.upsert()
-        await channel.apply_settings()
+        await channel.apply_setting_and_permissions()
 
         await interaction.response.send_message(
             embeds=[SuccessEmbed(f"已設定比特率為 {bitrate}")] +
@@ -303,7 +303,7 @@ class VoiceSettings(View):
         channel.channel_settings.nsfw = not channel.channel_settings.nsfw
 
         await channel.channel_settings.upsert()
-        await channel.apply_settings()
+        await channel.apply_setting_and_permissions()
 
         await interaction.response.send_message(
             embed=SuccessEmbed(f"NSFW：{'開' if channel.channel_settings.nsfw else '關'}"),
@@ -330,7 +330,7 @@ class VoiceSettings(View):
         channel.channel_settings.rtc_region = rtc_region[0]
 
         await channel.channel_settings.upsert()
-        await channel.apply_settings()
+        await channel.apply_setting_and_permissions()
 
         await interaction.response.edit_message(embed=SuccessEmbed(f"已設定語音區域為 {rtc_region[0]}"))
 
@@ -347,7 +347,7 @@ class VoiceSettings(View):
         channel.channel_settings.soundboard_enabled = not channel.channel_settings.soundboard_enabled
 
         await channel.channel_settings.upsert()
-        await channel.apply_settings()
+        await channel.apply_setting_and_permissions()
 
         await interaction.response.send_message(
             embed=SuccessEmbed(f"音效版：{'開' if channel.channel_settings.soundboard_enabled else '關'}"),
@@ -367,7 +367,7 @@ class VoiceSettings(View):
         channel.channel_settings.media_allowed = not channel.channel_settings.media_allowed
 
         await channel.channel_settings.upsert()
-        await channel.apply_settings()
+        await channel.apply_setting_and_permissions()
 
         await interaction.response.send_message(
             embed=SuccessEmbed(f"媒體傳送許可：{'開' if channel.channel_settings.media_allowed else '關'}"),
@@ -410,7 +410,7 @@ class VoiceSettings(View):
         channel.channel_settings.slowmode_delay = int(slowmode_delay)
 
         await channel.channel_settings.upsert()
-        await channel.apply_settings()
+        await channel.apply_setting_and_permissions()
 
         await interaction.response.send_message(
             embed=SuccessEmbed(f"已設定慢速模式為 {slowmode_delay} 秒"), ephemeral=True

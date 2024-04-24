@@ -2,10 +2,10 @@ import asyncio
 from asyncio import Event
 from enum import Enum
 from logging import getLogger
-from typing import Optional, TYPE_CHECKING, AsyncIterator
+from typing import Optional, TYPE_CHECKING, AsyncIterator, Union
 
 import disnake
-from disnake import Member, NotFound, VoiceState, Message, Interaction
+from disnake import Member, NotFound, VoiceState, Message, Interaction, User, HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.channel_settings import ChannelSettings
@@ -51,6 +51,8 @@ class VoiceChannel(MongoObject):
 
         self.default_timeout: int = 5 if self.bot.debug else 60
 
+        self.member_queue: list[Union[User, Member]] = []
+
     def unique_identifier(self) -> dict:
         return {"channel_id": self.channel_id}
 
@@ -60,18 +62,24 @@ class VoiceChannel(MongoObject):
             "owner_id": self.owner_id
         }
 
-    async def apply_settings(self, guild_settings: Optional[GuildSettings] = None) -> None:
+    async def apply_setting_and_permissions(self, guild_settings: Optional[GuildSettings] = None) -> None:
         """
-        Applies the settings to the channel.
+        Apply the channel settings and permissions to the channel.
         :param guild_settings: The guild settings object. If not specified, it will be fetched from the database.
         """
-        guild_settings = guild_settings or await GuildSettings.find_one(
-            self.bot, self.database, guild_id=self.channel.guild.id
-        )
+        if not guild_settings:
+            guild_settings = await GuildSettings.find_one(
+                self.bot, self.database, guild_id=self.channel.guild.id
+            )
+
+        members = self.channel.members.copy()
+        members.remove(self.owner)
+        members.extend(self.member_queue)
 
         await self.channel.edit(
             **generate_channel_metadata(
                 owner=self.owner,
+                members=members,
                 channel_settings=self.channel_settings,
                 guild_settings=guild_settings or await GuildSettings.find_one(
                     self.bot, self.database, guild_id=self.channel.guild.id
@@ -93,7 +101,7 @@ class VoiceChannel(MongoObject):
         await self.upsert()
 
         self.channel_settings = await ChannelSettings.get_settings(self.bot, self.database, user_id=new_owner.id)
-        await self.apply_settings()
+        await self.apply_setting_and_permissions()
 
         await self.notify(
             embed=SuccessEmbed(
@@ -297,26 +305,35 @@ class VoiceChannel(MongoObject):
         """
         if member.id == self.owner_id:
             return
-        # TODO: Deal with the channel lock
+
+        if self.channel_settings.password:
+            self.member_queue.append(member)
+            await self.apply_setting_and_permissions()
+
+        try:
+            await member.move_to(self.channel)
+        except HTTPException:
+            pass
 
     async def remove_member(self, member: Member) -> None:
         """
         Remove a member from the channel. Kick them from the channel and remove their permissions.
         :param member: The member to remove.
         """
-        # TODO: Deal with the channel lock
         if member.id == self.owner_id:
             raise ValueError("Owner cannot be removed from the channel.")
 
         # noinspection PyTypeChecker
         await member.move_to(None)
 
+        await self.apply_setting_and_permissions()
+
     async def setup(self) -> None:
         """
         Apply the settings, start the listeners, then wait for owner to join and set state to ACTIVE.
         Note that if owner didn't join in the timeout period, the channel will be removed.
         """
-        await self.apply_settings()
+        await self.apply_setting_and_permissions()
 
         if not await self.wait_for_user(self.owner_id, timeout=self.default_timeout):
             await self.remove()
@@ -388,7 +405,12 @@ class VoiceChannel(MongoObject):
         channel_settings = await ChannelSettings.get_settings(bot, database, owner.id)
 
         created_channel = await guild_settings.category_channel.create_voice_channel(
-            **generate_channel_metadata(owner, channel_settings, guild_settings)
+            **generate_channel_metadata(
+                owner=owner,
+                members=[],
+                channel_settings=channel_settings,
+                guild_settings=guild_settings
+            )
         )
 
         voice_channel = cls(
@@ -401,7 +423,7 @@ class VoiceChannel(MongoObject):
 
         await voice_channel.upsert()
 
-        await voice_channel.apply_settings()
+        await voice_channel.apply_setting_and_permissions()
 
         bot.voice_channels[voice_channel.channel_id] = voice_channel
 

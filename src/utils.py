@@ -1,6 +1,6 @@
-from typing import Union, Dict, TYPE_CHECKING
+from typing import Union, Dict, TYPE_CHECKING, List
 
-from disnake import PermissionOverwrite, Member, Role, Guild
+from disnake import PermissionOverwrite, Member, Role, Guild, User
 
 if TYPE_CHECKING:
     from src.classes.guild_settings import GuildSettings
@@ -29,19 +29,22 @@ def max_bitrate(guild: Guild) -> int:
 
 def generate_channel_metadata(
         owner: Union[Role, Member],
+        members: List[Union[User, Member]],
         channel_settings: "ChannelSettings",
         guild_settings: "GuildSettings"
 ) -> Dict[str, Union[str, int]]:
     """
     Generate the metadata for a channel.
 
+    :param owner: The owner of the channel.
+    :param members: The members of the channel.
     :param channel_settings: The channel settings object.
     :param guild_settings: The guild settings object.
     :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method.
     """
     return {
         "name": channel_settings.channel_name or f"{channel_settings.user}'s channel",
-        "overwrites": generate_permission_overwrites(owner, channel_settings, guild_settings),
+        "overwrites": generate_permission_overwrites(owner, members, channel_settings, guild_settings),
         "bitrate": max_bitrate(guild_settings.guild)
         if channel_settings.bitrate and channel_settings.bitrate >= max_bitrate(guild_settings.guild)
         else channel_settings.bitrate or 64000,
@@ -54,6 +57,7 @@ def generate_channel_metadata(
 
 def generate_permission_overwrites(
         owner: Union[Role, Member],
+        members: List[User, Member],
         channel_settings: "ChannelSettings",
         guild_settings: "GuildSettings"
 ) -> Dict[Union[Role, Member], PermissionOverwrite]:
@@ -61,12 +65,26 @@ def generate_permission_overwrites(
     Generate permission overwrites for a channel.
 
     :param owner: The owner of the channel.
+    :param members: The members of the channel.
     :param channel_settings: The channel settings.
     :param guild_settings: The guild settings.
     :return: The permission overwrites for the channel.
     """
     if channel_settings.password:
-        return {}  # TODO: Implement permission overwrites with channel lock
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = {
+            owner: PermissionOverwrite(
+                connect=True,
+                manage_channels=True
+            ),
+            guild_settings.base_role: PermissionOverwrite(
+                connect=False,
+                use_soundboard=channel_settings.soundboard_enabled,
+                attach_files=channel_settings.media_allowed,
+                embed_links=channel_settings.media_allowed
+            )
+        }
+
+        return overwrites
     else:
         overwrites: Dict[Union[Role, Member], PermissionOverwrite] = {
             owner: PermissionOverwrite(
