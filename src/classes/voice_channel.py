@@ -12,6 +12,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, WarningEmbed
+from src.errors import FailedToResolve
 from src.utils import generate_channel_metadata
 
 if TYPE_CHECKING:
@@ -63,24 +64,42 @@ class VoiceChannel(MongoObject):
         }
 
     @property
-    def channel(self) -> Optional[disnake.VoiceChannel]:
+    def channel(self) -> disnake.VoiceChannel:
+        """
+        Get the voice channel object.
+
+        :raise FailedToResolve: If the channel is not found.
+        :return: The voice channel object.
+        """
         if self._channel is None:
             self._channel = self.bot.get_channel(self.channel_id)
 
         elif self._channel.id != self.channel_id:
             self._channel = self.bot.get_channel(self.channel_id)
 
-        return self._channel
+        if self._channel:
+            return self._channel
+
+        raise FailedToResolve(f"Voice channel {self.channel_id} not found.")
 
     @property
-    def owner(self) -> Optional[Member]:
+    def owner(self) -> Member:
+        """
+        Get the owner of the channel.
+
+        :raise FailedToResolve: If the owner is not found.
+        :return: The owner of the channel.
+        """
         if self._owner is None:
             self._owner = self.channel.guild.get_member(self.owner_id)
 
         elif self._owner.id != self.owner_id:
             self._owner = self.channel.guild.get_member(self.owner_id)
 
-        return self._owner
+        if self._owner:
+            return self._owner
+
+        raise FailedToResolve(f"Owner {self.owner_id} not found.")
 
     @property
     def members(self) -> List[Union[User, Member]]:
@@ -409,7 +428,7 @@ class VoiceChannel(MongoObject):
 
         try:
             await self.channel.delete()
-        except (NotFound, ValueError):  # Forgive the channel if it's already deleted or not resolved
+        except (NotFound, ValueError, FailedToResolve):  # Forgive the channel if it's already deleted or not resolved
             pass
 
         await self.delete()

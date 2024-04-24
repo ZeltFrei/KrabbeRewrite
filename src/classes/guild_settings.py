@@ -4,6 +4,7 @@ from disnake import Guild, CategoryChannel, VoiceChannel, Role
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.mongo_object import MongoObject
+from src.errors import FailedToResolve
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -62,17 +63,23 @@ class GuildSettings(MongoObject):
         elif self._category_channel.id != self.category_channel_id:
             self._category_channel = self.guild.get_channel(self.category_channel_id)
 
-        return self._category_channel
+        if self._category_channel:
+            return self._category_channel
+
+        raise FailedToResolve(f"Failed to resolve category channel {self.category_channel_id}")
 
     @property
-    def root_channel(self) -> Optional[VoiceChannel]:
+    def root_channel(self) -> VoiceChannel:
         if self._root_channel is None:
             self._root_channel = self.guild.get_channel(self.root_channel_id)
 
         elif self._root_channel.id != self.root_channel_id:
             self._root_channel = self.guild.get_channel(self.root_channel_id)
 
-        return self._root_channel
+        if self._root_channel:
+            return self._root_channel
+
+        raise FailedToResolve(f"Failed to resolve root channel {self.root_channel_id}")
 
     @property
     def base_role(self) -> Optional[Role]:
@@ -82,4 +89,7 @@ class GuildSettings(MongoObject):
         elif self._base_role.id != self.base_role_id:
             self._base_role = self.guild.get_role(self.base_role_id)
 
-        return self._base_role
+        if self._base_role:
+            return self._base_role
+
+        raise FailedToResolve(f"Failed to resolve base role {self.base_role_id}")

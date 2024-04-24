@@ -4,6 +4,7 @@ import disnake
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.mongo_object import MongoObject
+from src.errors import FailedToResolve
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -79,14 +80,23 @@ class ChannelSettings(MongoObject):
         self.slowmode_delay = None
 
     @property
-    def user(self) -> Optional[disnake.User]:
+    def user(self) -> disnake.User:
+        """
+        Get the user object associated with the channel settings object.
+
+        :raises FailedToResolve: If the user object cannot be resolved.
+        :return: The user object.
+        """
         if self._user is None:
             self._user = self.bot.get_user(self.user_id)
 
         elif self._user.id != self.user_id:
             self._user = self.bot.get_user(self.user_id)
 
-        return self._user
+        if self._user:
+            return self._user
+
+        raise FailedToResolve(f"Failed to resolve user {self.user_id}")
 
     def is_resolved(self) -> bool:
         """
