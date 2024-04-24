@@ -1,0 +1,6 @@
+services:
+  krabbe-rewrite:
+    build:
+      context: .
+    env_file: .env
+    network_mode: host
