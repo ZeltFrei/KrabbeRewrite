@@ -2,8 +2,9 @@ import uuid
 from typing import Tuple, Optional, List, Union
 
 from disnake import Interaction, MessageInteraction, ButtonStyle, Event, SelectOption, Member, User, TextInputStyle, \
-    ModalInteraction
-from disnake.ui import Button, StringSelect, UserSelect, Modal, TextInput
+    ModalInteraction, ChannelType
+from disnake.abc import GuildChannel
+from disnake.ui import Button, StringSelect, UserSelect, Modal, TextInput, ChannelSelect
 
 from src.embeds import WarningEmbed
 
@@ -120,6 +121,48 @@ async def user_select(
             placeholder=placeholder,
             min_values=min_values,
             max_values=max_values
+        )],
+        ephemeral=True
+    )
+
+    user_select_interaction: MessageInteraction = await interaction.bot.wait_for(
+        Event.message_interaction,
+        check=lambda i: i.data.custom_id == custom_id,
+        timeout=timeout
+    )
+
+    return user_select_interaction, user_select_interaction.resolved_values
+
+
+async def channel_select(
+        interaction: Interaction,
+        placeholder: str,
+        min_values: int = 1,
+        max_values: int = 1,
+        channel_types: List[ChannelType] = ChannelType.text,
+        timeout=60
+) -> Tuple[MessageInteraction, List[Union[GuildChannel]]]:
+    """
+    Prompt the user to select a channel.
+
+    :param interaction: The interaction object.
+    :param placeholder: The placeholder of the channel select.
+    :param min_values: The minimum number of channels that can be selected.
+    :param max_values: The maximum number of channels that can be selected.
+    :param channel_types: The types of channels that can be selected.
+    :param timeout: The timeout of the channel select.
+    :raise asyncio.TimeoutError: If the channel select interaction times out.
+    :return: The interaction object and the selected channel.
+    """
+    custom_id = uuid.uuid1().hex
+
+    await interaction.response.send_message(
+        components=[ChannelSelect(
+            custom_id=custom_id,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            channel_types=channel_types
         )],
         ephemeral=True
     )
