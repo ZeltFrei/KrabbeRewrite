@@ -20,8 +20,6 @@ class Channels(Cog):
         if guild_settings is None:
             return
 
-        await guild_settings.resolve()
-
         voice_channel = await VoiceChannel.new(
             bot=self.bot,
             database=self.bot.database,

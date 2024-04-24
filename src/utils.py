@@ -39,9 +39,6 @@ def generate_channel_metadata(
     if not channel_settings.is_resolved():
         raise ValueError("Channel settings must be resolved before generating metadata")
 
-    if not guild_settings.is_resolved():
-        raise ValueError("Guild settings must be resolved before generating metadata")
-
     return {
         "name": channel_settings.channel_name or f"{channel_settings.user}'s Channel",
         "overwrites": generate_permission_overwrites(channel_settings, guild_settings),

@@ -43,43 +43,31 @@ class GuildSettings(MongoObject):
         }
 
     @property
-    def guild(self) -> Guild:
+    def guild(self) -> Optional[Guild]:
         if self._guild is None:
-            raise ValueError("Guild is not resolved yet. Consider calling the resolve method.")
+            self._guild = self.bot.get_guild(self.guild_id)
+
+        if self._guild.id != self.guild_id:
+            self._guild = self.bot.get_guild(self.guild_id)
+
         return self._guild
 
     @property
-    def category_channel(self) -> CategoryChannel:
+    def category_channel(self) -> Optional[CategoryChannel]:
         if self._category_channel is None:
-            raise ValueError("Category channel is not resolved yet. Consider calling the resolve method.")
+            self._category_channel = self.guild.get_channel(self.category_channel_id)
+
+        if self._category_channel.id != self.category_channel_id:
+            self._category_channel = self.guild.get_channel(self.category_channel_id)
+
         return self._category_channel
 
     @property
-    def root_channel(self) -> VoiceChannel:
+    def root_channel(self) -> Optional[VoiceChannel]:
         if self._root_channel is None:
-            raise ValueError("Root channel is not resolved yet. Consider calling the resolve method.")
+            self._root_channel = self.guild.get_channel(self.root_channel_id)
+
+        if self._root_channel.id != self.root_channel_id:
+            self._root_channel = self.guild.get_channel(self.root_channel_id)
+
         return self._root_channel
-
-    def is_resolved(self) -> bool:
-        """
-        Returns whether the guild, category channel, and root channel objects are resolved.
-        :return: Boolean indicating whether the objects are resolved.
-        """
-        return self.resolved
-
-    async def resolve(self) -> "GuildSettings":
-        """
-        Resolves the guild, category channel, and root channel objects.
-
-        :return: The resolved GuildSettings object.
-        """
-        self._guild = self.bot.get_guild(self.guild_id)
-        self._category_channel = self._guild.get_channel(self.category_channel_id)
-        self._root_channel = self._guild.get_channel(self.root_channel_id)
-
-        if any([not self._guild, not self._category_channel, not self._root_channel]):
-            raise ValueError("One or more objects could not be resolved.")
-
-        self.resolved = True
-
-        return self

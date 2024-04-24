@@ -69,9 +69,6 @@ class VoiceChannel(MongoObject):
             self.bot, self.database, guild_id=self.channel.guild.id
         )
 
-        if not guild_settings.is_resolved():
-            await guild_settings.resolve()
-
         await self.channel.edit(
             **generate_channel_metadata(
                 channel_settings=self.channel_settings,
