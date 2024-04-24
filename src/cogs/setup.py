@@ -34,6 +34,14 @@ class Setup(Cog):
 
         await guild_settings.upsert()
 
+        panel_channel = await category.create_text_channel("控制面板")
+
+        for panel in panels.values():
+            await panel_channel.send(
+                embed=panel.embed,
+                view=panel.view
+            )
+
         await interaction.edit_original_response(embed=SuccessEmbed("設定完成", "成功設定動態語音頻道！"))
 
     @has_permissions(administrator=True)
