@@ -36,6 +36,7 @@ class Setup(Cog):
 
         await interaction.edit_original_response(embed=SuccessEmbed("設定完成", "成功設定動態語音頻道！"))
 
+    @has_permissions(administrator=True)
     @slash_command(
         name="panel",
         description="傳送指定的控制面板",
