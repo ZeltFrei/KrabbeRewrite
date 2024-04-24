@@ -83,7 +83,7 @@ class ChannelSettings(MongoObject):
         if self._user is None:
             self._user = self.bot.get_user(self.user_id)
 
-        if self._user.id != self.user_id:
+        elif self._user.id != self.user_id:
             self._user = self.bot.get_user(self.user_id)
 
         return self._user

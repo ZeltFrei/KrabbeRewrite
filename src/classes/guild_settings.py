@@ -49,7 +49,7 @@ class GuildSettings(MongoObject):
         if self._guild is None:
             self._guild = self.bot.get_guild(self.guild_id)
 
-        if self._guild.id != self.guild_id:
+        elif self._guild.id != self.guild_id:
             self._guild = self.bot.get_guild(self.guild_id)
 
         return self._guild
@@ -59,7 +59,7 @@ class GuildSettings(MongoObject):
         if self._category_channel is None:
             self._category_channel = self.guild.get_channel(self.category_channel_id)
 
-        if self._category_channel.id != self.category_channel_id:
+        elif self._category_channel.id != self.category_channel_id:
             self._category_channel = self.guild.get_channel(self.category_channel_id)
 
         return self._category_channel
@@ -69,7 +69,7 @@ class GuildSettings(MongoObject):
         if self._root_channel is None:
             self._root_channel = self.guild.get_channel(self.root_channel_id)
 
-        if self._root_channel.id != self.root_channel_id:
+        elif self._root_channel.id != self.root_channel_id:
             self._root_channel = self.guild.get_channel(self.root_channel_id)
 
         return self._root_channel
@@ -79,7 +79,7 @@ class GuildSettings(MongoObject):
         if self._base_role is None:
             self._base_role = self.guild.get_role(self.base_role_id)
 
-        if self._base_role.id != self.base_role_id:
+        elif self._base_role.id != self.base_role_id:
             self._base_role = self.guild.get_role(self.base_role_id)
 
         return self._base_role

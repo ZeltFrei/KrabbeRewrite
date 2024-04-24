@@ -67,7 +67,7 @@ class VoiceChannel(MongoObject):
         if self._channel is None:
             self._channel = self.bot.get_channel(self.channel_id)
 
-        if self._channel.id != self.channel_id:
+        elif self._channel.id != self.channel_id:
             self._channel = self.bot.get_channel(self.channel_id)
 
         return self._channel
@@ -77,7 +77,7 @@ class VoiceChannel(MongoObject):
         if self._owner is None:
             self._owner = self.channel.guild.get_member(self.owner_id)
 
-        if self._owner.id != self.owner_id:
+        elif self._owner.id != self.owner_id:
             self._owner = self.channel.guild.get_member(self.owner_id)
 
         return self._owner
