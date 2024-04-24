@@ -246,7 +246,7 @@ class MemberSettings(View):
                 ephemeral=True
             )
 
-        interaction, selected_users = await channel_select(interaction, "選擇要邀請的成員")
+        interaction, selected_users = await user_select(interaction, "選擇要邀請的成員")
 
         member = selected_users[0]
 
