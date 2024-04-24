@@ -306,7 +306,7 @@ class VoiceSettings(View):
         await channel.apply_settings()
 
         await interaction.response.send_message(
-            embed=SuccessEmbed(f"已切換 NSFW 狀態至 {'開' if channel.channel_settings.nsfw else '關'}"),
+            embed=SuccessEmbed(f"NSFW：{'開' if channel.channel_settings.nsfw else '關'}"),
             ephemeral=True
         )
 
@@ -332,37 +332,47 @@ class VoiceSettings(View):
         await channel.channel_settings.upsert()
         await channel.apply_settings()
 
-        await interaction.response.send_message(embed=SuccessEmbed(f"已設定語音區域為 {rtc_region[0]}"), ephemeral=True)
+        await interaction.response.edit_message(embed=SuccessEmbed(f"已設定語音區域為 {rtc_region[0]}"))
 
     @ui.button(
         label="音效版開關",
         custom_id="toggle_soundboard",
         style=ButtonStyle.secondary,
         emoji="🔊",
-        disabled=True  # TODO: Implement soundboard toggle functionality
     )
-    async def toggle_soundboard(self, button: Button, interaction: MessageInteraction) -> None:
-        pass
+    async def toggle_soundboard(self, _button: Button, interaction: MessageInteraction) -> None:
+        if not (channel := await ensure_channel(interaction)):
+            return
 
-    @ui.button(
-        label="開關文字頻道",
-        custom_id="toggle_text_channel",
-        style=ButtonStyle.secondary,
-        emoji="📝",
-        disabled=True  # TODO: Implement text channel toggle functionality
-    )
-    async def toggle_text_channel(self, button: Button, interaction: MessageInteraction) -> None:
-        pass
+        channel.channel_settings.soundboard_enabled = not channel.channel_settings.soundboard_enabled
+
+        await channel.channel_settings.upsert()
+        await channel.apply_settings()
+
+        await interaction.response.send_message(
+            embed=SuccessEmbed(f"音效版：{'開' if channel.channel_settings.soundboard_enabled else '關'}"),
+            ephemeral=True
+        )
 
     @ui.button(
         label="媒體傳送許可",
         custom_id="media_permission",
         style=ButtonStyle.secondary,
         emoji="🎥",
-        disabled=True  # TODO: Implement media permission functionality
     )
-    async def media_permission(self, button: Button, interaction: MessageInteraction) -> None:
-        pass
+    async def media_permission(self, _button: Button, interaction: MessageInteraction) -> None:
+        if not (channel := await ensure_channel(interaction)):
+            return
+
+        channel.channel_settings.media_allowed = not channel.channel_settings.media_allowed
+
+        await channel.channel_settings.upsert()
+        await channel.apply_settings()
+
+        await interaction.response.send_message(
+            embed=SuccessEmbed(f"媒體傳送許可：{'開' if channel.channel_settings.media_allowed else '關'}"),
+            ephemeral=True
+        )
 
     @ui.button(
         label="慢速模式",
@@ -370,7 +380,7 @@ class VoiceSettings(View):
         style=ButtonStyle.secondary,
         emoji="⏳"
     )
-    async def slowmode(self, button: Button, interaction: MessageInteraction) -> None:
+    async def slowmode(self, _button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_channel(interaction)):
             return
 
