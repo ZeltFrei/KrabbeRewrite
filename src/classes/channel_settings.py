@@ -45,7 +45,6 @@ class ChannelSettings(MongoObject):
         self.rtc_region: Optional[str] = rtc_region
         self.nsfw: Optional[bool] = nsfw
         self.soundboard_enabled: Optional[bool] = soundboard_enabled
-        self.text_channel_enabled: Optional[bool] = text_channel_enabled
         self.media_allowed: Optional[bool] = media_allowed
         self.slowmode_delay: Optional[int] = slowmode_delay
 
@@ -62,7 +61,6 @@ class ChannelSettings(MongoObject):
             "rtc_region": self.rtc_region,
             "nsfw": self.nsfw,
             "soundboard_enabled": self.soundboard_enabled,
-            "text_channel_enabled": self.text_channel_enabled,
             "media_allowed": self.media_allowed,
             "slowmode_delay": self.slowmode_delay
         }
@@ -78,7 +76,6 @@ class ChannelSettings(MongoObject):
         self.bitrate = None
         self.rtc_region = None
         self.soundboard_enabled = None
-        self.text_channel_enabled = None
         self.media_allowed = None
         self.slowmode_delay = None
 
@@ -112,7 +109,5 @@ class ChannelSettings(MongoObject):
         """
         if settings := await cls.find_one(bot, database, user_id=user_id):
             return settings
-
-        settings = cls(bot, database, user_id=user_id)
 
         return cls(bot, database, user_id=user_id)
