@@ -6,7 +6,6 @@
 
 ### TODOs
 
-- 容器化
 - 設計頻道主控面板
 - 個別調整伺服器設定
 - 子機器音樂功能 [Kava](https://github.com/ZeltFrei/Kava)
