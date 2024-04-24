@@ -199,8 +199,7 @@ class MemberSettings(View):
         label="頻道鎖",
         custom_id="lock_channel",
         style=ButtonStyle.secondary,
-        emoji="🔒",
-        disabled=True  # TODO: Implement channel lock functionality
+        emoji="🔒"
     )
     async def lock_channel(self, button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
@@ -212,6 +211,7 @@ class MemberSettings(View):
             field_name="密碼，留空以取消鎖定",
             placeholder="12345678",
             value=channel.channel_settings.password or None,
+            required=False
         )
 
         if not new_password:
@@ -219,7 +219,7 @@ class MemberSettings(View):
             await channel.channel_settings.upsert()
             await channel.apply_setting_and_permissions()
 
-            return await interaction.response.send_message(embed=SuccessEmbed("已取消頻道鎖"))
+            return await interaction.response.send_message(embed=SuccessEmbed("已取消頻道鎖"), ephemeral=True)
 
         channel.channel_settings.password = new_password
         await channel.channel_settings.upsert()

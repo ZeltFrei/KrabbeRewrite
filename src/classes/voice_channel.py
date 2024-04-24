@@ -73,7 +73,10 @@ class VoiceChannel(MongoObject):
             )
 
         members = self.channel.members.copy()
-        members.remove(self.owner)
+
+        if self.owner in members:
+            members.remove(self.owner)
+            
         members.extend(self.member_queue)
 
         await self.channel.edit(
