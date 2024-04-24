@@ -1,5 +1,5 @@
 import asyncio
-from asyncio import Event
+from asyncio import Event, Future
 from enum import Enum
 from logging import getLogger
 from typing import Optional, TYPE_CHECKING, AsyncIterator, Union, List, Dict
@@ -112,10 +112,12 @@ class VoiceChannel(MongoObject):
 
         return members
 
-    async def apply_setting_and_permissions(self, guild_settings: Optional[GuildSettings] = None) -> None:
+    async def apply_setting_and_permissions(self, guild_settings: Optional[GuildSettings] = None) -> Future:
         """
-        Apply the channel settings and permissions to the channel.
+        Schedule the settings and permissions to be applied to the channel.
+
         :param guild_settings: The guild settings object. If not specified, it will be fetched from the database.
+        :return An awaitable Future object.
         """
         if not guild_settings:
             guild_settings = await GuildSettings.find_one(
@@ -138,9 +140,11 @@ class VoiceChannel(MongoObject):
         self.logger.info(f"Applying settings and permissions to {self.channel.name}: {pending_edits}")
 
         if not pending_edits:
-            return
+            future = Future()
+            future.set_result(None)
+            return future
 
-        await self.channel.edit(**pending_edits)
+        return self.bot.loop.create_task(self.channel.edit(**pending_edits))
 
     async def transfer_ownership(self, new_owner: Member) -> None:
         """
