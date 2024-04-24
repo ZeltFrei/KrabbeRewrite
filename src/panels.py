@@ -260,8 +260,8 @@ class MemberSettings(View):
 
             return await interaction.response.send_message(
                 embed=InfoEmbed(
-                    title="這個頻道不是鎖定的！",
-                    description=f"如果你想要邀請成員，你可以直接複製這個一次性邀請連結 {invite.url}"
+                    title="這個語音頻道當前未設定密碼，屬於公開頻道",
+                    description=f"您可以複製此語音邀請連結來邀請完成驗證之成員。\n{invite.url}"
                 ),
                 ephemeral=True
             )
