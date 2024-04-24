@@ -81,6 +81,7 @@ class MongoObject(ABC, Generic[T]):
         if not document:
             return None
 
+        # noinspection PyUnresolvedReferences
         del document["_id"]
 
         return cls(bot=bot, database=database, **document)

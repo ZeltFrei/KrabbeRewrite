@@ -308,6 +308,7 @@ class VoiceChannel(MongoObject):
         if member.id == self.owner_id:
             raise ValueError("Owner cannot be removed from the channel.")
 
+        # noinspection PyTypeChecker
         await member.move_to(None)
 
     async def setup(self) -> None:
@@ -420,6 +421,7 @@ class VoiceChannel(MongoObject):
         if not author_voice_state:
             return None
 
+        # noinspection PyUnresolvedReferences
         return interaction.bot.voice_channels.get(author_voice_state.channel.id)
 
     @classmethod
@@ -434,6 +436,7 @@ class VoiceChannel(MongoObject):
         if not document:
             return None
 
+        # noinspection PyUnresolvedReferences
         del document["_id"]
 
         channel_settings = await ChannelSettings.get_settings(bot, database, user_id=document["owner_id"])
