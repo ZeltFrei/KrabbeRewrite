@@ -83,9 +83,13 @@ class ChannelSettings(MongoObject):
         self.slowmode_delay = None
 
     @property
-    def user(self) -> disnake.User:
+    def user(self) -> Optional[disnake.User]:
         if self._user is None:
-            raise ValueError("User is not resolved yet. Consider calling the resolve method.")
+            self._user = self.bot.get_user(self.user_id)
+
+        if self._user.id != self.user_id:
+            self._user = self.bot.get_user(self.user_id)
+
         return self._user
 
     def is_resolved(self) -> bool:
@@ -95,18 +99,6 @@ class ChannelSettings(MongoObject):
         :return: True if the channel settings object is resolved, False otherwise.
         """
         return self.resolved
-
-    async def resolve(self) -> "ChannelSettings":
-        """
-        Resolves the user object.
-
-        :return: The resolved ChannelSettings object.
-        """
-        self._user = await self.bot.getch_user(self.user_id)
-
-        self.resolved = True
-
-        return self
 
     @classmethod
     async def get_settings(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, user_id: int) -> "ChannelSettings":
@@ -119,10 +111,8 @@ class ChannelSettings(MongoObject):
         :return: The ChannelSettings object.
         """
         if settings := await cls.find_one(bot, database, user_id=user_id):
-            await settings.resolve()
             return settings
 
         settings = cls(bot, database, user_id=user_id)
 
-        await settings.resolve()
         return cls(bot, database, user_id=user_id)

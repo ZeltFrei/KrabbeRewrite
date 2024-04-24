@@ -36,9 +36,6 @@ def generate_channel_metadata(
     :param channel_settings: The channel settings object
     :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method
     """
-    if not channel_settings.is_resolved():
-        raise ValueError("Channel settings must be resolved before generating metadata")
-
     return {
         "name": channel_settings.channel_name or f"{channel_settings.user}'s Channel",
         "overwrites": generate_permission_overwrites(channel_settings, guild_settings),
