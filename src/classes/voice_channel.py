@@ -190,15 +190,15 @@ class VoiceChannel(MongoObject):
         Restores the state of the channel. Checks if the owner is in the channel or not.
         This should only be called when bot is starting up.
         """
-        if self.channel_settings.password:
-            await self.notify(
-                embed=WarningEmbed(
-                    title="機器人剛重啟",
-                    description="所有等待中的邀請將被清除，\n"
-                                "如果你正在等待某個成員加入頻道，\n"
-                                "請將他重新邀請至這個頻道"
-                )
+        await self.notify(
+            embed=WarningEmbed(
+                title="機器人剛重啟",
+                description="這可能造成一些奇怪的問題，" +
+                            "\n所有等待中的邀請將被清除，\n"
+                            "如果你正在等待某個成員加入頻道，\n"
+                            "請將他重新邀請至這個頻道" if self.channel_settings.password else ""
             )
+        )
 
         await self.apply_setting_and_permissions()
 
