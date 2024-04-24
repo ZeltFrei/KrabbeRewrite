@@ -1,5 +1,6 @@
-from disnake import Option, OptionType, ApplicationCommandInteraction
+from disnake import Option, OptionType, ApplicationCommandInteraction, ButtonStyle
 from disnake.ext.commands import Cog, slash_command, has_permissions
+from disnake.ui import Button
 
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
@@ -50,14 +51,25 @@ class Setup(Cog):
         ]
     )
     async def panel(self, interaction: ApplicationCommandInteraction, panel: str) -> None:
+        await interaction.response.defer(ephemeral=True)
+
         panel_to_send = panels.get(panel)
 
-        await interaction.channel.send(
+        message = await interaction.channel.send(
             embed=panel_to_send.embed,
             view=panel_to_send.view
         )
 
-        await interaction.response.send_message("✅ 完成", ephemeral=True)
+        await interaction.edit_original_response(
+            embed=SuccessEmbed("控制面板已傳送"),
+            components=[
+                Button(
+                    label="面板訊息",
+                    style=ButtonStyle.url,
+                    url=message.jump_url
+                )
+            ]
+        )
 
 
 def setup(bot: Krabbe) -> None:
