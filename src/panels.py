@@ -77,7 +77,7 @@ class ChannelSettings(View):
             interaction,
             title="✒️ 重新命名頻道",
             field_name="新名稱",
-            placeholder="輸入新的頻道名稱",
+            placeholder=f"{interaction.author}'s channel",
             value=channel.channel_settings.channel_name or channel.channel.name,
             max_length=100,
             min_length=1,
