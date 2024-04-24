@@ -24,7 +24,6 @@ class ChannelSettings(MongoObject):
             rtc_region: Optional[str] = None,
             nsfw: Optional[bool] = None,
             soundboard_enabled: Optional[bool] = None,
-            text_channel_enabled: Optional[bool] = None,
             media_allowed: Optional[bool] = None,
             slowmode_delay: Optional[int] = None
     ):
@@ -101,7 +100,6 @@ class ChannelSettings(MongoObject):
     async def get_settings(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, user_id: int) -> "ChannelSettings":
         """
         Gets the settings for the specified user. A default ChannelSettings object is created if the user has no settings stored.
-        Note that this method will automatically resolve the settings object.
         :param bot: The bot instance.
         :param database: The database instance.
         :param user_id: The user ID.

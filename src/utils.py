@@ -57,7 +57,7 @@ def generate_channel_metadata(
 
 def generate_permission_overwrites(
         owner: Union[Role, Member],
-        members: List[User, Member],
+        members: List[Union[User, Member]],
         channel_settings: "ChannelSettings",
         guild_settings: "GuildSettings"
 ) -> Dict[Union[Role, Member], PermissionOverwrite]:
@@ -84,7 +84,13 @@ def generate_permission_overwrites(
             )
         }
 
+        for member in members:
+            overwrites[member] = PermissionOverwrite(
+                connect=True
+            )
+
         return overwrites
+
     else:
         overwrites: Dict[Union[Role, Member], PermissionOverwrite] = {
             owner: PermissionOverwrite(

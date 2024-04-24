@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from src.bot import Krabbe
 
 
-async def ensure_channel(interaction: Interaction) -> Optional[VoiceChannel]:
+async def ensure_owned_channel(interaction: Interaction) -> Optional[VoiceChannel]:
     """
     Block the interaction if the user does not have a channel.
     :return: VoiceChannel object if the user has a channel
@@ -70,7 +70,7 @@ class ChannelSettings(View):
         emoji="✒️"
     )
     async def rename_channel(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         interaction, new_name = await quick_modal(
@@ -101,7 +101,7 @@ class ChannelSettings(View):
         emoji="👥"
     )
     async def transfer_ownership(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         interaction, selected_users = await user_select(interaction, "選擇新的頻道所有者")
@@ -133,7 +133,7 @@ class ChannelSettings(View):
         emoji="🗑️"
     )
     async def remove_channel(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         interaction, confirmed = await confirm_modal(
@@ -171,7 +171,7 @@ class MemberSettings(View):
         emoji="🚪"
     )
     async def remove_member(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         interaction, selected_users = await user_select(interaction, "選擇要移出的成員")
@@ -203,7 +203,29 @@ class MemberSettings(View):
         disabled=True  # TODO: Implement channel lock functionality
     )
     async def lock_channel(self, button: Button, interaction: MessageInteraction) -> None:
-        pass
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        interaction, new_password = await quick_modal(
+            interaction,
+            title="🔒 頻道鎖",
+            field_name="密碼，留空以取消鎖定",
+            placeholder="12345678",
+            value=channel.channel_settings.password or None,
+        )
+
+        if not new_password:
+            channel.channel_settings.password = None
+            await channel.channel_settings.upsert()
+            await channel.apply_setting_and_permissions()
+
+            return await interaction.response.send_message(embed=SuccessEmbed("已取消頻道鎖"))
+
+        channel.channel_settings.password = new_password
+        await channel.channel_settings.upsert()
+        await channel.apply_setting_and_permissions()
+
+        await interaction.response.send_message(embed=SuccessEmbed("頻道已鎖定"), ephemeral=True)
 
     @ui.button(
         label="人數限制",
@@ -212,7 +234,7 @@ class MemberSettings(View):
         emoji="🔢"
     )
     async def limit_members(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         interaction, limit = await quick_modal(
@@ -257,7 +279,7 @@ class VoiceSettings(View):
         emoji="📶"
     )
     async def bitrate(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         interaction, bitrate = await quick_modal(
@@ -297,7 +319,7 @@ class VoiceSettings(View):
         emoji="🔞"
     )
     async def nsfw(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         channel.channel_settings.nsfw = not channel.channel_settings.nsfw
@@ -317,7 +339,7 @@ class VoiceSettings(View):
         emoji="🌍"
     )
     async def rtc_region(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         interaction, rtc_region = await string_select(
@@ -341,7 +363,7 @@ class VoiceSettings(View):
         emoji="🔊",
     )
     async def toggle_soundboard(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         channel.channel_settings.soundboard_enabled = not channel.channel_settings.soundboard_enabled
@@ -361,7 +383,7 @@ class VoiceSettings(View):
         emoji="🎥",
     )
     async def media_permission(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         channel.channel_settings.media_allowed = not channel.channel_settings.media_allowed
@@ -381,7 +403,7 @@ class VoiceSettings(View):
         emoji="⏳"
     )
     async def slowmode(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_channel(interaction)):
+        if not (channel := await ensure_owned_channel(interaction)):
             return
 
         interaction, slowmode_delay = await quick_modal(
