@@ -456,6 +456,13 @@ class VoiceSettings(View):
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
 
+        await channel.notify(
+            embed=InfoEmbed(
+                title="NSFW",
+                description=f"NSFW 已{'啟用，允許限制級內容' if channel.channel_settings.nsfw else '禁用'}"
+            )
+        )
+
         await interaction.response.send_message(
             embed=SuccessEmbed(f"NSFW：{'開' if channel.channel_settings.nsfw else '關'}"),
             ephemeral=True
