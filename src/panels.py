@@ -84,7 +84,7 @@ class JoinChannel(View):
                     Button(
                         style=ButtonStyle.url,
                         label="加入頻道",
-                        url=channel.channel.name
+                        url=channel.channel.jump_url
                     )
                 ]
             )
