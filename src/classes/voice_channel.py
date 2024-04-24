@@ -408,20 +408,18 @@ class VoiceChannel(MongoObject):
         return voice_channel
 
     @classmethod
-    async def get_owned_channel_from_interaction(cls, interaction: Interaction) -> Optional["VoiceChannel"]:
+    async def get_active_channel_from_interaction(cls, interaction: Interaction) -> Optional["VoiceChannel"]:
         """
-        Get the voice channel object owned by the interaction author.
+        Get the active voice channel object that the interaction author is in if any.
         :param interaction: The interaction object.
         :return: The voice channel object if found.
         """
-        voice_channel = await VoiceChannel.find_one(
-            interaction.bot, interaction.bot.database, owner_id=interaction.author.id
-        )
+        author_voice_state = interaction.guild.get_member(interaction.author.id).voice
 
-        if not voice_channel:
+        if not author_voice_state:
             return None
 
-        return voice_channel
+        return interaction.bot.voice_channels.get(author_voice_state.channel.id)
 
     @classmethod
     async def find_one(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> Optional["VoiceChannel"]:

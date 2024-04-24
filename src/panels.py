@@ -13,16 +13,23 @@ if TYPE_CHECKING:
     from src.bot import Krabbe
 
 
-async def check_channel(interaction: Interaction) -> Optional[VoiceChannel]:
+async def ensure_channel(interaction: Interaction) -> Optional[VoiceChannel]:
     """
     Block the interaction if the user does not have a channel.
     :return: VoiceChannel object if the user has a channel
     """
-    channel = await VoiceChannel.get_owned_channel_from_interaction(interaction)
+    channel = await VoiceChannel.get_active_channel_from_interaction(interaction)
 
     if not channel:
         await interaction.response.send_message(
-            embed=ErrorEmbed("找不到你的頻道", "你可能還沒有創建屬於你的語音頻道"),
+            embed=ErrorEmbed("找不到你的頻道", "你並不在一個動態語音頻道內！"),
+            ephemeral=True
+        )
+        return None
+
+    if channel.owner_id != interaction.author.id:
+        await interaction.response.send_message(
+            embed=ErrorEmbed("權限不足", "你不是這個頻道的所有者！"),
             ephemeral=True
         )
         return None
@@ -63,7 +70,7 @@ class ChannelSettings(View):
         emoji="✒️"
     )
     async def rename_channel(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         interaction, new_name = await quick_modal(
@@ -94,7 +101,7 @@ class ChannelSettings(View):
         emoji="👥"
     )
     async def transfer_ownership(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         interaction, selected_users = await user_select(interaction, "選擇新的頻道所有者")
@@ -126,7 +133,7 @@ class ChannelSettings(View):
         emoji="🗑️"
     )
     async def remove_channel(self, _button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         interaction, confirmed = await confirm_modal(
@@ -164,7 +171,7 @@ class MemberSettings(View):
         emoji="🚪"
     )
     async def remove_member(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         interaction, selected_users = await user_select(interaction, "選擇要移出的成員")
@@ -205,7 +212,7 @@ class MemberSettings(View):
         emoji="🔢"
     )
     async def limit_members(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         interaction, limit = await quick_modal(
@@ -250,7 +257,7 @@ class VoiceSettings(View):
         emoji="📶"
     )
     async def bitrate(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         interaction, bitrate = await quick_modal(
@@ -290,7 +297,7 @@ class VoiceSettings(View):
         emoji="🔞"
     )
     async def nsfw(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         channel.channel_settings.nsfw = not channel.channel_settings.nsfw
@@ -310,7 +317,7 @@ class VoiceSettings(View):
         emoji="🌍"
     )
     async def rtc_region(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         interaction, rtc_region = await string_select(
@@ -364,7 +371,7 @@ class VoiceSettings(View):
         emoji="⏳"
     )
     async def slowmode(self, button: Button, interaction: MessageInteraction) -> None:
-        if not (channel := await check_channel(interaction)):
+        if not (channel := await ensure_channel(interaction)):
             return
 
         interaction, slowmode_delay = await quick_modal(
