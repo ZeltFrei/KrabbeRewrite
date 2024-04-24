@@ -3,6 +3,7 @@ from disnake.ext.commands import Cog, slash_command, has_permissions
 
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
+from src.embeds import SuccessEmbed
 from src.panels import panels
 
 
@@ -17,7 +18,7 @@ class Setup(Cog):
         guild_ids=[975244147730546758]
     )
     async def setup(self, interaction: ApplicationCommandInteraction) -> None:
-        await interaction.response.defer(ephermal=True)
+        await interaction.response.defer(ephemeral=True)
 
         category = await interaction.guild.create_category("🔊 動態語音頻道")
         root = await interaction.guild.create_voice_channel("🔊 建立語音頻道", category=category)
@@ -27,12 +28,13 @@ class Setup(Cog):
             database=self.bot.database,
             guild_id=interaction.guild.id,
             category_channel_id=category.id,
-            root_channel_id=root.id
+            root_channel_id=root.id,
+            base_role_id=interaction.guild.default_role.id
         )
 
         await guild_settings.upsert()
 
-        await interaction.edit_original_response("✅ 完成")
+        await interaction.edit_original_response(embed=SuccessEmbed("設定完成", "成功設定動態語音頻道！"))
 
     @slash_command(
         name="panel",
