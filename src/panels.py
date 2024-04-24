@@ -67,7 +67,7 @@ class JoinChannel(View):
         if selected_channel.id not in interaction.bot.voice_channels:
             return await interaction.response.edit_message(
                 embed=ErrorEmbed(
-                    title="這不是一個動態語音頻道！"
+                    title="請您選擇其他正確的語音頻道"
                 ),
                 components=[]
             )
@@ -78,7 +78,7 @@ class JoinChannel(View):
             return await interaction.response.edit_message(
                 embed=InfoEmbed(
                     title="這個頻道不是鎖定的！",
-                    description=f"你可以點擊 {channel.channel.mention} 或透過下方的連結來加入頻道"
+                    description=f"你可以點擊 {channel.channel.mention} 或透過下方的連結來直接加入頻道"
                 ),
                 components=[
                     Button(
