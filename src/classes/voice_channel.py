@@ -71,6 +71,7 @@ class VoiceChannel(MongoObject):
 
         await self.channel.edit(
             **generate_channel_metadata(
+                owner=self.owner,
                 channel_settings=self.channel_settings,
                 guild_settings=guild_settings or await GuildSettings.find_one(
                     self.bot, self.database, guild_id=self.channel.guild.id
@@ -386,7 +387,7 @@ class VoiceChannel(MongoObject):
         channel_settings = await ChannelSettings.get_settings(bot, database, owner.id)
 
         created_channel = await guild_settings.category_channel.create_voice_channel(
-            **generate_channel_metadata(channel_settings, guild_settings)
+            **generate_channel_metadata(owner, channel_settings, guild_settings)
         )
 
         voice_channel = cls(

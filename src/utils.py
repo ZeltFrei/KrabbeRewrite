@@ -28,6 +28,7 @@ def max_bitrate(guild: Guild) -> int:
 
 
 def generate_channel_metadata(
+        owner: Union[Role, Member],
         channel_settings: "ChannelSettings",
         guild_settings: "GuildSettings"
 ) -> Dict[str, Union[str, int]]:
@@ -40,7 +41,7 @@ def generate_channel_metadata(
     """
     return {
         "name": channel_settings.channel_name or f"{channel_settings.user}'s Channel",
-        "overwrites": generate_permission_overwrites(channel_settings, guild_settings),
+        "overwrites": generate_permission_overwrites(owner, channel_settings, guild_settings),
         "bitrate": max_bitrate(guild_settings.guild)
         if channel_settings.bitrate and channel_settings.bitrate >= max_bitrate(guild_settings.guild)
         else channel_settings.bitrate or 64000,
@@ -52,11 +53,32 @@ def generate_channel_metadata(
 
 
 def generate_permission_overwrites(
+        owner: Union[Role, Member],
         channel_settings: "ChannelSettings",
         guild_settings: "GuildSettings"
 ) -> Dict[Union[Role, Member], PermissionOverwrite]:
     """
-    Generate permission overwrites for a channel
-    :return: The permission overwrites for the channel
+    Generate permission overwrites for a channel.
+
+    :param owner: The owner of the channel.
+    :param channel_settings: The channel settings.
+    :param guild_settings: The guild settings.
+    :return: The permission overwrites for the channel.
     """
-    return {}
+    if channel_settings.password:
+        return {}  # TODO: Implement permission overwrites with channel lock
+    else:
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = {
+            owner: PermissionOverwrite(
+                connect=True,
+                manage_channels=True
+            ),
+            guild_settings.base_role: PermissionOverwrite(
+                connect=True,
+                use_soundboard=channel_settings.soundboard_enabled,
+                attach_files=channel_settings.media_allowed,
+                embed_links=channel_settings.media_allowed
+            )
+        }
+
+        return overwrites
