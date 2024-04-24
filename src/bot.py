@@ -10,6 +10,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.server_api import ServerApi
 
 from src.classes.voice_channel import VoiceChannel
+from src.errors import FailedToResolve
 from src.panels import setup_views
 
 
@@ -89,7 +90,9 @@ class Krabbe(InteractionBot):
         :return: None
         """
         async for voice_channel in VoiceChannel.find(self, self.database):
-            if not voice_channel.channel or not voice_channel.owner:
+            try:
+                self.logger.info(f"Resolving voice channel {voice_channel.channel} with owner {voice_channel.owner}")
+            except FailedToResolve:
                 self.logger.warning(f"Failed to resolve voice channel {voice_channel.channel_id}, removing.")
                 await voice_channel.remove()
                 continue
