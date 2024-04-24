@@ -14,8 +14,7 @@ class Setup(Cog):
     @has_permissions(administrator=True)
     @slash_command(
         name="setup",
-        description="快捷設定",
-        guild_ids=[975244147730546758]
+        description="快捷設定"
     )
     async def setup(self, interaction: ApplicationCommandInteraction) -> None:
         await interaction.response.defer(ephemeral=True)
@@ -48,8 +47,7 @@ class Setup(Cog):
                 choices=[str(key) for key in panels.keys()],
                 required=True
             )
-        ],
-        guild_ids=[975244147730546758]
+        ]
     )
     async def panel(self, interaction: ApplicationCommandInteraction, panel: str) -> None:
         panel_to_send = panels.get(panel)
