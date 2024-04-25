@@ -5,13 +5,13 @@ from logging import getLogger
 from typing import Optional, TYPE_CHECKING, AsyncIterator, Union, List, Dict
 
 import disnake
-from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite
+from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite, Thread
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
-from src.embeds import SuccessEmbed, WarningEmbed
+from src.embeds import SuccessEmbed, WarningEmbed, InfoEmbed
 from src.errors import FailedToResolve
 from src.utils import generate_channel_metadata
 
@@ -35,15 +35,18 @@ class VoiceChannel(MongoObject):
             database: AsyncIOMotorDatabase,
             channel_id: int,
             owner_id: int,
+            logging_thread_id: int,
             channel_settings: ChannelSettings
     ):
         super().__init__(bot, database)
 
         self.channel_id: int = channel_id
         self.owner_id: int = owner_id
+        self.logging_thread_id: int = logging_thread_id
 
         self._channel: Optional[disnake.VoiceChannel] = None
         self._owner: Optional[disnake.Member] = None
+        self._logging_thread: Optional[Thread] = None
 
         self.state: VoiceChannelState = VoiceChannelState.PREPARING
         self.state_change_event: Event = Event()
@@ -60,7 +63,8 @@ class VoiceChannel(MongoObject):
     def to_dict(self) -> dict:
         return {
             "channel_id": self.channel_id,
-            "owner_id": self.owner_id
+            "owner_id": self.owner_id,
+            "logging_thread_id": self.logging_thread_id,
         }
 
     @property
@@ -355,6 +359,10 @@ class VoiceChannel(MongoObject):
 
         await self.apply_setting_and_permissions()
 
+    async def on_message(self, message: Message) -> None:
+        if not message.channel.id == self.channel_id:
+            return
+
     async def add_member(self, member: Member) -> None:
         """
         Add a member to the channel. And wait for the member to join the channel.
@@ -407,6 +415,7 @@ class VoiceChannel(MongoObject):
         """
         self.bot.add_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.add_listener(self.on_member_leave, "on_voice_channel_leave")
+        self.bot.add_listener(self.on_message, "on_message")
 
     def stop_listeners(self) -> None:
         """
@@ -415,6 +424,7 @@ class VoiceChannel(MongoObject):
         """
         self.bot.remove_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.remove_listener(self.on_member_leave, "on_voice_channel_leave")
+        self.bot.remove_listener(self.on_message, "on_message")
 
     async def remove(self) -> None:
         """
@@ -471,11 +481,23 @@ class VoiceChannel(MongoObject):
             )
         )
 
+        thread: Thread
+        message: Message
+
+        thread, message = await guild_settings.logging_channel.create_thread(
+            name=created_channel.name,
+            embed=InfoEmbed(
+                title="頻道紀錄",
+                description=f"這是 {created_channel.mention} 的頻道訊息紀錄"
+            )
+        )
+
         voice_channel = cls(
             bot=bot,
             database=database,
             channel_id=created_channel.id,
             owner_id=owner.id,
+            logging_thread_id=thread.id,
             channel_settings=channel_settings
         )
 
