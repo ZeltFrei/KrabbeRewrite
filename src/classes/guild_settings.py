@@ -1,7 +1,9 @@
-from typing import Optional, TYPE_CHECKING
+from logging import getLogger
+from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator
 
 from disnake import Guild, CategoryChannel, VoiceChannel, Role
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.results import UpdateResult, DeleteResult
 
 from src.classes.mongo_object import MongoObject
 from src.errors import FailedToResolve
@@ -12,6 +14,9 @@ if TYPE_CHECKING:
 
 class GuildSettings(MongoObject):
     collection_name = "guild_settings"
+    __logger = getLogger("krabbe.mongo")
+
+    __caches: Dict[int, "GuildSettings"] = {}
 
     def __init__(
             self,
@@ -33,6 +38,8 @@ class GuildSettings(MongoObject):
         self._category_channel: Optional[CategoryChannel] = None
         self._root_channel: Optional[VoiceChannel] = None
         self._base_role: Optional[Role] = None
+
+        self.__caches[self.guild_id] = self
 
     def unique_identifier(self) -> dict:
         return {"guild_id": self.guild_id}
@@ -93,3 +100,75 @@ class GuildSettings(MongoObject):
             return self._base_role
 
         raise FailedToResolve(f"Failed to resolve base role {self.base_role_id}")
+
+    async def upsert(self) -> UpdateResult:
+        """
+        Updates or inserts a document in the collection.
+
+        :return: The UpdateResult of the update operation.
+        """
+        self.__logger.info(
+            f"Upserting {self.__class__.collection_name} document: {self.to_dict()}"
+        )
+
+        data = self.to_dict()
+
+        self.__caches[self.guild_id] = self
+
+        return await self.database.get_collection(self.__class__.collection_name).update_one(
+            self.unique_identifier(),
+            {"$set": data},
+            upsert=True
+        )
+
+    async def delete(self) -> DeleteResult:
+        """
+        Deletes this document from the collection.
+
+        :return: The DeleteResult of the delete operation.
+        """
+        self.__logger.info(
+            f"Deleting {self.__class__.collection_name} document: {self.unique_identifier()}"
+        )
+
+        del self.__caches[self.guild_id]
+
+        return await self.database.get_collection(self.__class__.collection_name).delete_one(
+            self.unique_identifier()
+        )
+
+    @classmethod
+    async def find_one(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> Optional["GuildSettings"]:
+        """
+        Find a document in the collection that matches the specified query.
+        """
+        cls.__logger.info(f"Finding one {cls.collection_name} document: {kwargs}")
+
+        if guild_id := kwargs.get("guild_id"):
+            cached = cls.__caches.get(guild_id)
+            if cached:
+                return cached
+
+        document = await database.get_collection(cls.collection_name).find_one(kwargs)
+
+        if not document:
+            return None
+
+        # noinspection PyUnresolvedReferences
+        del document["_id"]
+
+        return cls(bot=bot, database=database, **document)
+
+    @classmethod
+    async def find(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator["GuildSettings"]:
+        """
+        Find all documents in the collection that match the specified query.
+        """
+        cls.__logger.info(f"Finding {cls.collection_name} documents: {kwargs}")
+
+        cursor = database.get_collection(cls.collection_name).find(kwargs)
+
+        async for document in cursor:
+            del document["_id"]
+
+            yield cls(bot=bot, database=database, **document)
