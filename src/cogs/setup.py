@@ -22,6 +22,7 @@ class Setup(Cog):
 
         category = await interaction.guild.create_category("🔊 動態語音頻道")
         root = await interaction.guild.create_voice_channel("🔊 建立語音頻道", category=category)
+        log = await interaction.guild.create_forum_channel(name="記錄頻道", category=category)
 
         guild_settings = GuildSettings(
             bot=self.bot,
@@ -29,7 +30,8 @@ class Setup(Cog):
             guild_id=interaction.guild.id,
             category_channel_id=category.id,
             root_channel_id=root.id,
-            base_role_id=interaction.guild.default_role.id
+            base_role_id=interaction.guild.default_role.id,
+            logging_channel_id=log.id
         )
 
         await guild_settings.upsert()
@@ -42,7 +44,13 @@ class Setup(Cog):
                 view=panel.view
             )
 
-        await interaction.edit_original_response(embed=SuccessEmbed("設定完成", "成功設定動態語音頻道！"))
+        await interaction.edit_original_response(
+            embed=SuccessEmbed(
+                title="設定完成",
+                description="成功設定動態語音頻道！\n"
+                            "你可能需要調整權限設定。"
+            )
+        )
 
     @has_permissions(administrator=True)
     @slash_command(

@@ -25,7 +25,8 @@ class GuildSettings(MongoObject):
             guild_id: int,
             category_channel_id: int,
             root_channel_id: int,
-            base_role_id: int
+            base_role_id: int,
+            logging_channel_id: int
     ):
         super().__init__(bot, database)
 
@@ -33,11 +34,13 @@ class GuildSettings(MongoObject):
         self.category_channel_id: int = category_channel_id
         self.root_channel_id: int = root_channel_id
         self.base_role_id: int = base_role_id
+        self.logging_channel_id: int = logging_channel_id
 
         self._guild: Optional[Guild] = None
         self._category_channel: Optional[CategoryChannel] = None
         self._root_channel: Optional[VoiceChannel] = None
         self._base_role: Optional[Role] = None
+        self._logging_channel: Optional[VoiceChannel] = None
 
         self.__caches[self.guild_id] = self
 
@@ -49,7 +52,8 @@ class GuildSettings(MongoObject):
             "guild_id": self.guild_id,
             "category_channel_id": self.category_channel_id,
             "root_channel_id": self.root_channel_id,
-            "base_role_id": self.base_role_id
+            "base_role_id": self.base_role_id,
+            "logging_channel_id": self.logging_channel_id
         }
 
     @property
@@ -100,6 +104,19 @@ class GuildSettings(MongoObject):
             return self._base_role
 
         raise FailedToResolve(f"Failed to resolve base role {self.base_role_id}")
+
+    @property
+    def logging_channel(self) -> Optional[VoiceChannel]:
+        if self._logging_channel is None:
+            self._logging_channel = self.guild.get_channel(self.logging_channel_id)
+
+        elif self._logging_channel.id != self.logging_channel_id:
+            self._logging_channel = self.guild.get_channel(self.logging_channel_id)
+
+        if self._logging_channel:
+            return self._logging_channel
+
+        raise FailedToResolve(f"Failed to resolve logging channel {self.logging_channel_id}")
 
     async def upsert(self) -> UpdateResult:
         """
