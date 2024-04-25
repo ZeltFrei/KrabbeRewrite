@@ -23,6 +23,7 @@ class Setup(Cog):
         category = await interaction.guild.create_category("🔊 動態語音頻道")
         root = await interaction.guild.create_voice_channel("🔊 建立語音頻道", category=category)
         log = await interaction.guild.create_forum_channel(name="記錄頻道", category=category)
+        logging_webhook = await log.create_webhook(name="Krabbe Logging")
 
         guild_settings = GuildSettings(
             bot=self.bot,
@@ -31,7 +32,8 @@ class Setup(Cog):
             category_channel_id=category.id,
             root_channel_id=root.id,
             base_role_id=interaction.guild.default_role.id,
-            logging_channel_id=log.id
+            logging_channel_id=log.id,
+            logging_webhook_url=logging_webhook.url
         )
 
         await guild_settings.upsert()

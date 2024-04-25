@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator
 
-from disnake import Guild, CategoryChannel, VoiceChannel, Role
+from disnake import Guild, CategoryChannel, VoiceChannel, Role, Webhook, ForumChannel
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
 
@@ -26,7 +26,8 @@ class GuildSettings(MongoObject):
             category_channel_id: int,
             root_channel_id: int,
             base_role_id: int,
-            logging_channel_id: int
+            logging_channel_id: int,
+            logging_webhook_url: str
     ):
         super().__init__(bot, database)
 
@@ -35,12 +36,14 @@ class GuildSettings(MongoObject):
         self.root_channel_id: int = root_channel_id
         self.base_role_id: int = base_role_id
         self.logging_channel_id: int = logging_channel_id
+        self.logging_webhook_url: str = logging_webhook_url
 
         self._guild: Optional[Guild] = None
         self._category_channel: Optional[CategoryChannel] = None
         self._root_channel: Optional[VoiceChannel] = None
         self._base_role: Optional[Role] = None
         self._logging_channel: Optional[VoiceChannel] = None
+        self._logging_webhook: Optional[Webhook] = None
 
         self.__caches[self.guild_id] = self
 
@@ -53,7 +56,8 @@ class GuildSettings(MongoObject):
             "category_channel_id": self.category_channel_id,
             "root_channel_id": self.root_channel_id,
             "base_role_id": self.base_role_id,
-            "logging_channel_id": self.logging_channel_id
+            "logging_channel_id": self.logging_channel_id,
+            "logging_webhook_url": self.logging_webhook_url
         }
 
     @property
@@ -106,7 +110,7 @@ class GuildSettings(MongoObject):
         raise FailedToResolve(f"Failed to resolve base role {self.base_role_id}")
 
     @property
-    def logging_channel(self) -> Optional[VoiceChannel]:
+    def logging_channel(self) -> Optional[ForumChannel]:
         if self._logging_channel is None:
             self._logging_channel = self.guild.get_channel(self.logging_channel_id)
 
@@ -117,6 +121,15 @@ class GuildSettings(MongoObject):
             return self._logging_channel
 
         raise FailedToResolve(f"Failed to resolve logging channel {self.logging_channel_id}")
+
+    @property
+    def logging_webhook(self) -> Webhook:
+        try:
+            self._logging_webhook = Webhook.from_url(self.logging_webhook_url, session=self.bot.webhooks_client_session)
+        except ValueError:
+            raise FailedToResolve(f"Failed to resolve logging webhook {self.logging_webhook_url}")
+
+        return self._logging_webhook
 
     async def upsert(self) -> UpdateResult:
         """

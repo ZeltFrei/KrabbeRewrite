@@ -3,6 +3,7 @@ import logging
 from os import getenv
 from typing import Dict
 
+from aiohttp import ClientSession
 from colorlog import ColoredFormatter
 from disnake import Intents, Event, VoiceState, Member
 from disnake.ext.commands import InteractionBot, CommandSyncFlags
@@ -65,6 +66,8 @@ class Krabbe(InteractionBot):
         self.__load_extensions()
 
         self.voice_channels: Dict[int, VoiceChannel] = {}
+
+        self.webhooks_client_session: ClientSession = ClientSession()
 
         self.add_listener(self.__on_ready, Event.ready)
         self.add_listener(self.__on_voice_state_update, Event.voice_state_update)
