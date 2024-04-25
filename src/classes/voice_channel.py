@@ -5,7 +5,9 @@ from logging import getLogger
 from typing import Optional, TYPE_CHECKING, AsyncIterator, Union, List, Dict
 
 import disnake
-from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite, Thread
+from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite, Thread, \
+    AllowedMentions, Object
+from disnake.ui import Button
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.channel_settings import ChannelSettings
@@ -36,7 +38,8 @@ class VoiceChannel(MongoObject):
             channel_id: int,
             owner_id: int,
             logging_thread_id: int,
-            channel_settings: ChannelSettings
+            channel_settings: ChannelSettings,
+            guild_settings: GuildSettings
     ):
         super().__init__(bot, database)
 
@@ -52,6 +55,7 @@ class VoiceChannel(MongoObject):
         self.state_change_event: Event = Event()
 
         self.channel_settings: ChannelSettings = channel_settings
+        self.guild_settings: GuildSettings = guild_settings
 
         self.default_timeout: int = 5 if self.bot.debug else 60
 
@@ -104,6 +108,25 @@ class VoiceChannel(MongoObject):
             return self._owner
 
         raise FailedToResolve(f"Owner {self.owner_id} not found.")
+
+    @property
+    def logging_thread(self) -> Thread:
+        """
+        Get the logging thread object.
+
+        :raise FailedToResolve: If the thread is not found.
+        :return: The logging thread object.
+        """
+        if self._logging_thread is None:
+            self._logging_thread = self.guild_settings.logging_channel.get_thread(self.logging_thread_id)
+
+        elif self._logging_thread.id != self.logging_thread_id:
+            self._logging_thread = self.guild_settings.logging_channel.get_thread(self.logging_thread_id)
+
+        if self._logging_thread:
+            return self._logging_thread
+
+        raise FailedToResolve(f"Logging thread {self.logging_thread_id} not found.")
 
     @property
     def members(self) -> List[Union[User, Member]]:
@@ -363,6 +386,23 @@ class VoiceChannel(MongoObject):
         if not message.channel.id == self.channel_id:
             return
 
+        await self.guild_settings.logging_webhook.send(
+            thread=Object(self.logging_thread_id),
+            username=message.author.display_name,
+            avatar_url=message.author.avatar.url,
+            content=message.content,
+            embeds=message.embeds,
+            wait=False,
+            allowed_mentions=AllowedMentions.none(),
+            components=[
+                Button(
+                    label=message.reference.cached_message.content[:5] +
+                          "..." if len(message.reference.cached_message.content) > 5 else "",
+                    url=message.reference.jump_url
+                )
+            ] if message.reference and message.reference.cached_message else [],
+        )
+
     async def add_member(self, member: Member) -> None:
         """
         Add a member to the channel. And wait for the member to join the channel.
@@ -445,6 +485,11 @@ class VoiceChannel(MongoObject):
         except (NotFound, ValueError, FailedToResolve):  # Forgive the channel if it's already deleted or not resolved
             pass
 
+        try:
+            await self.logging_thread.edit(archived=True)
+        except (NotFound, ValueError, FailedToResolve):  # Forgive the thread if it's already deleted or not resolved
+            pass
+
         await self.delete()
 
         self.logger.info(f"Voice channel {self.channel_id} removed.")
@@ -498,7 +543,8 @@ class VoiceChannel(MongoObject):
             channel_id=created_channel.id,
             owner_id=owner.id,
             logging_thread_id=thread.id,
-            channel_settings=channel_settings
+            channel_settings=channel_settings,
+            guild_settings=guild_settings
         )
 
         await voice_channel.upsert()
@@ -542,8 +588,13 @@ class VoiceChannel(MongoObject):
         del document["_id"]
 
         channel_settings = await ChannelSettings.get_settings(bot, database, user_id=document["owner_id"])
+        guild_settings = await GuildSettings.find_one(
+            bot, database, guild_id=bot.get_channel(document["channel_id"]).guild.id
+        )
 
-        return cls(bot=bot, database=database, channel_settings=channel_settings, **document)
+        return cls(
+            bot=bot, database=database, channel_settings=channel_settings, guild_settings=guild_settings, **document
+        )
 
     @classmethod
     async def find(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator["VoiceChannel"]:
@@ -558,5 +609,10 @@ class VoiceChannel(MongoObject):
             del document["_id"]
 
             channel_settings = await ChannelSettings.get_settings(bot, database, user_id=document["owner_id"])
+            guild_settings = await GuildSettings.find_one(
+                bot, database, guild_id=bot.get_channel(document["channel_id"]).guild.id
+            )
 
-            yield cls(bot=bot, database=database, channel_settings=channel_settings, **document)
+            yield cls(
+                bot=bot, database=database, channel_settings=channel_settings, guild_settings=guild_settings, **document
+            )
