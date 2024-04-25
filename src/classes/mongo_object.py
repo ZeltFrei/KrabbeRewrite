@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from logging import getLogger
-from typing import Generic, TypeVar, Type, Optional, AsyncIterator, TYPE_CHECKING
+from logging import getLogger, Logger
+from typing import Generic, TypeVar, Type, Optional, AsyncIterator, TYPE_CHECKING, Dict
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
@@ -13,14 +13,14 @@ T = TypeVar("T", bound="MongoObject")
 
 class MongoObject(ABC, Generic[T]):
     collection_name: str
-    __logger = getLogger("krabbe.mongo")
+    __logger: Logger = getLogger("krabbe.mongo")
 
     def __init__(self, bot: "Krabbe", database: AsyncIOMotorDatabase):
         self.bot: "Krabbe" = bot
         self.database: AsyncIOMotorDatabase = database
 
     @abstractmethod
-    def unique_identifier(self) -> dict:
+    def unique_identifier(self) -> Dict:
         """
         Returns a dictionary representing the unique identifier for the document.
 
@@ -29,7 +29,7 @@ class MongoObject(ABC, Generic[T]):
         raise NotImplementedError
 
     @abstractmethod
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """
         Returns a dictionary representation of the document to be upserted.
 
