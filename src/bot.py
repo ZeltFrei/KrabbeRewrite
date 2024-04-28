@@ -1,7 +1,6 @@
 import json
 import logging
 from os import getenv
-from typing import Dict
 
 from aiohttp import ClientSession
 from colorlog import ColoredFormatter
@@ -65,8 +64,6 @@ class Krabbe(InteractionBot):
         self.logger = setup_logging(self.debug)
         self.__load_extensions()
 
-        self.voice_channels: Dict[int, VoiceChannel] = {}
-
         self.webhooks_client_session: ClientSession = ClientSession()
 
         self.add_listener(self.__on_ready, Event.ready)
@@ -100,7 +97,7 @@ class Krabbe(InteractionBot):
                 await voice_channel.remove()
                 continue
 
-            self.voice_channels[voice_channel.channel_id] = voice_channel
+            VoiceChannel.active_channels[voice_channel.channel_id] = voice_channel
             voice_channel.start_listeners()
 
             await voice_channel.restore_state()

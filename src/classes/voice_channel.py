@@ -31,6 +31,7 @@ class VoiceChannelState(Enum):
 class VoiceChannel(MongoObject):
     collection_name = "voice_channels"
     logger = getLogger("krabbe.voice_channel")
+    active_channels: Dict[int, "VoiceChannel"] = {}
 
     def __init__(
             self, bot: "Krabbe",
@@ -476,7 +477,7 @@ class VoiceChannel(MongoObject):
         self.stop_listeners()
 
         try:
-            self.bot.voice_channels.pop(self.channel_id)
+            VoiceChannel.active_channels.pop(self.channel_id)
         except KeyError:  # Forgive the channel if it's not in the bot's memory
             pass
 
@@ -551,7 +552,7 @@ class VoiceChannel(MongoObject):
 
         await voice_channel.apply_setting_and_permissions()
 
-        bot.voice_channels[voice_channel.channel_id] = voice_channel
+        VoiceChannel.active_channels[voice_channel.channel_id] = voice_channel
 
         _ = bot.loop.create_task(voice_channel.setup())
 
@@ -570,7 +571,7 @@ class VoiceChannel(MongoObject):
             return None
 
         # noinspection PyUnresolvedReferences
-        return interaction.bot.voice_channels.get(author_voice_state.channel.id)
+        return VoiceChannel.active_channels.get(author_voice_state.channel.id)
 
     @classmethod
     async def find_one(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> Optional["VoiceChannel"]:

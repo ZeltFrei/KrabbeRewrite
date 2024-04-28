@@ -64,7 +64,7 @@ class JoinChannel(View):
 
         selected_channel = selected_channels[0]
 
-        if selected_channel.id not in interaction.bot.voice_channels:
+        if selected_channel.id not in VoiceChannel.active_channels:
             return await interaction.response.edit_message(
                 embed=ErrorEmbed(
                     title="請您選擇其他正確的語音頻道"
@@ -72,7 +72,7 @@ class JoinChannel(View):
                 components=[]
             )
 
-        channel: VoiceChannel = interaction.bot.voice_channels[selected_channel.id]
+        channel: VoiceChannel = VoiceChannel.active_channels[selected_channel.id]
 
         if not channel.channel_settings.password:
             return await interaction.response.edit_message(
@@ -188,7 +188,7 @@ class ChannelSettings(View):
 
         new_owner = selected_users[0]
 
-        for active_voice_channel in interaction.bot.voice_channels.values():
+        for active_voice_channel in VoiceChannel.active_channels.values():
             if active_voice_channel.owner_id == new_owner.id:
                 return await interaction.response.edit_message(
                     embed=ErrorEmbed(

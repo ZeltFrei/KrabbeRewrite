@@ -31,12 +31,12 @@ class Channels(Cog):
 
     @Cog.listener(name=Event.guild_channel_delete)
     async def on_guild_channel_delete(self, channel: GuildChannel) -> None:
-        if channel.id not in self.bot.voice_channels:
+        if channel.id not in VoiceChannel.active_channels:
             return
 
         VoiceChannel.logger.info(f"{channel.name} seems accidentally deleted, removing.")
 
-        voice_channel = self.bot.voice_channels[channel.id]
+        voice_channel = VoiceChannel.a[channel.id]
         await voice_channel.remove()
 
 
