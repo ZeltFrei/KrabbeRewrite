@@ -1,4 +1,5 @@
 import asyncio
+import random
 from asyncio import Event, Future
 from enum import Enum
 from logging import getLogger
@@ -31,7 +32,9 @@ class VoiceChannelState(Enum):
 class VoiceChannel(MongoObject):
     collection_name = "voice_channels"
     logger = getLogger("krabbe.voice_channel")
+
     active_channels: Dict[int, "VoiceChannel"] = {}
+    locked_channels: Dict[str, "VoiceChannel"] = {}
 
     def __init__(
             self, bot: "Krabbe",
@@ -39,6 +42,7 @@ class VoiceChannel(MongoObject):
             channel_id: int,
             owner_id: int,
             logging_thread_id: int,
+            pin_code: str,
             channel_settings: ChannelSettings,
             guild_settings: GuildSettings
     ):
@@ -47,6 +51,7 @@ class VoiceChannel(MongoObject):
         self.channel_id: int = channel_id
         self.owner_id: int = owner_id
         self.logging_thread_id: int = logging_thread_id
+        self.pin_code: Optional[str] = pin_code
 
         self._channel: Optional[disnake.VoiceChannel] = None
         self._owner: Optional[disnake.Member] = None
@@ -70,7 +75,16 @@ class VoiceChannel(MongoObject):
             "channel_id": self.channel_id,
             "owner_id": self.owner_id,
             "logging_thread_id": self.logging_thread_id,
+            "pin_code": self.pin_code
         }
+
+    def is_locked(self) -> bool:
+        """
+        Check if the channel is locked.
+
+        :return: Boolean indicating whether the channel is locked.
+        """
+        return self.pin_code != ""
 
     @property
     def channel(self) -> disnake.VoiceChannel:
@@ -156,7 +170,8 @@ class VoiceChannel(MongoObject):
             owner=self.owner,
             members=self.members,
             channel_settings=self.channel_settings,
-            guild_settings=guild_settings
+            guild_settings=guild_settings,
+            locked=self.is_locked()
         )
 
         pending_edits: Dict[str, Union[str, int, PermissionOverwrite, bool]] = {}
@@ -173,6 +188,52 @@ class VoiceChannel(MongoObject):
             return future
 
         return self.bot.loop.create_task(self.channel.edit(**pending_edits))
+
+    async def lock(self, pin_code: str) -> None:
+        """
+        Lock the channel with the specified pin code.
+
+        :param pin_code: The pin code to lock the channel.
+        """
+        if self.is_locked():
+            raise ValueError("Channel is already locked.")
+
+        self.pin_code = pin_code
+
+        await self.upsert()
+
+        VoiceChannel.locked_channels[pin_code] = self
+
+        await self.apply_setting_and_permissions()
+
+        await self.notify(
+            embed=SuccessEmbed(
+                title="頻道已鎖定",
+                description=f"頻道已被鎖定，並設定了 PIN 碼 `{pin_code}`"
+            )
+        )
+
+    async def unlock(self) -> None:
+        """
+        Unlock the channel.
+        """
+        if not self.is_locked():
+            return
+
+        VoiceChannel.locked_channels.pop(self.pin_code)
+
+        self.pin_code = ""
+
+        await self.upsert()
+
+        await self.apply_setting_and_permissions()
+
+        await self.notify(
+            embed=SuccessEmbed(
+                title="頻道已解鎖",
+                description="頻道已被解鎖"
+            )
+        )
 
     async def transfer_ownership(self, new_owner: Member) -> None:
         """
@@ -224,9 +285,12 @@ class VoiceChannel(MongoObject):
                 description="這可能造成一些奇怪的問題，" +
                             "\n所有等待中的邀請將被清除，\n"
                             "如果你正在等待某個成員加入頻道，\n"
-                            "請將他重新邀請至這個頻道" if self.channel_settings.password else ""
+                            "請將他重新邀請至這個頻道" if self.is_locked() else ""
             )
         )
+
+        if self.is_locked():
+            self.locked_channels[self.pin_code] = self
 
         await self.apply_setting_and_permissions()
 
@@ -412,8 +476,8 @@ class VoiceChannel(MongoObject):
         if member.id == self.owner_id:
             return
 
-        if not self.channel_settings.password:
-            raise ValueError("Channel is not password protected. Why are you adding a member?")
+        if not self.is_locked():
+            raise ValueError("Channel is not locked. Why are you adding a member?")
 
         self.member_queue.append(member)
         await self.apply_setting_and_permissions()
@@ -482,6 +546,11 @@ class VoiceChannel(MongoObject):
             pass
 
         try:
+            VoiceChannel.locked_channels.pop(self.pin_code)
+        except KeyError:  # Forgive the channel if it's not in the locked channels
+            pass
+
+        try:
             await self.channel.delete()
         except (NotFound, ValueError, FailedToResolve):  # Forgive the channel if it's already deleted or not resolved
             pass
@@ -523,7 +592,8 @@ class VoiceChannel(MongoObject):
                 owner=owner,
                 members=[],
                 channel_settings=channel_settings,
-                guild_settings=guild_settings
+                guild_settings=guild_settings,
+                locked=False
             )
         )
 
@@ -544,6 +614,7 @@ class VoiceChannel(MongoObject):
             channel_id=created_channel.id,
             owner_id=owner.id,
             logging_thread_id=thread.id,
+            pin_code="",
             channel_settings=channel_settings,
             guild_settings=guild_settings
         )
@@ -617,3 +688,17 @@ class VoiceChannel(MongoObject):
             yield cls(
                 bot=bot, database=database, channel_settings=channel_settings, guild_settings=guild_settings, **document
             )
+
+    @classmethod
+    def generate_pin_code(cls) -> str:
+        """
+        Generates a new pin code, not conflicting with existing pin codes.
+        :return: The generated pin code.
+        """
+        while True:
+            pin_code = str(random.randint(000000, 999999)).zfill(6)
+
+            if pin_code not in cls.locked_channels:
+                break
+
+        return pin_code

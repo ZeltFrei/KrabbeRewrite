@@ -36,7 +36,7 @@ class Channels(Cog):
 
         VoiceChannel.logger.info(f"{channel.name} seems accidentally deleted, removing.")
 
-        voice_channel = VoiceChannel.a[channel.id]
+        voice_channel = VoiceChannel.active_channels[channel.id]
         await voice_channel.remove()
 
 

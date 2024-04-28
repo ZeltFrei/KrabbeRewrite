@@ -31,7 +31,8 @@ def generate_channel_metadata(
         owner: Union[Role, Member],
         members: List[Union[User, Member]],
         channel_settings: "ChannelSettings",
-        guild_settings: "GuildSettings"
+        guild_settings: "GuildSettings",
+        locked: bool = False
 ) -> Dict[str, Union[str, int, PermissionOverwrite, bool]]:
     """
     Generate the metadata for a channel.
@@ -40,11 +41,12 @@ def generate_channel_metadata(
     :param members: The members of the channel.
     :param channel_settings: The channel settings object.
     :param guild_settings: The guild settings object.
+    :param locked: Whether the channel is locked.
     :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method.
     """
     return {
         "name": channel_settings.channel_name or f"{channel_settings.user} 的語音頻道",
-        "overwrites": generate_permission_overwrites(owner, members, channel_settings, guild_settings),
+        "overwrites": generate_permission_overwrites(owner, members, channel_settings, guild_settings, locked),
         "bitrate": max_bitrate(guild_settings.guild)
         if channel_settings.bitrate and channel_settings.bitrate >= max_bitrate(guild_settings.guild)
         else channel_settings.bitrate or 64000,
@@ -59,7 +61,8 @@ def generate_permission_overwrites(
         owner: Union[Role, Member],
         members: List[Union[User, Member]],
         channel_settings: "ChannelSettings",
-        guild_settings: "GuildSettings"
+        guild_settings: "GuildSettings",
+        locked: bool = False,
 ) -> Dict[Union[Role, Member], PermissionOverwrite]:
     """
     Generate permission overwrites for a channel.
@@ -68,9 +71,10 @@ def generate_permission_overwrites(
     :param members: The members of the channel.
     :param channel_settings: The channel settings.
     :param guild_settings: The guild settings.
+    :param locked: Whether the channel is locked.
     :return: The permission overwrites for the channel.
     """
-    if channel_settings.password:
+    if locked:
         overwrites: Dict[Union[Role, Member], PermissionOverwrite] = {
             owner: PermissionOverwrite(
                 connect=True,

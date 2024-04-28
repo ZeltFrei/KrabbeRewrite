@@ -2,12 +2,12 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import Dict, TYPE_CHECKING, Type, Optional
 
-from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, ChannelType
+from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption
 from disnake.ui import View, Button
 
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed
-from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal, channel_select
+from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
 from src.utils import max_bitrate
 
 if TYPE_CHECKING:
@@ -56,56 +56,25 @@ class JoinChannel(View):
         emoji="🔊"
     )
     async def join_channel(self, button: Button, interaction: MessageInteraction) -> None:
-        interaction, selected_channels = await channel_select(
+        interaction, pin_code = await quick_modal(
             interaction,
-            placeholder="選擇要加入的頻道",
-            channel_types=[ChannelType.voice]
-        )
-
-        selected_channel = selected_channels[0]
-
-        if selected_channel.id not in VoiceChannel.active_channels:
-            return await interaction.response.edit_message(
-                embed=ErrorEmbed(
-                    title="請您選擇其他正確的語音頻道"
-                ),
-                components=[]
-            )
-
-        channel: VoiceChannel = VoiceChannel.active_channels[selected_channel.id]
-
-        if not channel.channel_settings.password:
-            return await interaction.response.edit_message(
-                embed=InfoEmbed(
-                    title="這個頻道不是鎖定的！",
-                    description=f"你可以點擊 {channel.channel.mention} 或透過下方的連結來直接加入頻道"
-                ),
-                components=[
-                    Button(
-                        style=ButtonStyle.url,
-                        label="加入頻道",
-                        url=channel.channel.jump_url
-                    )
-                ]
-            )
-
-        interaction, password = await quick_modal(
-            interaction,
-            title="🔒 輸入密碼",
-            field_name="密碼",
-            placeholder="輸入頻道密碼",
+            title="🔒 輸入 PIN 碼",
+            field_name="PIN",
+            placeholder="123456",
             required=True
         )
 
-        if password != channel.channel_settings.password:
-            return await interaction.response.edit_message(
-                embed=ErrorEmbed("密碼錯誤"),
-                components=[]
+        channel = VoiceChannel.locked_channels.get(pin_code)
+
+        if not channel:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("找不到這個頻道"),
+                ephemeral=True
             )
 
         await channel.add_member(interaction.author)
 
-        await interaction.response.edit_message(
+        await interaction.response.send_message(
             embed=SuccessEmbed(
                 title="已成功取得頻道權限！",
                 description=f"你可以點擊或下方的連結 {channel.channel.mention} 來加入頻道"
@@ -116,7 +85,8 @@ class JoinChannel(View):
                     label=channel.channel.name,
                     url=channel.channel.jump_url
                 )
-            ]
+            ],
+            ephemeral=True
         )
 
 
@@ -255,7 +225,7 @@ class MemberSettings(View):
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
-        if not channel.channel_settings.password:
+        if not channel.is_locked():
             invite = await channel.channel.create_invite(max_age=21600, unique=False)
 
             return await interaction.response.send_message(
@@ -334,27 +304,34 @@ class MemberSettings(View):
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
-        interaction, new_password = await quick_modal(
-            interaction,
-            title="🔒 頻道鎖",
-            field_name="密碼，留空以取消鎖定",
-            placeholder="12345678",
-            value=channel.channel_settings.password or None,
-            required=False
+        if channel.is_locked():
+            interaction, confirmed = await confirm_button(message="確定要解鎖頻道嗎？", interaction=interaction)
+
+            if confirmed:
+                await channel.unlock()
+
+                await interaction.response.edit_message(embed=SuccessEmbed("已解鎖頻道"), components=[])
+            else:
+                await interaction.response.edit_message(embed=ErrorEmbed("已取消"), components=[])
+
+            return
+
+        interaction, confirmed = await confirm_button(message="確定要鎖定頻道嗎？", interaction=interaction)
+
+        if not confirmed:
+            return await interaction.response.edit_message(embed=ErrorEmbed("已取消"), components=[])
+
+        pin_code = channel.generate_pin_code()
+
+        await channel.lock(pin_code)
+
+        return await interaction.response.edit_message(
+            embed=SuccessEmbed(
+                title="已鎖定頻道！",
+                description=f"請使用這個 PIN 碼來讓其他成員加入：\n```{pin_code}```"
+            ),
+            components=[]
         )
-
-        if not new_password:
-            channel.channel_settings.password = None
-            await channel.channel_settings.upsert()
-            await channel.apply_setting_and_permissions()
-
-            return await interaction.response.send_message(embed=SuccessEmbed("已取消頻道鎖"), ephemeral=True)
-
-        channel.channel_settings.password = new_password
-        await channel.channel_settings.upsert()
-        await channel.apply_setting_and_permissions()
-
-        await interaction.response.send_message(embed=SuccessEmbed("頻道已鎖定"), ephemeral=True)
 
     @ui.button(
         label="人數限制",
