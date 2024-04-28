@@ -75,18 +75,22 @@ def generate_permission_overwrites(
     :return: The permission overwrites for the channel.
     """
     if locked:
-        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = {
-            owner: PermissionOverwrite(
-                connect=True,
-                manage_channels=True
-            ),
-            guild_settings.base_role: PermissionOverwrite(
-                connect=False,
-                use_soundboard=channel_settings.soundboard_enabled,
-                attach_files=channel_settings.media_allowed,
-                embed_links=channel_settings.media_allowed
-            )
-        }
+        overwrites = guild_settings.category_channel.overwrites.copy()
+
+        overwrites.update(
+            {
+                owner: PermissionOverwrite(
+                    connect=True,
+                    manage_channels=True
+                ),
+                guild_settings.base_role: PermissionOverwrite(
+                    connect=True,
+                    use_soundboard=channel_settings.soundboard_enabled,
+                    attach_files=channel_settings.media_allowed,
+                    embed_links=channel_settings.media_allowed
+                )
+            }
+        )
 
         for member in members:
             overwrites[member] = PermissionOverwrite(
@@ -96,17 +100,21 @@ def generate_permission_overwrites(
         return overwrites
 
     else:
-        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = {
-            owner: PermissionOverwrite(
-                connect=True,
-                manage_channels=True
-            ),
-            guild_settings.base_role: PermissionOverwrite(
-                connect=True,
-                use_soundboard=channel_settings.soundboard_enabled,
-                attach_files=channel_settings.media_allowed,
-                embed_links=channel_settings.media_allowed
-            )
-        }
+        overwrites = guild_settings.category_channel.overwrites.copy()
+
+        overwrites.update(
+            {
+                owner: PermissionOverwrite(
+                    connect=True,
+                    manage_channels=True
+                ),
+                guild_settings.base_role: PermissionOverwrite(
+                    connect=True,
+                    use_soundboard=channel_settings.soundboard_enabled,
+                    attach_files=channel_settings.media_allowed,
+                    embed_links=channel_settings.media_allowed
+                )
+            }
+        )
 
         return overwrites
