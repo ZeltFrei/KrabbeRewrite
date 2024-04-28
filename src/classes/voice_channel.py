@@ -9,6 +9,7 @@ import disnake
 from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite, Thread, \
     AllowedMentions, Object
 from disnake.ui import Button
+from disnake.utils import snowflake_time
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.channel_settings import ChannelSettings
@@ -600,8 +601,10 @@ class VoiceChannel(MongoObject):
         thread: Thread
         message: Message
 
+        timestamp = snowflake_time(created_channel.id).strftime("%Y-%m-%d %H:%M:%S")
+
         thread, message = await guild_settings.logging_channel.create_thread(
-            name=created_channel.name,
+            name=f"{created_channel.name} ({timestamp})",
             embed=InfoEmbed(
                 title="頻道紀錄",
                 description=f"這是 {created_channel.mention} 的頻道訊息紀錄"
