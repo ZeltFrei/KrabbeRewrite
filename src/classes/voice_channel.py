@@ -193,7 +193,7 @@ class VoiceChannel(MongoObject):
             return future
 
         if "name" in pending_edits:
-            future = self.bot.loop.create_task(
+            future = asyncio.ensure_future(
                 asyncio.gather(
                     self.channel.edit(**pending_edits),
                     self.logging_thread.edit(name=f"{pending_edits['name']} ({self.creation_date})")
