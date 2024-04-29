@@ -84,7 +84,7 @@ def generate_permission_overwrites(
                     manage_channels=True
                 ),
                 guild_settings.base_role: PermissionOverwrite(
-                    connect=True,
+                    connect=False,
                     use_soundboard=channel_settings.soundboard_enabled,
                     attach_files=channel_settings.media_allowed,
                     embed_links=channel_settings.media_allowed
