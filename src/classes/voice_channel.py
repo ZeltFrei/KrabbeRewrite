@@ -487,8 +487,8 @@ class VoiceChannel(MongoObject):
             thread=Object(self.logging_thread_id),
             username=after.author.display_name,
             avatar_url=after.author.avatar.url,
-            content=after.content + "\n\n" + f"編輯前：```{before.content}```",
-            embeds=after.embeds,
+            content=after.content,
+            embeds=after.embeds[:24] + [InfoEmbed("編輯", f"```{before.content}```")],
             wait=False,
             allowed_mentions=AllowedMentions.none(),
             components=[
