@@ -479,6 +479,27 @@ class VoiceChannel(MongoObject):
             ] if message.reference and message.reference.cached_message else [],
         )
 
+    async def on_message_edit(self, before: Message, after: Message) -> None:
+        if not after.channel == self.channel:
+            return
+
+        await self.guild_settings.logging_webhook.send(
+            thread=Object(self.logging_thread_id),
+            username=after.author.display_name,
+            avatar_url=after.author.avatar.url,
+            content=after.content + "\n\n" + f"編輯前：```{before.content}```",
+            embeds=after.embeds,
+            wait=False,
+            allowed_mentions=AllowedMentions.none(),
+            components=[
+                Button(
+                    label=after.reference.cached_message.content[:5] +
+                          "..." if len(after.reference.cached_message.content) > 5 else "",
+                    url=after.reference.jump_url
+                )
+            ] if after.reference and after.reference.cached_message else [],
+        )
+
     async def add_member(self, member: Member) -> None:
         """
         Add a member to the channel. And wait for the member to join the channel.
@@ -532,6 +553,7 @@ class VoiceChannel(MongoObject):
         self.bot.add_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.add_listener(self.on_member_leave, "on_voice_channel_leave")
         self.bot.add_listener(self.on_message, "on_message")
+        self.bot.add_listener(self.on_message_edit, "on_message_edit")
 
     def stop_listeners(self) -> None:
         """
@@ -541,6 +563,7 @@ class VoiceChannel(MongoObject):
         self.bot.remove_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.remove_listener(self.on_member_leave, "on_voice_channel_leave")
         self.bot.remove_listener(self.on_message, "on_message")
+        self.bot.remove_listener(self.on_message_edit, "on_message_edit")
 
     async def remove(self) -> None:
         """
