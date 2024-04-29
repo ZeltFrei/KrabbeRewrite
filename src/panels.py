@@ -59,7 +59,7 @@ class JoinChannel(View):
         interaction, pin_code = await quick_modal(
             interaction,
             title="🔒 輸入 PIN 碼",
-            field_name="PIN",
+            field_name="請向擁有者要求六位數 PIN 碼以求加入語音",
             placeholder="123456",
             required=True
         )
