@@ -210,7 +210,7 @@ class VoiceChannel(MongoObject):
         await self.notify(
             embed=SuccessEmbed(
                 title="頻道已鎖定",
-                description=f"頻道已被鎖定，並設定了 PIN 碼 `{pin_code}`"
+                description=f"頻道已被鎖定"
             )
         )
 
