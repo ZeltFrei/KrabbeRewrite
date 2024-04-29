@@ -155,6 +155,10 @@ class VoiceChannel(MongoObject):
 
         return members
 
+    @property
+    def creation_date(self) -> str:
+        return snowflake_time(self.channel_id).strftime("%Y-%m-%d %H:%M:%S")
+
     async def apply_setting_and_permissions(self, guild_settings: Optional[GuildSettings] = None) -> Future:
         """
         Schedule the settings and permissions to be applied to the channel.
@@ -188,7 +192,17 @@ class VoiceChannel(MongoObject):
             future.set_result(None)
             return future
 
-        return self.bot.loop.create_task(self.channel.edit(**pending_edits))
+        if "name" in pending_edits:
+            future = self.bot.loop.create_task(
+                asyncio.gather(
+                    self.channel.edit(**pending_edits),
+                    self.logging_thread.edit(name=f"{pending_edits['name']} ({self.creation_date})")
+                )
+            )
+        else:
+            future = self.bot.loop.create_task(self.channel.edit(**pending_edits))
+
+        return future
 
     async def lock(self, pin_code: str) -> None:
         """
