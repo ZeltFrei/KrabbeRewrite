@@ -260,6 +260,16 @@ class VoiceChannel(MongoObject):
             )
         )
 
+        if self.is_locked():
+            await self.owner.send(
+                embed=InfoEmbed(
+                    title="通知",
+                    description=f"看來你成為了 {self.channel.mention} 的新擁有者！\n"
+                                f"為了避免你忘記，這是這個頻道的 PIN 碼：\n"
+                                f"```{self.pin_code}```"
+                )
+            )
+
     async def notify(self, wait: bool = False, *args, **kwargs) -> Optional[Message]:
         """
         Sends a message to the channel
