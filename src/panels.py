@@ -292,6 +292,13 @@ class MemberSettings(View):
 
         await channel.remove_member(member)
 
+        await channel.notify(
+            embed=InfoEmbed(
+                title="成員移除",
+                description=f"{member.mention} 被移出了這個頻道！"
+            )
+        )
+
         await interaction.response.edit_message(embed=SuccessEmbed(f"已移出 {member.name}"), components=[])
 
     @ui.button(
