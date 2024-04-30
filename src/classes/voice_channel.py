@@ -223,8 +223,8 @@ class VoiceChannel(MongoObject):
 
         await self.notify(
             embed=SuccessEmbed(
-                title="頻道已鎖定",
-                description=f"頻道已被鎖定"
+                title="語音頻道已更改為私人頻道",
+                description="此語音頻道已被設定密碼，請向擁有者要求PIN碼以利成員進入頻道。"
             )
         )
 

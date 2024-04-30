@@ -274,7 +274,7 @@ class MemberSettings(View):
 
         if member not in channel.channel.members + channel.member_queue:
             return await interaction.response.edit_message(
-                embed=ErrorEmbed("找不到這個成員"), components=[]
+                embed=ErrorEmbed("很抱歉，您的語音頻道並沒有這位成員"), components=[]
             )
 
         if member.id == interaction.author.id:
@@ -412,7 +412,7 @@ class VoiceSettings(View):
 
         await channel.notify(
             embed=InfoEmbed(
-                title="位元率",
+                title="當前語音頻道位元率",
                 description=f"此語音頻道的位元率調整為：{int(bitrate) // 1000} kbps"
             )
         )
@@ -442,7 +442,7 @@ class VoiceSettings(View):
 
         await channel.notify(
             embed=InfoEmbed(
-                title="NSFW",
+                title="當前語音文字 NSFW 限制級內容",
                 description=f"NSFW 已{'啟用，允許限制級內容' if channel.channel_settings.nsfw else '禁用'}"
             )
         )
@@ -476,7 +476,7 @@ class VoiceSettings(View):
 
         await channel.notify(
             embed=InfoEmbed(
-                title="語音區域",
+                title="當前語音頻道伺服器區域位置",
                 description=f"此語音頻道的伺服器區域調整為：{rtc_region[0]}"
             )
         )
@@ -500,7 +500,7 @@ class VoiceSettings(View):
 
         await channel.notify(
             embed=InfoEmbed(
-                title="音效板",
+                title="當前語音頻道音效版的設定",
                 description=f"此語音頻道的音效板調整為：{'啟用' if channel.channel_settings.soundboard_enabled else '關閉'}"
             )
         )
@@ -527,7 +527,7 @@ class VoiceSettings(View):
 
         await channel.notify(
             embed=InfoEmbed(
-                title="媒體傳送",
+                title="當前語音頻道檔案上傳的權限",
                 description=f"此語音頻道的檔案上傳調整為：{'允許' if channel.channel_settings.media_allowed else '禁止'}"
             )
         )
@@ -577,7 +577,7 @@ class VoiceSettings(View):
 
         await channel.notify(
             embed=InfoEmbed(
-                title="慢速模式",
+                title="當前語音頻道發言時間限制",
                 description=f"此語音頻道的文字頻道發言時速調整為：{slowmode_delay} 秒"
             )
         )
