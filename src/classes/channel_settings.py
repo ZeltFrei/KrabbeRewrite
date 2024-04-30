@@ -1,6 +1,7 @@
 from typing import Optional, TYPE_CHECKING
 
 import disnake
+from disnake import Embed
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.mongo_object import MongoObject
@@ -101,6 +102,29 @@ class ChannelSettings(MongoObject):
         :return: True if the channel settings object is resolved, False otherwise.
         """
         return self.resolved
+
+    def as_embed(self) -> Embed:
+        """
+        Generate a visual presentation as an embed for this channel settings object.
+
+        :return: The embed object.
+        """
+        embed = Embed(
+            title="⚙️ | 頻道設定",
+            color=disnake.Color.blurple(),
+            description=f"**用戶**: {self.user.mention}\n"
+        )
+
+        embed.add_field(name="✒️ 頻道名稱", value=self.channel_name or "未設定", inline=True)
+        embed.add_field(name="🔢 用戶上限", value=self.user_limit or "未設定", inline=True)
+        embed.add_field(name="📶 比特率", value=self.bitrate or "未設定", inline=True)
+        embed.add_field(name="🌍 RTC 地區", value=self.rtc_region or "未設定", inline=True)
+        embed.add_field(name="🔞 NSFW", value=self.nsfw or "未設定", inline=True)
+        embed.add_field(name="🔊 音效板", value=self.soundboard_enabled or "未設定", inline=True)
+        embed.add_field(name="🎥 媒體允許", value=self.media_allowed or "未設定", inline=True)
+        embed.add_field(name="⏳ 慢速模式延遲", value=self.slowmode_delay or "未設定", inline=True)
+
+        return embed
 
     @classmethod
     async def get_settings(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, user_id: int) -> "ChannelSettings":

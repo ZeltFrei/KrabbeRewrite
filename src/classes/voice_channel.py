@@ -581,6 +581,11 @@ class VoiceChannel(MongoObject):
 
         self.start_listeners()
 
+        await self.notify(
+            wait=False,
+            embed=self.channel_settings.as_embed()
+        )
+
     def start_listeners(self) -> None:
         """
         Register the listeners then start the state loop.
