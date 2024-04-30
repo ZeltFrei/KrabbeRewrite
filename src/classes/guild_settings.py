@@ -16,7 +16,7 @@ class GuildSettings(MongoObject):
     collection_name = "guild_settings"
     __logger = getLogger("krabbe.mongo")
 
-    __caches: Dict[int, "GuildSettings"] = {}
+    _caches: Dict[int, "GuildSettings"] = {}
 
     def __init__(
             self,
@@ -141,7 +141,7 @@ class GuildSettings(MongoObject):
 
         data = self.to_dict()
 
-        self.__caches[self.guild_id] = self
+        self._caches[self.guild_id] = self
 
         return await self.database.get_collection(self.__class__.collection_name).update_one(
             self.unique_identifier(),
@@ -159,7 +159,7 @@ class GuildSettings(MongoObject):
             f"Deleting {self.__class__.collection_name} document: {self.unique_identifier()}"
         )
 
-        del self.__caches[self.guild_id]
+        del self._caches[self.guild_id]
 
         return await self.database.get_collection(self.__class__.collection_name).delete_one(
             self.unique_identifier()
@@ -173,7 +173,7 @@ class GuildSettings(MongoObject):
         cls.__logger.info(f"Finding one {cls.collection_name} document: {kwargs}")
 
         if guild_id := kwargs.get("guild_id"):
-            cached = cls.__caches.get(guild_id)
+            cached = cls._caches.get(guild_id)
             if cached:
                 return cached
 
