@@ -402,24 +402,19 @@ class VoiceSettings(View):
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
-        interaction, bitrate = await quick_modal(
+        interaction, selected_bitrate = await string_select(
             interaction,
-            title="📶 設定比特率",
-            field_name="比特率 (bit/s)",
-            placeholder="輸入比特率",
-            value=str(channel.channel_settings.bitrate or 64000),
-            max_length=6,
-            min_length=5,
-            required=True
+            placeholder="選擇語音位元率",
+            options=[
+                SelectOption(label="64 Kbps", value="64000"),
+                SelectOption(label="96 Kbps", value="96000"),
+                SelectOption(label="128 Kbps", value="128000"),
+                SelectOption(label="256 Kbps", value="256000"),
+                SelectOption(label="384 Kbps", value="384000")
+            ]
         )
 
-        if int(bitrate) < 8000 or int(bitrate) > 384000:
-            return await interaction.response.send_message(
-                embed=ErrorEmbed("比特率必須介於 8000 和 384000 之間"),
-                ephemeral=True
-            )
-
-        channel.channel_settings.bitrate = int(bitrate)
+        channel.channel_settings.bitrate = int(selected_bitrate[0])
 
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
@@ -427,15 +422,15 @@ class VoiceSettings(View):
         await channel.notify(
             embed=InfoEmbed(
                 title="當前語音頻道位元率",
-                description=f"此語音頻道的位元率調整為：{int(bitrate) // 1000} kbps"
+                description=f"此語音頻道的位元率調整為：{int(selected_bitrate[0]) // 1000} Kbps"
             )
         )
 
         await interaction.response.send_message(
-            embeds=[SuccessEmbed(f"已設定比特率為 {bitrate}")] +
+            embeds=[SuccessEmbed(f"已設定比特率為 {int(selected_bitrate[0]) // 1000} Kbps")] +
                    [
                        WarningEmbed("注意", "這個伺服器的加成等級可能限制了比特率")
-                   ] if int(bitrate) > max_bitrate(interaction.guild) else [],
+                   ] if int(selected_bitrate[0]) > max_bitrate(interaction.guild) else [],
             ephemeral=True
         )
 

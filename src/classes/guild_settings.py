@@ -187,7 +187,7 @@ class GuildSettings(MongoObject):
 
         guild_settings = cls(bot=bot, database=database, **document)
 
-        cls.__cache[guild_settings.guild_id] = guild_settings
+        cls._caches[guild_settings.guild_id] = guild_settings
 
         return guild_settings
 
@@ -204,6 +204,7 @@ class GuildSettings(MongoObject):
             del document["_id"]
 
             guild_settings = cls(bot=bot, database=database, **document)
-            
-            cls.__cache[guild_settings.guild_id] = guild_settings
+
+            cls._caches[guild_settings.guild_id] = guild_settings
+
             yield guild_settings
