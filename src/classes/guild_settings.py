@@ -45,8 +45,6 @@ class GuildSettings(MongoObject):
         self._logging_channel: Optional[VoiceChannel] = None
         self._logging_webhook: Optional[Webhook] = None
 
-        self.__caches[self.guild_id] = self
-
     def unique_identifier(self) -> dict:
         return {"guild_id": self.guild_id}
 
@@ -187,7 +185,11 @@ class GuildSettings(MongoObject):
         # noinspection PyUnresolvedReferences
         del document["_id"]
 
-        return cls(bot=bot, database=database, **document)
+        guild_settings = cls(bot=bot, database=database, **document)
+
+        cls.__cache[guild_settings.guild_id] = guild_settings
+
+        return guild_settings
 
     @classmethod
     async def find(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator["GuildSettings"]:
@@ -201,4 +203,7 @@ class GuildSettings(MongoObject):
         async for document in cursor:
             del document["_id"]
 
-            yield cls(bot=bot, database=database, **document)
+            guild_settings = cls(bot=bot, database=database, **document)
+            
+cls.__cache[guild_settings.guild_id] = guild_settings
+            yield guild_settings
