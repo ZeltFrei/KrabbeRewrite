@@ -353,7 +353,7 @@ class MemberSettings(View):
         interaction, limit = await quick_modal(
             interaction,
             title="🔢 設定人數限制",
-            field_name="人數",
+            field_name="請輸入 0~99 的數字來做為您的頻道人數上限，0 為無限制",
             placeholder="輸入人數限制",
             value=str(channel.channel_settings.user_limit or 0),
             max_length=3,
@@ -377,6 +377,13 @@ class MemberSettings(View):
 
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="當前語音頻道加入人數限制",
+                description=f"此語音頻道的人數上限為：{limit} 位。"
+            )
+        )
 
         await interaction.response.send_message(embed=SuccessEmbed(f"已設定人數限制為 {limit}"), ephemeral=True)
 
