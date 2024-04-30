@@ -7,7 +7,7 @@ from typing import Optional, TYPE_CHECKING, AsyncIterator, Union, List, Dict
 
 import disnake
 from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite, Thread, \
-    AllowedMentions, Object
+    AllowedMentions, Object, HTTPException
 from disnake.ui import Button
 from disnake.utils import snowflake_time
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -15,7 +15,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
-from src.embeds import SuccessEmbed, WarningEmbed, InfoEmbed
+from src.embeds import SuccessEmbed, WarningEmbed, InfoEmbed, ErrorEmbed
 from src.errors import FailedToResolve
 from src.utils import generate_channel_metadata
 
@@ -634,9 +634,15 @@ class VoiceChannel(MongoObject):
             pass
 
         try:
-            await self.logging_thread.edit(archived=True)
-        except (NotFound, ValueError, FailedToResolve):  # Forgive the thread if it's already deleted or not resolved
-            pass
+            thread = self.logging_thread  # Try to get the thread first to prevent FailedToResolve error
+
+            await thread.send(
+                embed=ErrorEmbed("此頻道已被刪除，記錄到此為止")
+            )
+
+            await thread.edit(locked=True, archived=True)
+        except (NotFound, ValueError, FailedToResolve, HTTPException):
+            pass  # Forgive the thread if it's already deleted or not resolved
 
         await self.delete()
 
