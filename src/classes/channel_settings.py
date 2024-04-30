@@ -117,7 +117,9 @@ class ChannelSettings(MongoObject):
 
         embed.add_field(name="✒️ 頻道名稱", value=self.channel_name or "未設定", inline=True)
         embed.add_field(name="🔢 用戶上限", value=self.user_limit or "未設定", inline=True)
-        embed.add_field(name="📶 比特率", value=self.bitrate or "未設定", inline=True)
+        embed.add_field(
+            name="📶 比特率", value=f"{self.bitrate // 1000} Kbps" if self.bitrate else "未設定", inline=True
+            )
         embed.add_field(name="🌍 RTC 地區", value=self.rtc_region or "未設定", inline=True)
         embed.add_field(name="🔞 NSFW", value=self.nsfw or "未設定", inline=True)
         embed.add_field(name="🔊 音效板", value=self.soundboard_enabled or "未設定", inline=True)
