@@ -85,7 +85,8 @@ def generate_permission_overwrites(
                 ),
                 guild_settings.base_role: PermissionOverwrite(
                     connect=False,
-                    use_soundboard=channel_settings.soundboard_enabled,
+                    use_soundboard=False if channel_settings.soundboard_enabled is None
+                    else channel_settings.soundboard_enabled,  # To make it's False by default
                     attach_files=channel_settings.media_allowed,
                     embed_links=channel_settings.media_allowed
                 )
@@ -110,7 +111,8 @@ def generate_permission_overwrites(
                 ),
                 guild_settings.base_role: PermissionOverwrite(
                     connect=True,
-                    use_soundboard=channel_settings.soundboard_enabled,
+                    use_soundboard=False if channel_settings.soundboard_enabled is None
+                    else channel_settings.soundboard_enabled,  # To make it's False by default
                     attach_files=channel_settings.media_allowed,
                     embed_links=channel_settings.media_allowed
                 )
