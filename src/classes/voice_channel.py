@@ -514,6 +514,27 @@ class VoiceChannel(MongoObject):
             ] if after.reference and after.reference.cached_message else [],
         )
 
+    async def on_message_delete(self, message: Message) -> None:
+        if not self.channel == self.channel:
+            return
+
+        await self.guild_settings.logging_webhook.send(
+            thread=Object(self.logging_thread_id),
+            username=message.author.display_name,
+            avatar_url=message.author.avatar.url,
+            content=message.content,
+            embeds=message.embeds[:24] + [InfoEmbed("訊息已被刪除")],
+            wait=False,
+            allowed_mentions=AllowedMentions.none(),
+            components=[
+                Button(
+                    label=message.reference.cached_message.content[:5] +
+                          "..." if len(message.reference.cached_message.content) > 5 else "",
+                    url=message.reference.jump_url
+                )
+            ] if message.reference and message.reference.cached_message else [],
+        )
+
     async def add_member(self, member: Member) -> None:
         """
         Add a member to the channel. And wait for the member to join the channel.
@@ -566,8 +587,10 @@ class VoiceChannel(MongoObject):
         """
         self.bot.add_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.add_listener(self.on_member_leave, "on_voice_channel_leave")
+
         self.bot.add_listener(self.on_message, "on_message")
         self.bot.add_listener(self.on_message_edit, "on_message_edit")
+        self.bot.add_listener(self.on_message_delete, "on_message_delete")
 
     def stop_listeners(self) -> None:
         """
@@ -576,8 +599,10 @@ class VoiceChannel(MongoObject):
         """
         self.bot.remove_listener(self.on_member_join, "on_voice_channel_join")
         self.bot.remove_listener(self.on_member_leave, "on_voice_channel_leave")
+
         self.bot.remove_listener(self.on_message, "on_message")
         self.bot.remove_listener(self.on_message_edit, "on_message_edit")
+        self.bot.remove_listener(self.on_message_delete, "on_message_delete")
 
     async def remove(self) -> None:
         """
