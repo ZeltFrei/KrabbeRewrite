@@ -205,5 +205,5 @@ class GuildSettings(MongoObject):
 
             guild_settings = cls(bot=bot, database=database, **document)
             
-cls.__cache[guild_settings.guild_id] = guild_settings
+            cls.__cache[guild_settings.guild_id] = guild_settings
             yield guild_settings
