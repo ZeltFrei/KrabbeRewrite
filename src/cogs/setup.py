@@ -1,4 +1,4 @@
-from disnake import Option, OptionType, ApplicationCommandInteraction, ButtonStyle
+from disnake import Option, OptionType, ApplicationCommandInteraction, ButtonStyle, OptionChoice
 from disnake.ext.commands import Cog, slash_command, has_permissions
 from disnake.ui import Button
 
@@ -60,8 +60,8 @@ class Setup(Cog):
                 name="panel",
                 description="要傳送的控制面板",
                 type=OptionType.string,
-                choices=[str(key) for key in panels.keys()],
-                required=True
+                required=True,
+                autocomplete=True
             )
         ]
     )
@@ -82,6 +82,10 @@ class Setup(Cog):
                 )
             ]
         )
+
+    @panel.autocomplete("panel")
+    async def list_panels(self, _interaction: ApplicationCommandInteraction, panel: str) -> list[OptionChoice]:
+        return [OptionChoice(name=key, value=key) for key in panels.keys() if panel in key]
 
 
 def setup(bot: Krabbe) -> None:
