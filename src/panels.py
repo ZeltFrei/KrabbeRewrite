@@ -1,8 +1,9 @@
 import asyncio
-from dataclasses import dataclass, field
-from typing import Dict, TYPE_CHECKING, Type, Optional
+from abc import ABC, abstractmethod
+from typing import Dict, TYPE_CHECKING, Optional
 
-from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption
+from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message
+from disnake.abc import Messageable
 from disnake.ui import View, Button
 
 from src.classes.voice_channel import VoiceChannel
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
 async def ensure_owned_channel(interaction: Interaction) -> Optional[VoiceChannel]:
     """
     Block the interaction if the user does not have a channel.
+
     :return: VoiceChannel object if the user has a channel
     """
     channel = await VoiceChannel.get_active_channel_from_interaction(interaction)
@@ -38,16 +40,53 @@ async def ensure_owned_channel(interaction: Interaction) -> Optional[VoiceChanne
     return channel
 
 
-@dataclass
-class Panel:
-    embed: Embed
-    view_class: Type[View]
-    view: Optional[View] = field(default=None, init=False)
+class Panel(View, ABC):
+    """
+    The base class for all panels.
+    """
+    _instance: Optional["Panel"] = None
 
-
-class JoinChannel(View):
     def __init__(self):
         super().__init__(timeout=None)
+
+    def __new__(cls) -> "Panel":
+        if cls._instance:
+            return cls._instance
+
+        cls._instance = super().__new__(cls)
+
+        return cls._instance
+
+    @property
+    @abstractmethod
+    def embed(self) -> Embed:
+        """
+        Returns the embed of this panel, must be implemented by the subclass.
+
+        :return: The embed.
+        """
+        raise NotImplementedError
+
+    async def send_to(self, destination: Messageable) -> Message:
+        """
+        Send the panel to a messageable object.
+
+        :param destination: The messageable object.
+        :return: The message sent.
+        """
+        return await destination.send(
+            embed=self.embed,
+            view=self._instance
+        )
+
+
+class JoinChannel(Panel):
+    @property
+    def embed(self) -> Embed:
+        return Embed(
+            title="➕ 加入頻道",
+            description="點擊下方按鈕來加入一個私人頻道！"
+        )
 
     @ui.button(
         label="加入頻道",
@@ -90,9 +129,13 @@ class JoinChannel(View):
         )
 
 
-class ChannelSettings(View):
-    def __init__(self):
-        super().__init__(timeout=None)
+class ChannelSettings(Panel):
+    @property
+    def embed(self) -> Embed:
+        return Embed(
+            title="⚙️ 頻道設定",
+            description="透過下方的按鈕來對你的頻道進行設定！"
+        )
 
     @ui.button(
         label="重新命名",
@@ -211,9 +254,13 @@ class ChannelSettings(View):
         await interaction.response.send_message(embed=SuccessEmbed("頻道已移除"), ephemeral=True)
 
 
-class MemberSettings(View):
-    def __init__(self):
-        super().__init__(timeout=None)
+class MemberSettings(Panel):
+    @property
+    def embed(self) -> Embed:
+        return Embed(
+            title="👥 成員設定",
+            description="管理頻道成員！"
+        )
 
     @ui.button(
         label="邀請成員",
@@ -388,9 +435,13 @@ class MemberSettings(View):
         await interaction.response.send_message(embed=SuccessEmbed(f"已設定人數限制為 {limit}"), ephemeral=True)
 
 
-class VoiceSettings(View):
-    def __init__(self):
-        super().__init__(timeout=None)
+class VoiceSettings(Panel):
+    @property
+    def embed(self) -> Embed:
+        return Embed(
+            title="🔊 語音設定",
+            description="調整語音相關設定！"
+        )
 
     @ui.button(
         label="語音位元率",
@@ -596,36 +647,7 @@ class VoiceSettings(View):
         )
 
 
-panels: Dict[str, Panel] = {
-    "join_channel": Panel(
-        embed=Embed(
-            title="➕ 加入頻道",
-            description="點擊下方按鈕來加入一個私人頻道！"
-        ),
-        view_class=JoinChannel
-    ),
-    "channel_settings": Panel(
-        embed=Embed(
-            title="⚙️ 頻道設定",
-            description="透過下方的按鈕來對你的頻道進行設定！"
-        ),
-        view_class=ChannelSettings
-    ),
-    "member_settings": Panel(
-        embed=Embed(
-            title="👥 成員設定",
-            description="管理頻道成員！"
-        ),
-        view_class=MemberSettings
-    ),
-    "voice_settings": Panel(
-        embed=Embed(
-            title="🔊 語音設定",
-            description="調整語音相關設定！"
-        ),
-        view_class=VoiceSettings
-    )
-}
+panels: Dict[str, Panel] = {}
 
 
 def setup_views(bot: "Krabbe") -> None:
@@ -635,6 +657,14 @@ def setup_views(bot: "Krabbe") -> None:
     :param bot: The bot instance.
     :return: None
     """
+    panels.update(
+        {
+            "join_channel": JoinChannel(),
+            "channel_settings": ChannelSettings(),
+            "member_settings": MemberSettings(),
+            "voice_settings": VoiceSettings()
+        }
+    )
+
     for panel in panels.values():
-        panel.view = panel.view_class()
-        bot.add_view(panel.view)
+        bot.add_view(panel)

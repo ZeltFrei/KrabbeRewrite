@@ -41,10 +41,7 @@ class Setup(Cog):
         panel_channel = await category.create_text_channel("控制面板")
 
         for panel in panels.values():
-            await panel_channel.send(
-                embed=panel.embed,
-                view=panel.view
-            )
+            await panel.send_to(panel_channel)
 
         await interaction.edit_original_response(
             embed=SuccessEmbed(
@@ -73,10 +70,7 @@ class Setup(Cog):
 
         panel_to_send = panels.get(panel)
 
-        message = await interaction.channel.send(
-            embed=panel_to_send.embed,
-            view=panel_to_send.view
-        )
+        message = await panel_to_send.send_to(interaction.channel)
 
         await interaction.edit_original_response(
             embed=SuccessEmbed("控制面板已傳送"),
