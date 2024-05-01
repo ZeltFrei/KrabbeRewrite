@@ -59,7 +59,7 @@ class Panel(View, ABC):
 
     @property
     @abstractmethod
-    def embed(self) -> Embed:
+    def embed(self) -> Optional[Embed]:
         """
         Returns the embed of this panel, must be implemented by the subclass.
 
@@ -85,7 +85,8 @@ class JoinChannel(Panel):
     def embed(self) -> Embed:
         return Embed(
             title="➕ 加入頻道",
-            description="點擊下方按鈕來加入一個私人頻道！"
+            description="點擊下方按鈕來加入一個私人頻道！",
+            color=0x2b2d31
         )
 
     @ui.button(
@@ -133,17 +134,30 @@ class ChannelSettings(Panel):
     @property
     def embed(self) -> Embed:
         return Embed(
-            title="⚙️ 頻道設定",
-            description="透過下方的按鈕來對你的頻道進行設定！"
+            title="⚙️ 頻道類設定",
+            color=0x2b2d31
         )
 
-    @ui.button(
-        label="重新命名",
-        custom_id="rename_channel",
-        style=ButtonStyle.secondary,
-        emoji="✒️"
+    @ui.string_select(
+        placeholder="⚙️ 頻道類設定",
+        options=[
+            SelectOption(label="頻道名稱", value="rename_channel", description="重新命名頻道", emoji="✒️"),
+            SelectOption(label="移交所有權", value="transfer_ownership", description="將頻道所有權轉移", emoji="👑"),
+            SelectOption(label="移除頻道", value="remove_channel", description="讓頻道永遠沉眠", emoji="🗑️")
+        ],
+        custom_id="channel_settings"
     )
-    async def rename_channel(self, _button: Button, interaction: MessageInteraction) -> None:
+    async def select_setting(self, _select, interaction: MessageInteraction):
+        match interaction.values[0]:
+            case "rename_channel":
+                await self.rename_channel(interaction)
+            case "transfer_ownership":
+                await self.transfer_ownership(interaction)
+            case "remove_channel":
+                await self.remove_channel(interaction)
+
+    @staticmethod
+    async def rename_channel(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -187,13 +201,8 @@ class ChannelSettings(Panel):
 
             return
 
-    @ui.button(
-        label="移交所有權",
-        custom_id="transfer_ownership",
-        style=ButtonStyle.secondary,
-        emoji="👥"
-    )
-    async def transfer_ownership(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def transfer_ownership(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -230,13 +239,8 @@ class ChannelSettings(Panel):
 
         await interaction.response.edit_message(embed=SuccessEmbed(f"已移交所有權給 {new_owner.name}"), components=[])
 
-    @ui.button(
-        label="移除頻道",
-        custom_id="remove_channel",
-        style=ButtonStyle.secondary,
-        emoji="🗑️"
-    )
-    async def remove_channel(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def remove_channel(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -259,16 +263,32 @@ class MemberSettings(Panel):
     def embed(self) -> Embed:
         return Embed(
             title="👥 成員設定",
-            description="管理頻道成員！"
+            color=0x2b2d31
         )
 
-    @ui.button(
-        label="邀請成員",
-        custom_id="invite_member",
-        style=ButtonStyle.green,
-        emoji="👤"
+    @ui.string_select(
+        placeholder="👥 成員設定",
+        options=[
+            SelectOption(label="邀請成員", value="invite_member", description="邀請成員加入頻道", emoji="📩"),
+            SelectOption(label="移出成員", value="remove_member", description="移出成員出頻道", emoji="🚪"),
+            SelectOption(label="頻道鎖", value="lock_channel", description="鎖定或解鎖頻道", emoji="🔒"),
+            SelectOption(label="人數限制", value="limit_members", description="設定頻道人數上限", emoji="🔢")
+        ],
+        custom_id="member_settings"
     )
-    async def invite_member(self, _button: Button, interaction: MessageInteraction) -> None:
+    async def select_setting(self, _select, interaction: MessageInteraction):
+        match interaction.values[0]:
+            case "invite_member":
+                await self.invite_member(interaction)
+            case "remove_member":
+                await self.remove_member(interaction)
+            case "lock_channel":
+                await self.lock_channel(interaction)
+            case "limit_members":
+                await self.limit_members(interaction)
+
+    @staticmethod
+    async def invite_member(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -305,13 +325,8 @@ class MemberSettings(Panel):
             components=[]
         )
 
-    @ui.button(
-        label="移出成員",
-        custom_id="remove_member",
-        style=ButtonStyle.danger,
-        emoji="🚪"
-    )
-    async def remove_member(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def remove_member(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -348,13 +363,8 @@ class MemberSettings(Panel):
 
         await interaction.response.edit_message(embed=SuccessEmbed(f"已移出 {member.name}"), components=[])
 
-    @ui.button(
-        label="頻道鎖",
-        custom_id="lock_channel",
-        style=ButtonStyle.secondary,
-        emoji="🔒"
-    )
-    async def lock_channel(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def lock_channel(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -387,13 +397,8 @@ class MemberSettings(Panel):
             components=[]
         )
 
-    @ui.button(
-        label="人數限制",
-        custom_id="limit_members",
-        style=ButtonStyle.secondary,
-        emoji="🔢"
-    )
-    async def limit_members(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def limit_members(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -440,16 +445,38 @@ class VoiceSettings(Panel):
     def embed(self) -> Embed:
         return Embed(
             title="🔊 語音設定",
-            description="調整語音相關設定！"
+            color=0x2b2d31
         )
 
-    @ui.button(
-        label="語音位元率",
-        custom_id="bitrate",
-        style=ButtonStyle.secondary,
-        emoji="📶"
+    @ui.select(
+        placeholder="🔊 語音設定",
+        options=[
+            SelectOption(label="語音位元率", value="bitrate", description="調整語音位元率", emoji="🎶"),
+            SelectOption(label="NSFW", value="nsfw", description="啟用或禁用 NSFW 內容", emoji="🔞"),
+            SelectOption(label="語音區域", value="rtc_region", description="調整語音區域", emoji="🌐"),
+            SelectOption(label="音效板", value="toggle_soundboard", description="啟用或禁用音效板", emoji="🔉"),
+            SelectOption(label="媒體傳送許可", value="media_permission", description="啟用或禁用媒體傳送", emoji="📎"),
+            SelectOption(label="慢速模式", value="slowmode", description="設定慢速模式", emoji="⏳")
+        ],
+        custom_id="voice_settings"
     )
-    async def bitrate(self, _button: Button, interaction: MessageInteraction) -> None:
+    async def select_setting(self, interaction: MessageInteraction):
+        match interaction.values[0]:
+            case "bitrate":
+                await self.bitrate(interaction)
+            case "nsfw":
+                await self.nsfw(interaction)
+            case "rtc_region":
+                await self.rtc_region(interaction)
+            case "toggle_soundboard":
+                await self.toggle_soundboard(interaction)
+            case "media_permission":
+                await self.media_permission(interaction)
+            case "slowmode":
+                await self.slowmode(interaction)
+
+    @staticmethod
+    async def bitrate(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -485,13 +512,8 @@ class VoiceSettings(Panel):
             ephemeral=True
         )
 
-    @ui.button(
-        label="NSFW",
-        custom_id="nsfw",
-        style=ButtonStyle.secondary,
-        emoji="🔞"
-    )
-    async def nsfw(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def nsfw(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -512,13 +534,8 @@ class VoiceSettings(Panel):
             ephemeral=True
         )
 
-    @ui.button(
-        label="語音區域",
-        custom_id="rtc_region",
-        style=ButtonStyle.secondary,
-        emoji="🌍"
-    )
-    async def rtc_region(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def rtc_region(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -543,13 +560,8 @@ class VoiceSettings(Panel):
 
         await interaction.response.edit_message(embed=SuccessEmbed(f"已設定語音區域為 {rtc_region[0]}"))
 
-    @ui.button(
-        label="音效板",
-        custom_id="toggle_soundboard",
-        style=ButtonStyle.secondary,
-        emoji="🔊",
-    )
-    async def toggle_soundboard(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def toggle_soundboard(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -570,13 +582,8 @@ class VoiceSettings(Panel):
             ephemeral=True
         )
 
-    @ui.button(
-        label="媒體傳送許可",
-        custom_id="media_permission",
-        style=ButtonStyle.secondary,
-        emoji="🎥",
-    )
-    async def media_permission(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def media_permission(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -597,13 +604,8 @@ class VoiceSettings(Panel):
             ephemeral=True
         )
 
-    @ui.button(
-        label="慢速模式",
-        custom_id="slowmode",
-        style=ButtonStyle.secondary,
-        emoji="⏳"
-    )
-    async def slowmode(self, _button: Button, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def slowmode(_button: Button, interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
