@@ -515,7 +515,7 @@ class VoiceChannel(MongoObject):
         )
 
     async def on_message_delete(self, message: Message) -> None:
-        if not self.channel == self.channel:
+        if not message.channel == self.channel:
             return
 
         await self.guild_settings.logging_webhook.send(
