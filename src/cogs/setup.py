@@ -70,6 +70,12 @@ class Setup(Cog):
     async def panel(self, interaction: ApplicationCommandInteraction, panel: str) -> None:
         await interaction.response.defer(ephemeral=True)
 
+        if panel == "all":
+            for panel in panels.values():
+                await panel.send_to(interaction.channel)
+
+            return
+
         panel_to_send = panels.get(panel)
 
         message = await panel_to_send.send_to(interaction.channel)
@@ -87,7 +93,7 @@ class Setup(Cog):
 
     @panel.autocomplete("panel")
     async def list_panels(self, _interaction: ApplicationCommandInteraction, panel: str) -> list[OptionChoice]:
-        return [OptionChoice(name=key, value=key) for key in panels.keys() if panel in key]
+        return [OptionChoice(name=key, value=key) for key in panels.keys() if panel in key] + ["all"]
 
 
 def setup(bot: Krabbe) -> None:
