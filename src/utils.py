@@ -82,7 +82,10 @@ def generate_permission_overwrites(
             {
                 owner: PermissionOverwrite(
                     connect=True,
-                    manage_channels=True
+                    manage_channels=True,
+                    mute_members=True,
+                    deafen_members=True,
+                    move_members=True
                 ),
                 guild_settings.base_role: PermissionOverwrite(
                     connect=False,
@@ -108,7 +111,10 @@ def generate_permission_overwrites(
             {
                 owner: PermissionOverwrite(
                     connect=True,
-                    manage_channels=True
+                    manage_channels=True,
+                    mute_members=True,
+                    deafen_members=True,
+                    move_members=True
                 ),
                 guild_settings.base_role: PermissionOverwrite(
                     connect=True,
