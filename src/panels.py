@@ -4,7 +4,7 @@ from typing import Dict, TYPE_CHECKING, Optional
 
 from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message
 from disnake.abc import Messageable
-from disnake.ui import View, Button
+from disnake.ui import View, Button, Select
 
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed
@@ -13,6 +13,9 @@ from src.utils import max_bitrate
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
+
+
+reset_option = SelectOption(label="取消選定", value="reset", emoji="🔄")
 
 
 async def ensure_owned_channel(interaction: Interaction) -> Optional[VoiceChannel]:
@@ -135,6 +138,7 @@ class ChannelSettings(Panel):
     @ui.string_select(
         placeholder="⚙️ 頻道類設定",
         options=[
+            reset_option,
             SelectOption(label="頻道名稱", value="rename_channel", description="重新命名頻道", emoji="✒️"),
             SelectOption(label="移交所有權", value="transfer_ownership", description="將頻道所有權轉移", emoji="👑"),
             SelectOption(label="移除頻道", value="remove_channel", description="讓頻道永遠沉眠", emoji="🗑️")
@@ -260,6 +264,7 @@ class MemberSettings(Panel):
     @ui.string_select(
         placeholder="👥 成員設定",
         options=[
+            reset_option,
             SelectOption(label="邀請成員", value="invite_member", description="邀請成員加入頻道", emoji="📩"),
             SelectOption(label="移出成員", value="remove_member", description="移出成員出頻道", emoji="🚪"),
             SelectOption(label="頻道鎖", value="lock_channel", description="鎖定或解鎖頻道", emoji="🔒"),
@@ -440,9 +445,10 @@ class MemberSettings(Panel):
 
 
 class VoiceSettings(Panel):
-    @ui.select(
+    @ui.string_select(
         placeholder="🔊 語音設定",
         options=[
+            reset_option,
             SelectOption(label="語音位元率", value="bitrate", description="調整語音位元率", emoji="🎶"),
             SelectOption(label="NSFW", value="nsfw", description="啟用或禁用 NSFW 內容", emoji="🔞"),
             SelectOption(label="語音區域", value="rtc_region", description="調整語音區域", emoji="🌐"),
@@ -452,7 +458,7 @@ class VoiceSettings(Panel):
         ],
         custom_id="voice_settings"
     )
-    async def select_setting(self, interaction: MessageInteraction):
+    async def select_setting(self, _select: Select, interaction: MessageInteraction):
         match interaction.values[0]:
             case "bitrate":
                 await self.bitrate(interaction)
