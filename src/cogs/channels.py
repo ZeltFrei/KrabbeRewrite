@@ -1,3 +1,6 @@
+from typing import Union
+
+import disnake
 from disnake import VoiceState, Member, Event
 from disnake.abc import GuildChannel
 from disnake.ext.commands import Cog
@@ -52,6 +55,35 @@ class Channels(Cog):
 
         voice_channel = VoiceChannel.active_channels[channel.id]
         await voice_channel.remove()
+
+    @Cog.listener(name=Event.guild_channel_update)
+    async def on_guild_channel_update(self,
+                                      before: Union[GuildChannel, disnake.VoiceChannel],
+                                      after: Union[GuildChannel, disnake.VoiceChannel]) -> None:
+        if before.id not in VoiceChannel.active_channels:
+            return
+
+        voice_channel = VoiceChannel.active_channels[before.id]
+
+        if before.name != after.name:
+            voice_channel.channel_settings.channel_name = after.name
+
+        if before.bitrate != after.bitrate:
+            voice_channel.channel_settings.bitrate = after.bitrate
+
+        if before.user_limit != after.user_limit:
+            voice_channel.channel_settings.user_limit = after.user_limit
+
+        if before.rtc_region != after.rtc_region:
+            voice_channel.channel_settings.rtc_region = after.rtc_region
+
+        if before.nsfw != after.nsfw:
+            voice_channel.channel_settings.nsfw = after.nsfw
+
+        if before.slowmode_delay != after.slowmode_delay:
+            voice_channel.channel_settings.slowmode_delay = after.slowmode_delay
+
+        await voice_channel.channel_settings.upsert()
 
 
 def setup(bot: Krabbe) -> None:
