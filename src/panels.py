@@ -1,5 +1,5 @@
 import asyncio
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Dict, TYPE_CHECKING, Optional
 
 from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message
@@ -58,14 +58,13 @@ class Panel(View, ABC):
         return cls._instance
 
     @property
-    @abstractmethod
     def embed(self) -> Optional[Embed]:
         """
-        Returns the embed of this panel, must be implemented by the subclass.
+        Returns the embed of this panel. Can be overridden by subclasses.
 
         :return: The embed.
         """
-        raise NotImplementedError
+        return None
 
     async def send_to(self, destination: Messageable) -> Message:
         """
@@ -80,15 +79,17 @@ class Panel(View, ABC):
         )
 
 
-class JoinChannel(Panel):
+class Title(Panel):
     @property
-    def embed(self) -> Embed:
+    def embed(self) -> Optional[Embed]:
         return Embed(
-            title="➕ 加入頻道",
-            description="點擊下方按鈕來加入一個私人頻道！",
+            title="🔊 動態語音控制",
+            description="有關動態語音的一切！",
             color=0x2b2d31
         )
 
+
+class JoinChannel(Panel):
     @ui.button(
         label="加入頻道",
         custom_id="join_channel",
@@ -131,13 +132,6 @@ class JoinChannel(Panel):
 
 
 class ChannelSettings(Panel):
-    @property
-    def embed(self) -> Embed:
-        return Embed(
-            title="⚙️ 頻道類設定",
-            color=0x2b2d31
-        )
-
     @ui.string_select(
         placeholder="⚙️ 頻道類設定",
         options=[
@@ -263,13 +257,6 @@ class ChannelSettings(Panel):
 
 
 class MemberSettings(Panel):
-    @property
-    def embed(self) -> Embed:
-        return Embed(
-            title="👥 成員設定",
-            color=0x2b2d31
-        )
-
     @ui.string_select(
         placeholder="👥 成員設定",
         options=[
@@ -453,13 +440,6 @@ class MemberSettings(Panel):
 
 
 class VoiceSettings(Panel):
-    @property
-    def embed(self) -> Embed:
-        return Embed(
-            title="🔊 語音設定",
-            color=0x2b2d31
-        )
-
     @ui.select(
         placeholder="🔊 語音設定",
         options=[
@@ -717,6 +697,7 @@ def setup_views(bot: "Krabbe") -> None:
     """
     panels.update(
         {
+            "title": Title(),
             "join_channel": JoinChannel(),
             "channel_settings": ChannelSettings(),
             "member_settings": MemberSettings(),
