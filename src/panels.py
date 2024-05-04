@@ -127,6 +127,8 @@ class Title(Panel):
 
         embed.set_image(url="https://i.imgur.com/BaXj26Y.gif")
 
+        embed.set_footer(text="如果遇到交互失敗的訊息，屬於正常現象，重新操作即可。")
+
         return embed
 
 
