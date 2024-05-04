@@ -1,12 +1,15 @@
+import datetime
 from logging import getLogger
 from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator
 
-from disnake import Guild, CategoryChannel, VoiceChannel, Role, Webhook, ForumChannel
+from disnake import Guild, CategoryChannel, VoiceChannel, Role, Webhook, ForumChannel, Message, ThreadArchiveDuration, \
+    Thread, AllowedMentions
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
 
 from src.classes.mongo_object import MongoObject
 from src.errors import FailedToResolve
+from src.utils import is_same_day
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -26,8 +29,9 @@ class GuildSettings(MongoObject):
             category_channel_id: int,
             root_channel_id: int,
             base_role_id: int,
-            logging_channel_id: int,
-            logging_webhook_url: str
+            event_logging_channel_id: int,
+            message_logging_channel_id: int,
+            message_logging_webhook_url: str
     ):
         super().__init__(bot, database)
 
@@ -35,15 +39,17 @@ class GuildSettings(MongoObject):
         self.category_channel_id: int = category_channel_id
         self.root_channel_id: int = root_channel_id
         self.base_role_id: int = base_role_id
-        self.logging_channel_id: int = logging_channel_id
-        self.logging_webhook_url: str = logging_webhook_url
+        self.event_logging_channel_id: int = event_logging_channel_id
+        self.message_logging_channel_id: int = message_logging_channel_id
+        self.message_logging_webhook_url: str = message_logging_webhook_url
 
         self._guild: Optional[Guild] = None
         self._category_channel: Optional[CategoryChannel] = None
         self._root_channel: Optional[VoiceChannel] = None
         self._base_role: Optional[Role] = None
-        self._logging_channel: Optional[VoiceChannel] = None
-        self._logging_webhook: Optional[Webhook] = None
+        self._event_logging_channel: Optional[ForumChannel] = None
+        self._message_logging_channel: Optional[VoiceChannel] = None
+        self._message_logging_webhook: Optional[Webhook] = None
 
     def unique_identifier(self) -> dict:
         return {"guild_id": self.guild_id}
@@ -54,8 +60,9 @@ class GuildSettings(MongoObject):
             "category_channel_id": self.category_channel_id,
             "root_channel_id": self.root_channel_id,
             "base_role_id": self.base_role_id,
-            "logging_channel_id": self.logging_channel_id,
-            "logging_webhook_url": self.logging_webhook_url
+            "event_logging_channel_id": self.event_logging_channel_id,
+            "message_logging_channel_id": self.message_logging_channel_id,
+            "message_logging_webhook_url": self.message_logging_webhook_url
         }
 
     @property
@@ -108,26 +115,90 @@ class GuildSettings(MongoObject):
         raise FailedToResolve(f"Failed to resolve base role {self.base_role_id}")
 
     @property
-    def logging_channel(self) -> Optional[ForumChannel]:
-        if self._logging_channel is None:
-            self._logging_channel = self.guild.get_channel(self.logging_channel_id)
+    def message_logging_channel(self) -> Optional[ForumChannel]:
+        if self._message_logging_channel is None:
+            self._message_logging_channel = self.guild.get_channel(self.message_logging_channel_id)
 
-        elif self._logging_channel.id != self.logging_channel_id:
-            self._logging_channel = self.guild.get_channel(self.logging_channel_id)
+        elif self._message_logging_channel.id != self.message_logging_channel_id:
+            self._message_logging_channel = self.guild.get_channel(self.message_logging_channel_id)
 
-        if self._logging_channel:
-            return self._logging_channel
+        if self._message_logging_channel:
+            return self._message_logging_channel
 
-        raise FailedToResolve(f"Failed to resolve logging channel {self.logging_channel_id}")
+        raise FailedToResolve(f"Failed to resolve logging channel {self.message_logging_channel_id}")
 
     @property
-    def logging_webhook(self) -> Webhook:
+    def message_logging_webhook(self) -> Webhook:
         try:
-            self._logging_webhook = Webhook.from_url(self.logging_webhook_url, session=self.bot.webhooks_client_session)
+            self._message_logging_webhook = Webhook.from_url(
+                self.message_logging_webhook_url, session=self.bot.webhooks_client_session
+            )
         except ValueError:
-            raise FailedToResolve(f"Failed to resolve logging webhook {self.logging_webhook_url}")
+            raise FailedToResolve(f"Failed to resolve logging webhook {self.message_logging_webhook_url}")
 
-        return self._logging_webhook
+        return self._message_logging_webhook
+
+    @property
+    def event_logging_channel(self) -> Optional[ForumChannel]:
+        if self._event_logging_channel is None:
+            self._event_logging_channel = self.guild.get_channel(self.event_logging_channel_id)
+
+        elif self._event_logging_channel.id != self.event_logging_channel_id:
+            self._event_logging_channel = self.guild.get_channel(self.event_logging_channel_id)
+
+        if self._event_logging_channel:
+            return self._event_logging_channel
+
+        raise FailedToResolve(f"Failed to resolve event logging channel {self.event_logging_channel_id}")
+
+    async def ensure_event_logging_thread(self) -> Thread:
+        """
+        Ensure the event logging thread is active.
+        Create one if not found or expired.
+
+        :return: The event logging thread.
+        """
+        thread = self.event_logging_channel.last_thread
+        now = datetime.datetime.now()
+
+        if not thread:
+            thread = await self.event_logging_channel.create_thread(
+                name=now.strftime("%Y-%m-%d"),
+                auto_archive_duration=ThreadArchiveDuration.day
+            )
+
+        if not is_same_day(thread.created_at, now):
+            await thread.edit(
+                archived=True
+            )
+
+            thread = await self.event_logging_channel.create_thread(
+                name=now.strftime("%Y-%m-%d"),
+                auto_archive_duration=ThreadArchiveDuration.day
+            )
+
+        return thread
+
+    async def log_event(self, message: str, wait: bool = False) -> Optional[Message]:
+        """
+        Log a message to the event logging channel.
+
+        :param wait: Whether to wait for the message to be sent.
+        :param message: The message to log.
+        """
+        thread = await self.ensure_event_logging_thread()
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        message = f"**{timestamp}**: {message}"
+
+        if wait:
+            return await thread.send(message, allowed_mentions=AllowedMentions.none())
+
+        _ = self.bot.loop.create_task(
+            thread.send(message, allowed_mentions=AllowedMentions.none())
+        )
+
+        return
 
     async def upsert(self) -> UpdateResult:
         """

@@ -134,10 +134,10 @@ class VoiceChannel(MongoObject):
         :return: The logging thread object.
         """
         if self._logging_thread is None:
-            self._logging_thread = self.guild_settings.logging_channel.get_thread(self.logging_thread_id)
+            self._logging_thread = self.guild_settings.message_logging_channel.get_thread(self.logging_thread_id)
 
         elif self._logging_thread.id != self.logging_thread_id:
-            self._logging_thread = self.guild_settings.logging_channel.get_thread(self.logging_thread_id)
+            self._logging_thread = self.guild_settings.message_logging_channel.get_thread(self.logging_thread_id)
 
         if self._logging_thread:
             return self._logging_thread
@@ -283,6 +283,10 @@ class VoiceChannel(MongoObject):
                                 f"```{self.pin_code}```"
                 )
             )
+
+        await self.guild_settings.log_event(
+            f"{new_owner.mention} 成為了 {self.channel.name} 的新擁有者"
+        )
 
     async def notify(self, wait: bool = False, *args, **kwargs) -> Optional[Message]:
         """
@@ -462,6 +466,10 @@ class VoiceChannel(MongoObject):
         if member in self.member_queue:
             self.member_queue.remove(member)
 
+        await self.guild_settings.log_event(
+            f"{member.mention} 加入了 {self.channel.name}"
+        )
+
     async def on_member_leave(self, member: Member, voice_state: VoiceState) -> None:
         if voice_state.channel.id != self.channel_id:
             return
@@ -472,11 +480,15 @@ class VoiceChannel(MongoObject):
 
         await self.apply_setting_and_permissions()
 
+        await self.guild_settings.log_event(
+            f"{member.mention} 離開了 {self.channel.name}"
+        )
+
     async def on_message(self, message: Message) -> None:
         if not message.channel.id == self.channel_id:
             return
 
-        await self.guild_settings.logging_webhook.send(
+        await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=message.author.display_name,
             avatar_url=message.author.avatar.url,
@@ -490,14 +502,14 @@ class VoiceChannel(MongoObject):
                           "..." if len(message.reference.cached_message.content) > 5 else "",
                     url=message.reference.jump_url
                 )
-            ] if message.reference and message.reference.cached_message else [],
+            ] if message.reference and message.reference.cached_message and message.reference.cached_message.content else [],
         )
 
     async def on_message_edit(self, before: Message, after: Message) -> None:
         if not after.channel == self.channel:
             return
 
-        await self.guild_settings.logging_webhook.send(
+        await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=after.author.display_name,
             avatar_url=after.author.avatar.url,
@@ -511,14 +523,14 @@ class VoiceChannel(MongoObject):
                           "..." if len(after.reference.cached_message.content) > 5 else "",
                     url=after.reference.jump_url
                 )
-            ] if after.reference and after.reference.cached_message else [],
+            ] if after.reference and after.reference.cached_message and after.reference.cached_message.content else [],
         )
 
     async def on_message_delete(self, message: Message) -> None:
         if not message.channel == self.channel:
             return
 
-        await self.guild_settings.logging_webhook.send(
+        await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=message.author.display_name,
             avatar_url=message.author.avatar.url,
@@ -583,6 +595,10 @@ class VoiceChannel(MongoObject):
 
         self.bot.dispatch("voice_channel_created", self)
 
+        await self.guild_settings.log_event(
+            f"{self.channel.name} 已建立"
+        )
+
     def start_listeners(self) -> None:
         """
         Register the listeners then start the state loop.
@@ -645,6 +661,10 @@ class VoiceChannel(MongoObject):
 
         self.logger.info(f"Voice channel {self.channel_id} removed.")
 
+        await self.guild_settings.log_event(
+            f"{self.channel.name} 已被刪除"
+        )
+
     @classmethod
     async def new(
             cls,
@@ -683,7 +703,7 @@ class VoiceChannel(MongoObject):
 
         timestamp = snowflake_time(created_channel.id).strftime("%Y-%m-%d %H:%M:%S")
 
-        thread, message = await guild_settings.logging_channel.create_thread(
+        thread, message = await guild_settings.message_logging_channel.create_thread(
             name=f"{created_channel.name} ({timestamp})",
             embed=InfoEmbed(
                 title="頻道紀錄",

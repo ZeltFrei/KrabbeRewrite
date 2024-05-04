@@ -187,6 +187,10 @@ class ChannelSettings(Panel):
                 embed=SuccessEmbed(f"頻道已重新命名為 {new_name}" if new_name else "已重設頻道名稱"),
             )
 
+            await channel.guild_settings.log_event(
+                f"{interaction.author.mention} 重新命名了頻道為 {new_name}"
+            )
+
             return
         except asyncio.TimeoutError:
             channel.channel_settings.channel_name = channel.channel.name
@@ -389,12 +393,16 @@ class MemberSettings(Panel):
 
         await channel.lock(pin_code)
 
-        return await interaction.response.edit_message(
+        await interaction.response.edit_message(
             embed=SuccessEmbed(
                 title="已鎖定頻道！",
                 description=f"請使用這個 PIN 碼來讓其他成員加入：\n```{pin_code}```"
             ),
             components=[]
+        )
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 鎖定了頻道 {channel.channel.name}"
         )
 
     @staticmethod
@@ -438,6 +446,10 @@ class MemberSettings(Panel):
         )
 
         await interaction.response.send_message(embed=SuccessEmbed(f"已設定人數限制為 {limit}"), ephemeral=True)
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的人數上限為 {limit}"
+        )
 
 
 class VoiceSettings(Panel):
@@ -512,6 +524,10 @@ class VoiceSettings(Panel):
             ephemeral=True
         )
 
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的比特率為 {int(selected_bitrate[0]) // 1000} Kbps"
+        )
+
     @staticmethod
     async def nsfw(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
@@ -532,6 +548,10 @@ class VoiceSettings(Panel):
         await interaction.response.send_message(
             embed=SuccessEmbed(f"NSFW：{'開' if channel.channel_settings.nsfw else '關'}"),
             ephemeral=True
+        )
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的 NSFW 為 {channel.channel_settings.nsfw}"
         )
 
     @staticmethod
@@ -560,6 +580,10 @@ class VoiceSettings(Panel):
 
         await interaction.response.edit_message(embed=SuccessEmbed(f"已設定語音區域為 {rtc_region[0]}"))
 
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的語音區域為 {rtc_region[0]}"
+        )
+
     @staticmethod
     async def toggle_soundboard(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
@@ -582,6 +606,10 @@ class VoiceSettings(Panel):
             ephemeral=True
         )
 
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的音效板為 {channel.channel_settings.soundboard_enabled}"
+        )
+
     @staticmethod
     async def media_permission(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
@@ -602,6 +630,10 @@ class VoiceSettings(Panel):
         await interaction.response.send_message(
             embed=SuccessEmbed(f"媒體傳送許可：{'開' if channel.channel_settings.media_allowed else '關'}"),
             ephemeral=True
+        )
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的媒體傳送許可為 {channel.channel_settings.media_allowed}"
         )
 
     @staticmethod
@@ -646,6 +678,10 @@ class VoiceSettings(Panel):
 
         await interaction.response.send_message(
             embed=SuccessEmbed(f"已設定慢速模式為 {slowmode_delay} 秒"), ephemeral=True
+        )
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的慢速模式為 {slowmode_delay} 秒"
         )
 
 

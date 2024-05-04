@@ -21,19 +21,21 @@ class Setup(Cog):
         await interaction.response.defer(ephemeral=True)
 
         category = await interaction.guild.create_category("🔊 動態語音頻道")
-        root = await interaction.guild.create_voice_channel("🔊 建立語音頻道", category=category)
-        log = await interaction.guild.create_forum_channel(name="記錄頻道", category=category)
-        logging_webhook = await log.create_webhook(name="Krabbe Logging")
+        root_channel = await interaction.guild.create_voice_channel("🔊 建立語音頻道", category=category)
+        event_logging_channel = await interaction.guild.create_forum_channel("事件紀錄", category=category)
+        message_logging_channel = await interaction.guild.create_forum_channel(name="訊息紀錄", category=category)
+        message_logging_webhook = await message_logging_channel.create_webhook(name="Krabbe Logging")
 
         guild_settings = GuildSettings(
             bot=self.bot,
             database=self.bot.database,
             guild_id=interaction.guild.id,
             category_channel_id=category.id,
-            root_channel_id=root.id,
+            root_channel_id=root_channel.id,
             base_role_id=interaction.guild.default_role.id,
-            logging_channel_id=log.id,
-            logging_webhook_url=logging_webhook.url
+            event_logging_channel_id=event_logging_channel.id,
+            message_logging_channel_id=message_logging_channel.id,
+            message_logging_webhook_url=message_logging_webhook.url
         )
 
         await guild_settings.upsert()

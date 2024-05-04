@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Union, Dict, TYPE_CHECKING, List
 
 from disnake import PermissionOverwrite, Member, Role, Guild, User
@@ -120,3 +121,14 @@ def generate_permission_overwrites(
         )
 
         return overwrites
+
+
+def is_same_day(date1: datetime, date2: datetime) -> bool:
+    """
+    Check if two dates are on the same day.
+
+    :param date1: The first date.
+    :param date2: The second date.
+    :return: True if the dates are on the same day, False otherwise.
+    """
+    return date1.year == date2.year and date1.month == date2.month and date1.day == date2.day
