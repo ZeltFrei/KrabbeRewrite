@@ -379,7 +379,7 @@ class VoiceChannel(MongoObject):
         if user_id and self.channel.members and any(m.id == user_id for m in self.channel.members):
             return True
 
-        if not user_id and self.channel.members:
+        if not user_id and self.non_bot_members:
             return True
 
         try:
