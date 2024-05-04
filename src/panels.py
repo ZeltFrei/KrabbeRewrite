@@ -85,19 +85,53 @@ class Panel(View, ABC):
 class Title(Panel):
     @property
     def embed(self) -> Optional[Embed]:
-        return Embed(
-            title="🔊 動態語音控制",
-            description="有關動態語音的一切！",
+        embed = Embed(
             color=0x2b2d31
         )
+
+        embed.set_author(name="Krabbe 2 - Voice Channel 自動化語音頻道", icon_url="https://i.imgur.com/lsTtd9c.png")
+
+        embed.add_field(
+            name="取消選定",
+            value="此選項為重新定位您的清單，方便您再次選擇相同設定。"
+        )
+
+        embed.add_field(
+            name="語音頻道設定",
+            value="* 頻道名稱：設定語音頻道的名字\n。"
+                  "* 移交所有權：將頻道的設定權限轉移給其他成員。\n"
+                  "* 移除頻道：將頻道永久刪除。"
+        )
+
+        embed.add_field(
+            name="語音成員設定",
+            value="* 邀請成員：使用短連結邀請成員加入您的語音頻道。\n"
+                  "* 移出成員：將成員移出您的語音頻道，並將使用權限刪除。\n"
+                  "* 頻道鎖：將頻道變更為私人頻道，透過邀請或輸入密碼加入。\n"
+                  "* 人數限制：設定頻道可以加入多少位成員。"
+        )
+
+        embed.add_field(
+            name="語音功能設定",
+            value="* 語音位元率：選擇適合您頻道的位元率。\n"
+                  "* NSFW：允許或禁止您頻道發佈限制級內容。\n"
+                  "* 語音區域：選擇適合您頻道的伺服器語音區域。\n"
+                  "* 音效板：允許或禁止您頻道的音效板效果。\n"
+                  "* 媒體傳送許可：允許或禁止您頻道的檔案上傳。\n"
+                  "* 慢速模式：設定您頻道的發言時間速度。"
+        )
+
+        embed.set_image(url="https://i.imgur.com/BaXj26Y.gif")
+
+        return embed
 
 
 class JoinChannel(Panel):
     @ui.button(
-        label="加入頻道",
+        label="加入私人語音頻道",
         custom_id="join_channel",
         style=ButtonStyle.green,
-        emoji="🔊"
+        emoji="🔓"
     )
     async def join_channel(self, button: Button, interaction: MessageInteraction) -> None:
         interaction, pin_code = await quick_modal(
