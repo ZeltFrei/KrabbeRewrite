@@ -189,13 +189,13 @@ class GuildSettings(MongoObject):
         thread = await self.ensure_event_logging_thread()
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        message = f"**{timestamp}**: {message}"
+        log_string = f"**{timestamp}**: {message}"
 
         if wait:
-            return await thread.send(message, allowed_mentions=AllowedMentions.none())
+            return await thread.send(log_string, allowed_mentions=AllowedMentions.none())
 
         _ = self.bot.loop.create_task(
-            thread.send(message, allowed_mentions=AllowedMentions.none())
+            thread.send(log_string, allowed_mentions=AllowedMentions.none())
         )
 
         return
