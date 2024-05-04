@@ -159,6 +159,10 @@ class VoiceChannel(MongoObject):
     def creation_date(self) -> str:
         return snowflake_time(self.channel_id).strftime("%Y-%m-%d %H:%M:%S")
 
+    @property
+    def non_bot_members(self) -> List[Member]:
+        return [m for m in self.channel.members if not m.bot]
+
     async def apply_setting_and_permissions(self, guild_settings: Optional[GuildSettings] = None) -> Future:
         """
         Schedule the settings and permissions to be applied to the channel.
@@ -314,18 +318,18 @@ class VoiceChannel(MongoObject):
 
             await self.apply_setting_and_permissions()
 
-            if any(m.id == self.owner_id for m in self.channel.members):  # Owner is in the channel
+            if any(m.id == self.owner_id for m in self.non_bot_members):  # Owner is in the channel
                 await self.update_state(VoiceChannelState.ACTIVE)
                 return
 
-            if len(self.channel.members) == 0:  # Channel is empty
+            if len(self.non_bot_members) == 0:  # Channel is empty
                 await self.update_state(VoiceChannelState.EMPTY)
                 return
 
             await self.update_state(
                 VoiceChannelState.OWNER_DISCONNECTED
             )  # Owner is not in the channel but someone else is
-            
+
         finally:
             self.bot.dispatch("voice_channel_restored", self)
 
@@ -418,7 +422,7 @@ class VoiceChannel(MongoObject):
                 await self.update_state(VoiceChannelState.ACTIVE)
                 return
 
-            if len(self.channel.members) == 0:
+            if len(self.non_bot_members) == 0:
                 await self.update_state(VoiceChannelState.EMPTY)
                 return
 
@@ -430,7 +434,7 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-            await self.transfer_ownership(self.channel.members[0])
+            await self.transfer_ownership(self.non_bot_members[0])
 
         elif new_state == VoiceChannelState.EMPTY:
             await self.notify(
@@ -447,12 +451,12 @@ class VoiceChannel(MongoObject):
                 await self.notify(
                     embed=ChannelNotificationEmbed(
                         left_message=f"語音頻道 {self.channel.mention} 繼續運作中",
-                        right_message=f"{self.channel.members[0].mention} 加入語音頻道並成為新的頻道擁有者",
+                        right_message=f"{self.non_bot_members[0].mention} 加入語音頻道並成為新的頻道擁有者",
                         image="https://i.imgur.com/R3Rl1e2.png"
                     )
                 )
 
-                await self.transfer_ownership(self.channel.members[0])
+                await self.transfer_ownership(self.non_bot_members[0])
                 await self.update_state(VoiceChannelState.ACTIVE)
                 return
 
