@@ -99,7 +99,7 @@ class Title(Panel):
 
         embed.add_field(
             name="語音頻道設定",
-            value="* 頻道名稱：設定語音頻道的名字\n。"
+            value="* 頻道名稱：設定語音頻道的名字。\n"
                   "* 移交所有權：將頻道的設定權限轉移給其他成員。\n"
                   "* 移除頻道：將頻道永久刪除。",
             inline=False
