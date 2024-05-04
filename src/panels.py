@@ -2,7 +2,7 @@ import asyncio
 from abc import ABC
 from typing import Dict, TYPE_CHECKING, Optional
 
-from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message
+from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message, Color
 from disnake.abc import Messageable
 from disnake.ui import View, Button, Select
 
@@ -683,7 +683,7 @@ class LockChannel(Panel):
             description="> 點選下面的按鈕，馬上將您的頻道進行鎖定。\n"
                         "> 請別擔心，這個按鈕只有身為頻道擁有者的您才能使用。\n"
                         "> 如您找不到按鈕，您也可以前往設定區域進行點選。",
-            color=0x2b2d31
+            color=Color.blurple()
         )
 
         embed.set_image("https://i.imgur.com/8tMgmWa.png")

@@ -50,7 +50,7 @@ class InfoEmbed(Embed):
 
 class ChannelNotificationEmbed(Embed):
     def __init__(self, left_message: str, right_message: str, image: str, *args, **kwargs):
-        super().__init__(color=0x2b2d31, *args, **kwargs)
+        super().__init__(color=Color.blurple(), *args, **kwargs)
         self.set_image(url=image)
         self.add_field(name="⚠️ Krabbe+ 2", value=left_message, inline=True)
         self.add_field(name="⚠️ 請注意", value=right_message, inline=True)
