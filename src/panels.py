@@ -222,6 +222,11 @@ class ChannelSettings(Panel):
                 embed=ErrorEmbed("這個成員不在這個頻道裡"), components=[]
             )
 
+        if new_owner.bot:
+            return await interaction.response.edit_message(
+                embed=ErrorEmbed("你不能將所有權移交給機器人"), components=[]
+            )
+
         for active_voice_channel in VoiceChannel.active_channels.values():
             if active_voice_channel.owner_id == new_owner.id:
                 return await interaction.response.edit_message(

@@ -263,6 +263,9 @@ class VoiceChannel(MongoObject):
         if self.owner_id == new_owner.id:
             return
 
+        if new_owner.bot:
+            raise ValueError("Bots cannot be the owner of a voice channel.")
+
         self.owner_id = new_owner.id
 
         await self.upsert()
