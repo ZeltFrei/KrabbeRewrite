@@ -242,16 +242,36 @@ class GuildSettings(MongoObject):
         )
 
     @classmethod
+    def get_from_cache(cls, **kwargs) -> Optional["GuildSettings"]:
+        """
+        Get the cached document that matches the specified query.
+
+        :param kwargs: The query to match. Only guild_id is supported to query from cache.
+        :return: The cached document.
+        """
+        if not kwargs.get("guild_id"):
+            return None
+
+        cached = cls._caches.get(kwargs["guild_id"])
+
+        if not cached:
+            return None
+
+        for key, value in kwargs.items():
+            if getattr(cached, key) != value:
+                return None
+
+        return cached
+
+    @classmethod
     async def find_one(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> Optional["GuildSettings"]:
         """
         Find a document in the collection that matches the specified query.
         """
         cls.__logger.info(f"Finding one {cls.collection_name} document: {kwargs}")
 
-        if guild_id := kwargs.get("guild_id"):
-            cached = cls._caches.get(guild_id)
-            if cached:
-                return cached
+        if cached := cls.get_from_cache(**kwargs):
+            return cached
 
         document = await database.get_collection(cls.collection_name).find_one(kwargs)
 
