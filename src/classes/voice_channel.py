@@ -15,7 +15,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
-from src.embeds import SuccessEmbed, WarningEmbed, InfoEmbed, ErrorEmbed
+from src.embeds import SuccessEmbed, WarningEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
 from src.errors import FailedToResolve
 from src.utils import generate_channel_metadata, remove_image
 
@@ -267,10 +267,10 @@ class VoiceChannel(MongoObject):
         await self.apply_setting_and_permissions()
 
         await self.notify(
-            embed=SuccessEmbed(
-                title="轉移所有權",
-                description=f"{new_owner.mention} 成為了頻道的新擁有者！\n"
-                            f"已套用新擁有者的頻道設定！"
+            embed=ChannelNotificationEmbed(
+                left_message=f"語音頻道 {self.channel.name} 擁有者已進行變更",
+                right_message=f"此語音頻道的擁有者已變更為 {self.owner.mention}",
+                image="https://i.imgur.com/JVumKnF.png"
             )
         )
 
@@ -309,12 +309,10 @@ class VoiceChannel(MongoObject):
         This should only be called when bot is starting up.
         """
         await self.notify(
-            embed=WarningEmbed(
-                title="機器人剛重啟",
-                description="這可能造成一些奇怪的問題，" +
-                            "\n所有等待中的邀請將被清除，\n"
-                            "如果你正在等待某個成員加入頻道，\n"
-                            "請將他重新邀請至這個頻道" if self.is_locked() else ""
+            embed=ChannelNotificationEmbed(
+                left_message="系統伺服器完成重新啟動！請注意，所有邀請已刪除",
+                right_message="您可能會遇到一些問題可以點選按鈕進行回報",
+                image="https://i.imgur.com/9Pt1NZA.png"
             )
         )
 
@@ -401,10 +399,10 @@ class VoiceChannel(MongoObject):
 
         elif new_state == VoiceChannelState.OWNER_DISCONNECTED:
             await self.notify(
-                embed=WarningEmbed(
-                    title="擁有者離開",
-                    description=f"頻道的擁有者 {self.owner.mention} 離開了頻道！\n"
-                                f"如果他沒有在 60 秒內加入，頻道所有權將被轉移給頻道內的隨機成員"
+                embed=ChannelNotificationEmbed(
+                    left_message=f"{self.owner.mention} 退出了他建立的語音頻道 {self.channel.name}",
+                    right_message="如果沒有在 60 秒內重新加入，會轉移此頻道設定權限",
+                    image="https://i.imgur.com/24YsyvX.png"
                 )
             )
 
@@ -412,9 +410,10 @@ class VoiceChannel(MongoObject):
 
             if is_owner_back:
                 await self.notify(
-                    embed=SuccessEmbed(
-                        title="擁有者回歸",
-                        description=f"頻道的擁有者 {self.owner.mention} 回到了頻道內！"
+                    embed=ChannelNotificationEmbed(
+                        left_message=f"語音頻道 {self.channel.name} 權限沒有進行任何更動",
+                        right_message=f"擁有者 {self.owner.mention} 重新加入語音頻道",
+                        image="https://i.imgur.com/A7K16RX.png"
                     )
                 )
 
@@ -426,9 +425,10 @@ class VoiceChannel(MongoObject):
                 return
 
             await self.notify(
-                embed=WarningEmbed(
-                    title="擁有者離開",
-                    description=f"頻道的原擁有者 {self.owner.mention} 沒有在 60 秒內回來"
+                embed=ChannelNotificationEmbed(
+                    left_message=f"語音頻道 {self.channel.name} 開始進行權限轉移",
+                    right_message=f"擁有者 {self.owner.mention} 沒有在 60 秒重新加入",
+                    image="https://i.imgur.com/24YsyvX.png"
                 )
             )
 
@@ -436,10 +436,10 @@ class VoiceChannel(MongoObject):
 
         elif new_state == VoiceChannelState.EMPTY:
             await self.notify(
-                embed=WarningEmbed(
-                    title="頻道是空的",
-                    description="所有成員都離開了頻道！\n"
-                                "如果再 60 秒內沒有人加入這個頻道，這個頻道將會被刪除"
+                embed=ChannelNotificationEmbed(
+                    left_message=f"語音頻道 {self.channel.name} 沒有成員在頻道中",
+                    right_message="若60 秒內沒有成員加入頻道，語音頻道將執行刪除動作",
+                    image="https://i.imgur.com/56Aifqg.png"
                 )
             )
 
@@ -447,9 +447,10 @@ class VoiceChannel(MongoObject):
 
             if is_anyone_joined:
                 await self.notify(
-                    embed=WarningEmbed(
-                        title="頻道重生",
-                        description=f"{self.channel.members[0].mention} 在頻道垂死之際加入了頻道！"
+                    embed=ChannelNotificationEmbed(
+                        left_message=f"語音頻道 {self.channel.mention} 繼續運作中",
+                        right_message=f"{self.channel.members[0].mention} 加入語音頻道並成為新的頻道擁有者",
+                        image="https://i.imgur.com/R3Rl1e2.png"
                     )
                 )
 

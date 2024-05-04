@@ -356,8 +356,8 @@ class MemberSettings(Panel):
 
         await channel.notify(
             embed=InfoEmbed(
-                title="成員移除",
-                description=f"{member.mention} 被移出了這個頻道！"
+                title="擁有者移除頻道成員與權限",
+                description=f"{member.mention} 被移出且被刪除頻道使用權限！"
             )
         )
 
@@ -678,13 +678,17 @@ class VoiceSettings(Panel):
 class LockChannel(Panel):
     @property
     def embed(self) -> Embed:
-        return InfoEmbed(
-            title="您好，我們推薦您可以使用密碼鎖定功能，這是您的頻道專屬權利",
-            description="請點選下面的按鈕，讓我們馬上將您的頻道進行鎖定，並記住系統的給予的指示。\n"
-                        "請別擔心，這個按鈕只有身為頻道擁有者的您才能使用。\n"
-                        "如您找不到按鈕，您也可以前往設定區域進行點選。"
-
+        embed = Embed(
+            title="讓頻道設定為私人頻道。",
+            description="> 點選下面的按鈕，馬上將您的頻道進行鎖定。\n"
+                        "> 請別擔心，這個按鈕只有身為頻道擁有者的您才能使用。\n"
+                        "> 如您找不到按鈕，您也可以前往設定區域進行點選。",
+            color=0x2b2d31
         )
+
+        embed.set_image("https://i.imgur.com/8tMgmWa.png")
+
+        return embed
 
     @ui.button(
         label="鎖定頻道",
