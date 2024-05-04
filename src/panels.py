@@ -627,7 +627,7 @@ class VoiceSettings(Panel):
         )
 
     @staticmethod
-    async def slowmode(_button: Button, interaction: MessageInteraction) -> None:
+    async def slowmode(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
