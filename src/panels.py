@@ -14,7 +14,6 @@ from src.utils import max_bitrate
 if TYPE_CHECKING:
     from src.bot import Krabbe
 
-
 reset_option = SelectOption(label="取消選定", value="reset", emoji="🔄")
 
 
@@ -212,6 +211,16 @@ class ChannelSettings(Panel):
 
         new_owner = selected_users[0]
 
+        if new_owner.id == interaction.author.id:
+            return await interaction.response.edit_message(
+                embed=ErrorEmbed("你不能將所有權移交給你自己"), components=[]
+            )
+
+        if new_owner not in channel.channel.members:
+            return await interaction.response.edit_message(
+                embed=ErrorEmbed("這個成員不在這個頻道裡"), components=[]
+            )
+
         for active_voice_channel in VoiceChannel.active_channels.values():
             if active_voice_channel.owner_id == new_owner.id:
                 return await interaction.response.edit_message(
@@ -222,11 +231,6 @@ class ChannelSettings(Panel):
                                     "請等待他原有的頻道被刪除或是請他手動刪除頻道！"
                     ), components=[]
                 )
-
-        if new_owner.id == interaction.author.id:
-            return await interaction.response.edit_message(
-                embed=ErrorEmbed("你不能將所有權移交給你自己"), components=[]
-            )
 
         interaction, confirmed = await confirm_modal(
             interaction,
