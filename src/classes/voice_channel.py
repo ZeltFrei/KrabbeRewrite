@@ -443,7 +443,7 @@ class VoiceChannel(MongoObject):
             await self.notify(
                 embed=ChannelNotificationEmbed(
                     left_message=f"語音頻道 {self.channel.name} 沒有成員在頻道中",
-                    right_message="若60 秒內沒有成員加入頻道，語音頻道將執行刪除動作",
+                    right_message="若 60 秒內沒有成員加入頻道，語音頻道將執行刪除動作",
                     image="https://i.imgur.com/56Aifqg.png"
                 )
             )
