@@ -523,8 +523,8 @@ class VoiceChannel(MongoObject):
             thread=Object(self.logging_thread_id),
             username=after.author.display_name,
             avatar_url=after.author.avatar.url,
-            content=after.content,
-            embeds=after.embeds[:24] + [InfoEmbed("編輯", f"```{before.content}```")],
+            content=f"{before.content} => {after.content} (edited)",
+            embeds=after.embeds,
             wait=False,
             allowed_mentions=AllowedMentions.none(),
             components=[
@@ -544,8 +544,8 @@ class VoiceChannel(MongoObject):
             thread=Object(self.logging_thread_id),
             username=message.author.display_name,
             avatar_url=message.author.avatar.url,
-            content=message.content,
-            embeds=message.embeds[:24] + [InfoEmbed("訊息已被刪除")],
+            content=message.content + "(deleted)",
+            embeds=message.embeds,
             wait=False,
             allowed_mentions=AllowedMentions.none(),
             components=[
