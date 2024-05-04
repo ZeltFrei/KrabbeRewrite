@@ -775,6 +775,7 @@ class VoiceChannel(MongoObject):
     async def find(cls, bot: "Krabbe", database: AsyncIOMotorDatabase, **kwargs) -> AsyncIterator["VoiceChannel"]:
         """
         Find all documents in the collection that match the specified query.
+        Note that this method will remove the document from the database if the channel failed to resolve.
         """
         cls.logger.info(f"Finding {cls.collection_name} documents: {kwargs}")
 
@@ -783,10 +784,15 @@ class VoiceChannel(MongoObject):
         async for document in cursor:
             del document["_id"]
 
-            channel_settings = await ChannelSettings.get_settings(bot, database, user_id=document["owner_id"])
-            guild_settings = await GuildSettings.find_one(
-                bot, database, guild_id=bot.get_channel(document["channel_id"]).guild.id
-            )
+            try:
+                channel_settings = await ChannelSettings.get_settings(bot, database, user_id=document["owner_id"])
+                guild_settings = await GuildSettings.find_one(
+                    bot, database, guild_id=bot.get_channel(document["channel_id"]).guild.id
+                )
+            except Exception as _error:
+                cls.logger.warning(f"Failed to resolve voice channel {document['channel_id']}, removing.")
+                await database.get_collection(cls.collection_name).delete_one({"channel_id": document["channel_id"]})
+                continue
 
             yield cls(
                 bot=bot, database=database, channel_settings=channel_settings, guild_settings=guild_settings, **document
