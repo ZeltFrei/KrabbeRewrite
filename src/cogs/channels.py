@@ -24,6 +24,13 @@ class Channels(Cog):
         if guild_settings is None:
             return
 
+        for active_voice_channel in VoiceChannel.active_channels.values():
+            if not active_voice_channel.owner.id == member.id:
+                continue
+
+            await member.move_to(active_voice_channel.channel)
+            return
+
         voice_channel = await VoiceChannel.new(
             bot=self.bot,
             database=self.bot.database,
