@@ -476,6 +476,10 @@ class VoiceChannel(MongoObject):
 
         if member.id == self.owner_id:
             await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)
+
+            await self.guild_settings.log_event(
+                f"{self.channel.name} 的擁有者 {member.mention} 離開了頻道"
+            )
             return
 
         await self.apply_setting_and_permissions()
