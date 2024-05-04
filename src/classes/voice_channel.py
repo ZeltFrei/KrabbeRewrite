@@ -17,7 +17,7 @@ from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, WarningEmbed, InfoEmbed, ErrorEmbed
 from src.errors import FailedToResolve
-from src.utils import generate_channel_metadata
+from src.utils import generate_channel_metadata, remove_image
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -492,12 +492,17 @@ class VoiceChannel(MongoObject):
         if not message.channel.id == self.channel_id:
             return
 
+        embeds = message.embeds
+
+        if message.author.id == self.bot.user.id:
+            embeds = [remove_image(embed) for embed in message.embeds]
+
         await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=message.author.display_name,
             avatar_url=message.author.avatar.url,
             content=message.content,
-            embeds=message.embeds,
+            embeds=embeds,
             wait=False,
             allowed_mentions=AllowedMentions.none(),
             components=[

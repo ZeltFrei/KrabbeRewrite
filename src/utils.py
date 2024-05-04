@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Union, Dict, TYPE_CHECKING, List
 
-from disnake import PermissionOverwrite, Member, Role, Guild, User
+from disnake import PermissionOverwrite, Member, Role, Guild, User, Embed
 
 if TYPE_CHECKING:
     from src.classes.guild_settings import GuildSettings
@@ -138,3 +138,15 @@ def is_same_day(date1: datetime, date2: datetime) -> bool:
     :return: True if the dates are on the same day, False otherwise.
     """
     return date1.year == date2.year and date1.month == date2.month and date1.day == date2.day
+
+
+def remove_image(embed: Embed) -> Embed:
+    """
+    Remove the image from the embed.
+
+    :param embed: The embed to remove image from.
+    :return The embed with the image removed.
+    """
+    embed.set_image(url=None)
+
+    return embed
