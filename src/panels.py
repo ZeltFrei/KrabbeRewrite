@@ -649,6 +649,26 @@ class VoiceSettings(Panel):
         )
 
 
+class LockChannel(Panel):
+    @property
+    def embed(self) -> Embed:
+        return InfoEmbed(
+            title="您好，我們推薦您可以使用密碼鎖定功能，這是您的頻道專屬權利",
+            description="請點選下面的按鈕，讓我們馬上將您的頻道進行鎖定，並記住系統的給予的指示。\n"
+                        "請別擔心，這個按鈕只有身為頻道擁有者的您才能使用。\n"
+                        "如您找不到按鈕，您也可以前往設定區域進行點選。"
+
+        )
+
+    @ui.button(
+        label="鎖定頻道",
+        custom_id="lock_channel",
+        emoji="🔒"
+    )
+    async def lock_channel(self, _button: Button, interaction: MessageInteraction) -> None:
+        await MemberSettings.lock_channel(interaction)
+
+
 panels: Dict[str, Panel] = {}
 
 

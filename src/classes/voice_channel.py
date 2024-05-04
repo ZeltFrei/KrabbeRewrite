@@ -581,10 +581,7 @@ class VoiceChannel(MongoObject):
 
         self.start_listeners()
 
-        await self.notify(
-            wait=False,
-            embed=self.channel_settings.as_embed()
-        )
+        self.bot.dispatch("voice_channel_created", self)
 
     def start_listeners(self) -> None:
         """

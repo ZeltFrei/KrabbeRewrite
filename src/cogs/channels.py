@@ -5,6 +5,7 @@ from disnake.ext.commands import Cog
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
 from src.classes.voice_channel import VoiceChannel
+from src.panels import LockChannel
 
 
 class Channels(Cog):
@@ -28,6 +29,19 @@ class Channels(Cog):
         )
 
         await member.move_to(voice_channel.channel)
+
+    @Cog.listener(name="on_voice_channel_created")
+    async def on_voice_channel_created(self, voice_channel: VoiceChannel) -> None:
+        view = LockChannel()  # The Panel is a singleton, so we can reuse it
+
+        await voice_channel.notify(
+            wait=True,
+            embeds=[
+                voice_channel.channel_settings.as_embed(),
+                view.embed
+            ],
+            view=view
+        )
 
     @Cog.listener(name=Event.guild_channel_delete)
     async def on_guild_channel_delete(self, channel: GuildChannel) -> None:
