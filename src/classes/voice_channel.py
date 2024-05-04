@@ -15,7 +15,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
-from src.embeds import SuccessEmbed, WarningEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
+from src.embeds import SuccessEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
 from src.errors import FailedToResolve
 from src.utils import generate_channel_metadata, remove_image
 
@@ -308,28 +308,26 @@ class VoiceChannel(MongoObject):
         Restores the state of the channel. Checks if the owner is in the channel or not.
         This should only be called when bot is starting up.
         """
-        await self.notify(
-            embed=ChannelNotificationEmbed(
-                left_message="系統伺服器完成重新啟動！請注意，所有邀請已刪除",
-                right_message="您可能會遇到一些問題可以點選按鈕進行回報",
-                image="https://i.imgur.com/9Pt1NZA.png"
-            )
-        )
+        try:
+            if self.is_locked():
+                self.locked_channels[self.pin_code] = self
 
-        if self.is_locked():
-            self.locked_channels[self.pin_code] = self
+            await self.apply_setting_and_permissions()
 
-        await self.apply_setting_and_permissions()
+            if any(m.id == self.owner_id for m in self.channel.members):  # Owner is in the channel
+                await self.update_state(VoiceChannelState.ACTIVE)
+                return
 
-        if any(m.id == self.owner_id for m in self.channel.members):  # Owner is in the channel
-            await self.update_state(VoiceChannelState.ACTIVE)
-            return
+            if len(self.channel.members) == 0:  # Channel is empty
+                await self.update_state(VoiceChannelState.EMPTY)
+                return
 
-        if len(self.channel.members) == 0:  # Channel is empty
-            await self.update_state(VoiceChannelState.EMPTY)
-            return
-
-        await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)  # Owner is not in the channel but someone else is
+            await self.update_state(
+                VoiceChannelState.OWNER_DISCONNECTED
+            )  # Owner is not in the channel but someone else is
+            
+        finally:
+            self.bot.dispatch("voice_channel_restored", self)
 
     async def update_state(self, new_state: VoiceChannelState) -> None:
         """

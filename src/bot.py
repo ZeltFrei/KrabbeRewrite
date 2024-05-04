@@ -1,10 +1,11 @@
 import json
 import logging
 from os import getenv
+from typing import Optional
 
 from aiohttp import ClientSession
 from colorlog import ColoredFormatter
-from disnake import Intents, Event, VoiceState, Member
+from disnake import Intents, Event, VoiceState, Member, Webhook
 from disnake.ext.commands import InteractionBot, CommandSyncFlags
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.server_api import ServerApi
@@ -68,6 +69,10 @@ class Krabbe(InteractionBot):
 
         self.add_listener(self.__on_ready, Event.ready)
         self.add_listener(self.__on_voice_state_update, Event.voice_state_update)
+
+        self.feedback_webhook: Optional[Webhook] = Webhook.from_url(
+            getenv("FEEDBACK_WEBHOOK_URL"), session=self.webhooks_client_session
+        )
 
     def __load_extensions(self) -> None:
         """

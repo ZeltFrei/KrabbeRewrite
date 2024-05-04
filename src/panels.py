@@ -2,12 +2,13 @@ import asyncio
 from abc import ABC
 from typing import Dict, TYPE_CHECKING, Optional
 
-from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message, Color
+from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message, Color, \
+    TextInputStyle, AllowedMentions
 from disnake.abc import Messageable
 from disnake.ui import View, Button, Select
 
 from src.classes.voice_channel import VoiceChannel
-from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed
+from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
 from src.utils import max_bitrate
 
@@ -697,6 +698,48 @@ class LockChannel(Panel):
     )
     async def lock_channel(self, _button: Button, interaction: MessageInteraction) -> None:
         await MemberSettings.lock_channel(interaction)
+
+
+class ChannelRestored(Panel):
+    @property
+    def embed(self) -> Embed:
+        return ChannelNotificationEmbed(
+            left_message="系統伺服器完成重新啟動！請注意，所有邀請已刪除",
+            right_message="您可能會遇到一些問題可以點選按鈕進行回報",
+            image="https://i.imgur.com/9Pt1NZA.png"
+        )
+
+    @ui.button(
+        label="回報問題",
+        emoji="🔧",
+        custom_id="feedback"
+    )
+    async def feedback(self, _button: Button, interaction: MessageInteraction):
+        interaction, feedback = await quick_modal(
+            interaction,
+            title="回報問題",
+            field_name="請詳細描述您遇到的問題",
+            placeholder="請描述您遇到的問題",
+            max_length=2000,
+            min_length=5,
+            required=True,
+            style=TextInputStyle.long
+        )
+
+        await interaction.bot.feedback_webhook.send(
+            username=interaction.author.name,
+            avatar_url=interaction.author.avatar.url,
+            content=feedback,
+            allowed_mentions=AllowedMentions.none()
+        )
+
+        await interaction.response.send_message(
+            embed=SuccessEmbed(
+                title="已回報問題",
+                description="您的問題已經成功回報給我們了！"
+            ),
+            ephemeral=True
+        )
 
 
 panels: Dict[str, Panel] = {}

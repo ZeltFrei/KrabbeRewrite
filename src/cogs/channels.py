@@ -8,7 +8,7 @@ from disnake.ext.commands import Cog
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
 from src.classes.voice_channel import VoiceChannel
-from src.panels import LockChannel
+from src.panels import LockChannel, ChannelRestored
 
 
 class Channels(Cog):
@@ -43,6 +43,16 @@ class Channels(Cog):
                 voice_channel.channel_settings.as_embed(),
                 view.embed
             ],
+            view=view
+        )
+
+    @Cog.listener(name="on_voice_channel_restored")
+    async def on_voice_channel_restored(self, voice_channel: VoiceChannel) -> None:
+        view = ChannelRestored()
+
+        await voice_channel.notify(
+            wait=True,
+            embed=view.embed,
             view=view
         )
 
