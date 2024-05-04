@@ -8,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
 
 from src.classes.mongo_object import MongoObject
+from src.embeds import InfoEmbed
 from src.errors import FailedToResolve
 from src.utils import is_same_day
 
@@ -162,9 +163,13 @@ class GuildSettings(MongoObject):
         now = datetime.datetime.now()
 
         if not thread:
-            thread = await self.event_logging_channel.create_thread(
+            thread, _message = await self.event_logging_channel.create_thread(
                 name=now.strftime("%Y-%m-%d"),
-                auto_archive_duration=ThreadArchiveDuration.day
+                auto_archive_duration=ThreadArchiveDuration.day,
+                embed=InfoEmbed(
+                    title="事件紀錄",
+                    description=f"這是 {now.strftime('%Y-%m-%d')} 的事件紀錄"
+                )
             )
 
         if not is_same_day(thread.created_at, now):
