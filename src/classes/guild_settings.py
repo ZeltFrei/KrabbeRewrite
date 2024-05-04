@@ -174,7 +174,8 @@ class GuildSettings(MongoObject):
 
         if not is_same_day(thread.created_at, now):
             await thread.edit(
-                archived=True
+                archived=True,
+                locked=True
             )
 
             thread = await self.event_logging_channel.create_thread(
