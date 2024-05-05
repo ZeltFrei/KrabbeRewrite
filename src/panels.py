@@ -554,9 +554,9 @@ class VoiceSettings(Panel):
 
         await interaction.response.send_message(
             embeds=[SuccessEmbed(f"已設定比特率為 {int(selected_bitrate[0]) // 1000} Kbps")] +
-                   [
-                       WarningEmbed("注意", "這個伺服器的加成等級可能限制了比特率")
-                   ] if int(selected_bitrate[0]) > max_bitrate(interaction.guild) else [],
+                   ([
+                        WarningEmbed("注意", "這個伺服器的加成等級可能限制了比特率")
+                    ] if int(selected_bitrate[0]) > max_bitrate(interaction.guild) else []),
             ephemeral=True
         )
 
