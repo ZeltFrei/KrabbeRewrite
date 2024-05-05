@@ -134,25 +134,25 @@ class Setup(Cog):
                 ephemeral=True
             )
 
-        if category:
+        if category is not None:
             guild_settings.category_channel_id = category.id
 
-        if root_channel:
+        if root_channel is not None:
             guild_settings.root_channel_id = root_channel.id
 
-        if base_role:
+        if base_role is not None:
             guild_settings.base_role_id = base_role.id
 
-        if event_logging_channel:
+        if event_logging_channel is not None:
             guild_settings.event_logging_channel_id = event_logging_channel.id
 
-        if message_logging_channel:
+        if message_logging_channel is not None:
             guild_settings.message_logging_channel_id = message_logging_channel.id
 
-        if message_logging_webhook:
+        if message_logging_webhook is not None:
             guild_settings.message_logging_webhook_url = message_logging_webhook
 
-        if allow_nsfw:
+        if allow_nsfw is not None:
             guild_settings.allow_nsfw = allow_nsfw
 
         await guild_settings.upsert()
