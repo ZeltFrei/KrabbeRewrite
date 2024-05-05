@@ -3,7 +3,7 @@ from logging import getLogger
 from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator
 
 from disnake import Guild, CategoryChannel, VoiceChannel, Role, Webhook, ForumChannel, Message, ThreadArchiveDuration, \
-    Thread, AllowedMentions
+    Thread, AllowedMentions, Embed, Color
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
 
@@ -154,6 +154,27 @@ class GuildSettings(MongoObject):
             return self._event_logging_channel
 
         raise FailedToResolve(f"Failed to resolve event logging channel {self.event_logging_channel_id}")
+
+    def as_embed(self) -> Embed:
+        """
+        Generate a visual presentation as an embed for this guild settings object.
+
+        :return: The embed object.
+        """
+        embed = Embed(
+            title="⚙️ | 伺服器設定",
+            color=Color.blurple(),
+            description="這是這個伺服器的設定"
+        )
+
+        embed.add_field(name="📦 類別頻道", value=self.category_channel.mention)
+        embed.add_field(name="➕ 根頻道", value=self.root_channel.mention)
+        embed.add_field(name="👥 基礎身分組", value=self.base_role.mention)
+        embed.add_field(name="📃 事件紀錄頻道", value=self.event_logging_channel.mention)
+        embed.add_field(name="💬 訊息紀錄頻道", value=self.message_logging_channel.mention)
+        embed.add_field(name="🔞 NSFW 允許", value="是" if self.allow_nsfw else "否")
+
+        return embed
 
     async def ensure_event_logging_thread(self) -> Thread:
         """
