@@ -1,4 +1,7 @@
-from disnake import Option, OptionType, ApplicationCommandInteraction, ButtonStyle, OptionChoice
+from typing import Optional
+
+from disnake import Option, OptionType, ApplicationCommandInteraction, ButtonStyle, OptionChoice, ChannelType, \
+    CategoryChannel
 from disnake.ext.commands import Cog, slash_command, has_permissions
 from disnake.ui import Button
 
@@ -15,12 +18,24 @@ class Setup(Cog):
     @has_permissions(administrator=True)
     @slash_command(
         name="setup",
-        description="快捷設定"
+        description="快捷設定",
+        options=[
+            Option(
+                name="category",
+                description="要設定在的類別，未指定則由機器人自動創建",
+                type=OptionType.channel,
+                channel_types=[ChannelType.category],
+                required=False
+            )
+        ]
     )
-    async def setup(self, interaction: ApplicationCommandInteraction) -> None:
+    async def setup(self, interaction: ApplicationCommandInteraction,
+                    category: Optional[CategoryChannel] = None) -> None:
         await interaction.response.defer(ephemeral=True)
 
-        category = await interaction.guild.create_category("🔊 動態語音頻道")
+        if not category:
+            category = await interaction.guild.create_category("🔊 動態語音頻道")
+
         root_channel = await interaction.guild.create_voice_channel("🔊 建立語音頻道", category=category)
         event_logging_channel = await interaction.guild.create_forum_channel("事件紀錄", category=category)
         message_logging_channel = await interaction.guild.create_forum_channel(name="訊息紀錄", category=category)
