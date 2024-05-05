@@ -1,4 +1,4 @@
 [
     "src.cogs.channels",
-    "src.cogs.setup"
+    "src.cogs.configuration"
 ]
