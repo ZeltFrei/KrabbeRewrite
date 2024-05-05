@@ -32,7 +32,8 @@ class GuildSettings(MongoObject):
             base_role_id: int,
             event_logging_channel_id: int,
             message_logging_channel_id: int,
-            message_logging_webhook_url: str
+            message_logging_webhook_url: str,
+            allow_nsfw: bool
     ):
         super().__init__(bot, database)
 
@@ -43,6 +44,7 @@ class GuildSettings(MongoObject):
         self.event_logging_channel_id: int = event_logging_channel_id
         self.message_logging_channel_id: int = message_logging_channel_id
         self.message_logging_webhook_url: str = message_logging_webhook_url
+        self.allow_nsfw: bool = allow_nsfw
 
         self._guild: Optional[Guild] = None
         self._category_channel: Optional[CategoryChannel] = None
@@ -63,7 +65,8 @@ class GuildSettings(MongoObject):
             "base_role_id": self.base_role_id,
             "event_logging_channel_id": self.event_logging_channel_id,
             "message_logging_channel_id": self.message_logging_channel_id,
-            "message_logging_webhook_url": self.message_logging_webhook_url
+            "message_logging_webhook_url": self.message_logging_webhook_url,
+            "allow_nsfw": self.allow_nsfw
         }
 
     @property

@@ -50,7 +50,8 @@ class Setup(Cog):
             base_role_id=interaction.guild.default_role.id,
             event_logging_channel_id=event_logging_channel.id,
             message_logging_channel_id=message_logging_channel.id,
-            message_logging_webhook_url=message_logging_webhook.url
+            message_logging_webhook_url=message_logging_webhook.url,
+            allow_nsfw=True
         )
 
         await guild_settings.upsert()

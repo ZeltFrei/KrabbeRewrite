@@ -8,6 +8,7 @@ from disnake.ext.commands import Cog
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
 from src.classes.voice_channel import VoiceChannel
+from src.embeds import ErrorEmbed
 from src.panels import LockChannel, ChannelRestored
 
 
@@ -82,6 +83,20 @@ class Channels(Cog):
 
         voice_channel = VoiceChannel.active_channels[before.id]
 
+        if before.nsfw != after.nsfw:
+            voice_channel.channel_settings.nsfw = after.nsfw
+
+            if not voice_channel.guild_settings.allow_nsfw:
+                await voice_channel.notify(
+                    content=voice_channel.owner.mention,
+                    embed=ErrorEmbed(
+                        "設定更新",
+                        "偵測到您的頻道已被設為 NSFW，但伺服器不允許 NSFW 頻道，因此已將您的頻道設為非 NSFW。"
+                    )
+                )
+
+                voice_channel.channel_settings.nsfw = False
+
         if before.name != after.name:
             voice_channel.channel_settings.channel_name = after.name
 
@@ -94,13 +109,11 @@ class Channels(Cog):
         if before.rtc_region != after.rtc_region:
             voice_channel.channel_settings.rtc_region = after.rtc_region
 
-        if before.nsfw != after.nsfw:
-            voice_channel.channel_settings.nsfw = after.nsfw
-
         if before.slowmode_delay != after.slowmode_delay:
             voice_channel.channel_settings.slowmode_delay = after.slowmode_delay
 
         await voice_channel.channel_settings.upsert()
+        await voice_channel.apply_setting_and_permissions()
 
 
 def setup(bot: Krabbe) -> None:

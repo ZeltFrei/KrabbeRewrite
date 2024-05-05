@@ -569,6 +569,12 @@ class VoiceSettings(Panel):
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
+        if not channel.guild_settings.allow_nsfw:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("此伺服器不允許設置 NSFW 內容"),
+                ephemeral=True
+            )
+
         channel.channel_settings.nsfw = not channel.channel_settings.nsfw
 
         await channel.channel_settings.upsert()
