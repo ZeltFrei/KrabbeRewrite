@@ -10,7 +10,7 @@ from pymongo.results import UpdateResult, DeleteResult
 from src.classes.mongo_object import MongoObject
 from src.embeds import InfoEmbed
 from src.errors import FailedToResolve
-from src.utils import is_same_day
+from src.utils import is_same_day, snowflake_time
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -196,7 +196,7 @@ class GuildSettings(MongoObject):
                 )
             )
 
-        if not is_same_day(thread.created_at, now):
+        if not is_same_day(snowflake_time(thread.id), now):
             await thread.edit(
                 archived=True,
                 locked=True

@@ -9,7 +9,6 @@ import disnake
 from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite, Thread, \
     AllowedMentions, Object, HTTPException
 from disnake.ui import Button
-from disnake.utils import snowflake_time
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.channel_settings import ChannelSettings
@@ -17,7 +16,7 @@ from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
 from src.errors import FailedToResolve
-from src.utils import generate_channel_metadata, remove_image
+from src.utils import generate_channel_metadata, remove_image, snowflake_time
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
