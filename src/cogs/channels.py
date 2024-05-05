@@ -86,7 +86,7 @@ class Channels(Cog):
         if before.nsfw != after.nsfw:
             voice_channel.channel_settings.nsfw = after.nsfw
 
-            if not voice_channel.guild_settings.allow_nsfw:
+            if not voice_channel.guild_settings.allow_nsfw and after.nsfw:
                 await voice_channel.notify(
                     content=voice_channel.owner.mention,
                     embed=ErrorEmbed(
