@@ -274,11 +274,14 @@ class VoiceChannel(MongoObject):
         await self.apply_setting_and_permissions()
 
         await self.notify(
-            embed=ChannelNotificationEmbed(
-                left_message=f"語音頻道 {self.channel.name} 擁有者已進行變更",
-                right_message=f"此語音頻道的擁有者已變更為 {self.owner.mention}",
-                image="https://i.imgur.com/JVumKnF.png"
-            )
+            embeds=[
+                ChannelNotificationEmbed(
+                    left_message=f"語音頻道 {self.channel.name} 擁有者已進行變更",
+                    right_message=f"此語音頻道的擁有者已變更為 {self.owner.mention}",
+                    image="https://i.imgur.com/JVumKnF.png"
+                ),
+                self.channel_settings.as_embed()
+            ]
         )
 
         if self.is_locked():
