@@ -501,6 +501,9 @@ class VoiceChannel(MongoObject):
         if not message.channel.id == self.channel_id:
             return
 
+        if message.flags.ephemeral:
+            return
+
         embeds = message.embeds
 
         if message.author.id == self.bot.user.id:
@@ -527,6 +530,9 @@ class VoiceChannel(MongoObject):
         if not after.channel == self.channel:
             return
 
+        if after.flags.ephemeral:
+            return
+
         await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=after.author.display_name,
@@ -546,6 +552,9 @@ class VoiceChannel(MongoObject):
 
     async def on_message_delete(self, message: Message) -> None:
         if not message.channel == self.channel:
+            return
+
+        if message.flags.ephemeral:
             return
 
         await self.guild_settings.message_logging_webhook.send(
