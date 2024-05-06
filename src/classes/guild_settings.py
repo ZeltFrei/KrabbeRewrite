@@ -204,7 +204,12 @@ class GuildSettings(MongoObject):
 
             thread = await self.event_logging_channel.create_thread(
                 name=now.strftime("%Y-%m-%d"),
-                auto_archive_duration=ThreadArchiveDuration.day
+                auto_archive_duration=ThreadArchiveDuration.day,
+                embed=InfoEmbed(
+                    title="事件紀錄",
+                    description=f"這是 {now.strftime('%Y-%m-%d')} 的事件紀錄"
+                )
+
             )
 
         return thread
