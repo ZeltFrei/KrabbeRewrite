@@ -209,7 +209,6 @@ class GuildSettings(MongoObject):
                     title="事件紀錄",
                     description=f"這是 {now.strftime('%Y-%m-%d')} 的事件紀錄"
                 )
-
             )
 
         return thread
