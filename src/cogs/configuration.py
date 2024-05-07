@@ -7,6 +7,7 @@ from disnake.ui import Button
 
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
+from src.classes.voice_channel import VoiceChannel
 from src.embeds import SuccessEmbed, ErrorEmbed
 from src.panels import panels
 
@@ -159,11 +160,14 @@ class Setup(Cog):
 
         await interaction.response.send_message(
             embeds=[
-                SuccessEmbed("伺服器設定已更新"),
+                SuccessEmbed("伺服器設定已更新，各個頻道將會陸續套用新設定"),
                 guild_settings.as_embed()
             ],
             ephemeral=True
         )
+
+        for channel in VoiceChannel.active_channels.values():
+            await channel.apply_setting_and_permissions()
 
     @has_permissions(administrator=True)
     @slash_command(
