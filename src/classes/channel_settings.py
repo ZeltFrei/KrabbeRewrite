@@ -26,7 +26,9 @@ class ChannelSettings(MongoObject):
             nsfw: Optional[bool] = None,
             soundboard_enabled: Optional[bool] = None,
             media_allowed: Optional[bool] = None,
-            slowmode_delay: Optional[int] = None
+            slowmode_delay: Optional[int] = None,
+            stream: Optional[bool] = None,
+            use_embedded_activities: Optional[bool] = None
     ):
         super().__init__(bot, database)
 
@@ -46,6 +48,8 @@ class ChannelSettings(MongoObject):
         self.soundboard_enabled: Optional[bool] = soundboard_enabled
         self.media_allowed: Optional[bool] = media_allowed
         self.slowmode_delay: Optional[int] = slowmode_delay
+        self.stream: Optional[bool] = stream
+        self.use_embedded_activities: Optional[bool] = use_embedded_activities
 
     def unique_identifier(self) -> dict:
         return {"user_id": self.user_id}
@@ -60,7 +64,9 @@ class ChannelSettings(MongoObject):
             "nsfw": self.nsfw,
             "soundboard_enabled": self.soundboard_enabled,
             "media_allowed": self.media_allowed,
-            "slowmode_delay": self.slowmode_delay
+            "slowmode_delay": self.slowmode_delay,
+            "stream": self.stream,
+            "use_embedded_activities": self.use_embedded_activities
         }
 
     def reset(self):
@@ -75,6 +81,8 @@ class ChannelSettings(MongoObject):
         self.soundboard_enabled = None
         self.media_allowed = None
         self.slowmode_delay = None
+        self.stream = None
+        self.use_embedded_activities = None
 
     @property
     def user(self) -> disnake.User:
@@ -116,7 +124,9 @@ class ChannelSettings(MongoObject):
         embed.add_field(name="🔞 NSFW", value=self.nsfw or "未設定", inline=True)
         embed.add_field(name="🔊 音效板", value=self.soundboard_enabled or "未設定", inline=True)
         embed.add_field(name="🎥 媒體允許", value=self.media_allowed or "未設定", inline=True)
-        embed.add_field(name="⏳ 慢速模式延遲", value=self.slowmode_delay or "未設定", inline=True)
+        embed.add_field(name="⏳ 慢速模式延遲", value=self.slowmode_delay or "未設定", inline=True),
+        embed.add_field(name="🔴 直播 / 視訊", value=self.stream or "未設定", inline=True)
+        embed.add_field(name="🎮 嵌入式活動", value=self.use_embedded_activities or "未設定", inline=True)
 
         return embed
 
