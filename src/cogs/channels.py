@@ -8,7 +8,7 @@ from disnake.ext.commands import Cog
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
 from src.classes.voice_channel import VoiceChannel
-from src.embeds import ErrorEmbed
+from src.embeds import ErrorEmbed, WarningEmbed
 from src.panels import LockChannel, ChannelRestored
 
 
@@ -28,6 +28,18 @@ class Channels(Cog):
         for active_voice_channel in VoiceChannel.active_channels.values():
             if not active_voice_channel.owner.id == member.id:
                 continue
+
+            if active_voice_channel.channel.guild.id != guild_settings.guild_id:
+                await member.move_to(None)
+
+                await active_voice_channel.notify(
+                    content=member.mention,
+                    embed=WarningEmbed(
+                        "還想竄逃！",
+                        "你已經擁有這個頻道了，如果你想要在其他伺服器裡創建頻道，請先刪除這個頻道或將所有權轉移。"
+                    )
+                )
+                return
 
             await member.move_to(active_voice_channel.channel)
             return
