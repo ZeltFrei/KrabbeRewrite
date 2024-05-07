@@ -504,7 +504,9 @@ class VoiceSettings(Panel):
             SelectOption(label="語音區域", value="rtc_region", description="調整語音區域", emoji="🌐"),
             SelectOption(label="音效板", value="toggle_soundboard", description="啟用或禁用音效板", emoji="🔉"),
             SelectOption(label="媒體傳送許可", value="media_permission", description="啟用或禁用媒體傳送", emoji="📎"),
-            SelectOption(label="慢速模式", value="slowmode", description="設定慢速模式", emoji="⏳")
+            SelectOption(label="慢速模式", value="slowmode", description="設定慢速模式", emoji="⏳"),
+            SelectOption(label="直播 / 視訊", value="stream", description="設定直播或視訊", emoji="🔴"),
+            SelectOption(label="嵌入式活動", value="embedded_activities", description="啟用或禁用嵌入式活動", emoji="🎮")
         ],
         custom_id="voice_settings"
     )
@@ -728,6 +730,58 @@ class VoiceSettings(Panel):
 
         await channel.guild_settings.log_event(
             f"{interaction.author.mention} 設定了 {channel.channel.name} 的慢速模式為 {slowmode_delay} 秒"
+        )
+
+    @staticmethod
+    async def toggle_stream(interaction: MessageInteraction) -> None:
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        channel.channel_settings.stream = not channel.channel_settings.stream
+
+        await channel.channel_settings.upsert()
+        await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="當前語音頻道直播 / 視訊的權限",
+                description=f"此語音頻道的直播 / 視訊調整為：{'允許' if channel.channel_settings.stream else '禁止'}"
+            )
+        )
+
+        await interaction.response.send_message(
+            embed=SuccessEmbed(f"直播 / 視訊：{'開' if channel.channel_settings.stream else '關'}"),
+            ephemeral=True
+        )
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的直播 / 視訊許可為 {channel.channel_settings.stream}"
+        )
+
+    @staticmethod
+    async def use_embedded_activities(interaction: MessageInteraction) -> None:
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        channel.channel_settings.use_embedded_activities = not channel.channel_settings.use_embedded_activities
+
+        await channel.channel_settings.upsert()
+        await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="當前語音頻道使用活動的權限",
+                description=f"此語音頻道的活動權限調整為：{'允許' if channel.channel_settings.use_embedded_activities else '禁止'}"
+            )
+        )
+
+        await interaction.response.send_message(
+            embed=SuccessEmbed(f"使用活動：{'開' if channel.channel_settings.use_embedded_activities else '關'}"),
+            ephemeral=True
+        )
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的使用活動許可為 {channel.channel_settings.use_embedded_activities}"
         )
 
 
