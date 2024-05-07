@@ -506,7 +506,7 @@ class VoiceSettings(Panel):
             SelectOption(label="檔案上傳", value="media_permission", description="設定語音頻道成員檔案上傳權限", emoji="📎"),
             SelectOption(label="慢速模式", value="slowmode", description="設定慢速模式", emoji="⏳"),
             SelectOption(label="允許/禁止畫面直播", value="stream", description="設定語音頻道成員畫面分享權限", emoji="🔴"),
-            SelectOption(label="允許/禁止 建立語音活動", value="embedded_activities", description="設定語音頻道成員建立活動權限", emoji="🎮")
+            SelectOption(label="允許/禁止建立語音活動", value="embedded_activities", description="設定語音頻道成員建立活動權限", emoji="🎮")
         ],
         custom_id="voice_settings"
     )
@@ -524,6 +524,10 @@ class VoiceSettings(Panel):
                 await self.media_permission(interaction)
             case "slowmode":
                 await self.slowmode(interaction)
+            case "stream":
+                await self.toggle_stream(interaction)
+            case "embedded_activities":
+                await self.use_embedded_activities(interaction)
 
     @staticmethod
     async def bitrate(interaction: MessageInteraction) -> None:
