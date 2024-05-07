@@ -35,8 +35,8 @@ class Channels(Cog):
                 await active_voice_channel.notify(
                     content=member.mention,
                     embed=WarningEmbed(
-                        "還想竄逃！",
-                        "你已經擁有這個頻道了，如果你想要在其他伺服器裡創建頻道，請先刪除這個頻道或將所有權轉移。"
+                        "您已經在這裡擁有語音頻道",
+                        "請先刪除頻道/轉移所有權或等待系統自動刪除後再次建立新頻道。"
                     )
                 )
                 return
