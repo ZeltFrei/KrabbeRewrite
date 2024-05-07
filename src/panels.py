@@ -503,7 +503,7 @@ class VoiceSettings(Panel):
             SelectOption(label="NSFW", value="nsfw", description="啟用或禁用 NSFW 內容", emoji="🔞"),
             SelectOption(label="語音區域", value="rtc_region", description="調整語音區域", emoji="🌐"),
             SelectOption(label="音效板", value="toggle_soundboard", description="啟用或禁用音效板", emoji="🔉"),
-            SelectOption(label="媒體傳送許可", value="media_permission", description="啟用或禁用媒體傳送", emoji="📎"),
+            SelectOption(label="檔案上傳", value="media_permission", description="設定語音頻道成員檔案上傳權限", emoji="📎"),
             SelectOption(label="慢速模式", value="slowmode", description="設定慢速模式", emoji="⏳"),
             SelectOption(label="允許/禁止畫面直播", value="stream", description="設定語音頻道成員畫面分享權限", emoji="🔴"),
             SelectOption(label="允許/禁止 建立語音活動", value="embedded_activities", description="設定語音頻道成員建立活動權限", emoji="🎮")
