@@ -186,9 +186,8 @@ class Setup(Cog):
             for panel in panels.values():
                 await panel.send_to(interaction.channel)
 
-            await interaction.response.send_message(
+            await interaction.edit_original_response(
                 embed=SuccessEmbed("所有控制面板已傳送"),
-                ephemeral=True
             )
 
             return
