@@ -46,6 +46,9 @@ def generate_channel_metadata(
     :param locked: Whether the channel is locked.
     :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method.
     """
+    if not guild_settings.allow_nsfw:
+        pass
+
     return {
         "name": channel_settings.channel_name or f"{channel_settings.user} 的語音頻道",
         "overwrites": generate_permission_overwrites(owner, members, channel_settings, guild_settings, locked),
@@ -54,7 +57,7 @@ def generate_channel_metadata(
         else channel_settings.bitrate or 64000,
         "user_limit": channel_settings.user_limit or 0,
         "rtc_region": channel_settings.rtc_region or None,
-        "nsfw": channel_settings.nsfw or False,
+        "nsfw": False if not guild_settings.allow_nsfw else channel_settings.nsfw,
         "slowmode_delay": channel_settings.slowmode_delay or 0
     }
 

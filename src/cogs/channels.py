@@ -91,7 +91,7 @@ class Channels(Cog):
                     content=voice_channel.owner.mention,
                     embed=ErrorEmbed(
                         "設定更新",
-                        "偵測到您的頻道已被設為 NSFW，但伺服器不允許 NSFW 頻道，因此已將您的頻道設為非 NSFW。"
+                        "偵測到您已將頻道的 NSFW 設定打開，但這個伺服器並不允許 NSFW 內容，NSFW 設定已被自動關閉"
                     )
                 )
 

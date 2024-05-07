@@ -569,32 +569,36 @@ class VoiceSettings(Panel):
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
-        if not channel.guild_settings.allow_nsfw:
-            return await interaction.response.send_message(
-                embed=ErrorEmbed("此伺服器不允許設置 NSFW 內容"),
-                ephemeral=True
-            )
-
         channel.channel_settings.nsfw = not channel.channel_settings.nsfw
 
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
 
-        await channel.notify(
-            embed=InfoEmbed(
-                title="當前語音文字 NSFW 限制級內容",
-                description=f"NSFW 已{'啟用，允許限制級內容' if channel.channel_settings.nsfw else '禁用'}"
+        if channel.guild_settings.allow_nsfw:
+            await channel.guild_settings.log_event(
+                f"{interaction.author.mention} 設定了 {channel.channel.name} 的 NSFW 為 {channel.channel_settings.nsfw}"
             )
-        )
 
-        await interaction.response.send_message(
-            embed=SuccessEmbed(f"NSFW：{'開' if channel.channel_settings.nsfw else '關'}"),
-            ephemeral=True
-        )
+            await channel.notify(
+                embed=InfoEmbed(
+                    title="當前語音文字 NSFW 限制級內容",
+                    description=f"NSFW 已{'啟用，允許限制級內容' if channel.channel_settings.nsfw else '禁用'}"
+                )
+            )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的 NSFW 為 {channel.channel_settings.nsfw}"
-        )
+            await interaction.response.send_message(
+                embed=SuccessEmbed(f"NSFW：{'開' if channel.channel_settings.nsfw else '關'}"),
+                ephemeral=True
+            )
+
+        else:
+            await interaction.response.send_message(
+                embeds=[
+                    SuccessEmbed(f"NSFW：{'開' if channel.channel_settings.nsfw else '關'}"),
+                    WarningEmbed("注意", "你的設定檔已更新，但這個伺服器禁用了 NSFW 內容，因此頻道的 NSFW 設定仍然為關")
+                ],
+                ephemeral=True
+            )
 
     @staticmethod
     async def rtc_region(interaction: MessageInteraction) -> None:
