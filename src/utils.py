@@ -96,7 +96,8 @@ def generate_permission_overwrites(
                     use_soundboard=False if channel_settings.soundboard_enabled is None
                     else channel_settings.soundboard_enabled,  # To make it's False by default
                     attach_files=channel_settings.media_allowed,
-                    embed_links=channel_settings.media_allowed
+                    embed_links=channel_settings.media_allowed,
+                    use_external_sounds=True
                 )
             }
         )
@@ -125,7 +126,8 @@ def generate_permission_overwrites(
                     use_soundboard=False if channel_settings.soundboard_enabled is None
                     else channel_settings.soundboard_enabled,  # To make it's False by default
                     attach_files=channel_settings.media_allowed,
-                    embed_links=channel_settings.media_allowed
+                    embed_links=channel_settings.media_allowed,
+                    use_external_sounds=True
                 )
             }
         )
