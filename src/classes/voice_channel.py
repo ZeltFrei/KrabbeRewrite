@@ -378,10 +378,14 @@ class VoiceChannel(MongoObject):
         :param timeout: The timeout in seconds.
         :return: Boolean indicating whether the user joined the channel.
         """
+        self.logger.info(f"Waiting for user {user_id} to join the channel {self.channel.name}")
+
         if user_id and self.channel.members and any(m.id == user_id for m in self.channel.members):
+            self.logger.info(f"User {user_id} already in the channel {self.channel.name}, returning")
             return True
 
         if not user_id and self.non_bot_members:
+            self.logger.info(f"Any user already in the channel {self.channel.name}, returning")
             return True
 
         try:
@@ -393,6 +397,7 @@ class VoiceChannel(MongoObject):
         except asyncio.TimeoutError:
             return False
 
+        self.logger.info(f"User {user_id} joined the channel {self.channel.name}, stop waiting")
         return True
 
     async def on_state_change(self, new_state: VoiceChannelState) -> None:
