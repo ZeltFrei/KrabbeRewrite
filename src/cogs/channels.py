@@ -109,6 +109,8 @@ class Channels(Cog):
 
                 voice_channel.channel_settings.nsfw = False
 
+                await voice_channel.apply_setting_and_permissions()
+
         if before.name != after.name:
             voice_channel.channel_settings.channel_name = after.name
 
@@ -125,7 +127,6 @@ class Channels(Cog):
             voice_channel.channel_settings.slowmode_delay = after.slowmode_delay
 
         await voice_channel.channel_settings.upsert()
-        await voice_channel.apply_setting_and_permissions()
 
 
 def setup(bot: Krabbe) -> None:
