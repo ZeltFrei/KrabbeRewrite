@@ -2,6 +2,7 @@ import asyncio
 from abc import ABC
 from typing import Dict, TYPE_CHECKING, Optional
 
+from ZeitfreiOauth import AsyncDiscordOAuthClient
 from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message, Color, \
     TextInputStyle, AllowedMentions
 from disnake.abc import Messageable
@@ -10,12 +11,42 @@ from disnake.ui import View, Button, Select
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
-from src.utils import max_bitrate
+from src.utils import max_bitrate, is_authorized
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
 
 reset_option = SelectOption(label="取消選定", value="reset", emoji="🔄")
+
+
+async def ensure_authorization(oauth_client: AsyncDiscordOAuthClient, interaction: Interaction) -> bool:
+    """
+    Ensure that the user is authorized. And respond to the interaction with an error message if not.
+
+    :param oauth_client: The OAuth API client to use.
+    :param interaction: The interaction to check.
+    :return: Whether the user is authorized.
+    """
+    if await is_authorized(oauth_client, interaction.author.id):
+        return True
+
+    await interaction.response.send_message(
+        embed=ErrorEmbed(
+            title="需要驗證",
+            description="你必須先通過 ZeitFrei 的驗證系統才能夠使用設定功能！\n"
+                        f"請點擊 [這裡]({oauth_client.api_base_url}) 或下方的連結來開始驗證"
+        ),
+        ephemeral=True,
+        components=[
+            Button(
+                style=ButtonStyle.url,
+                label="驗證",
+                url=oauth_client.api_base_url
+            )
+        ]
+    )
+
+    return False
 
 
 async def ensure_owned_channel(interaction: Interaction) -> Optional[VoiceChannel]:
@@ -133,6 +164,9 @@ class Title(Panel):
 
 
 class JoinChannel(Panel):
+    async def interaction_check(self, interaction: MessageInteraction) -> bool:
+        return await ensure_authorization(interaction.bot.oauth, interaction)
+
     @ui.button(
         label="加入私人語音頻道",
         custom_id="join_channel",
@@ -175,6 +209,9 @@ class JoinChannel(Panel):
 
 
 class ChannelSettings(Panel):
+    async def interaction_check(self, interaction: MessageInteraction) -> bool:
+        return await ensure_authorization(interaction.bot.oauth, interaction)
+
     @ui.string_select(
         placeholder="⚙️ 頻道類設定",
         options=[
@@ -311,6 +348,9 @@ class ChannelSettings(Panel):
 
 
 class MemberSettings(Panel):
+    async def interaction_check(self, interaction: MessageInteraction) -> bool:
+        return await ensure_authorization(interaction.bot.oauth, interaction)
+
     @ui.string_select(
         placeholder="👥 成員設定",
         options=[
@@ -495,6 +535,9 @@ class MemberSettings(Panel):
 
 
 class VoiceSettings(Panel):
+    async def interaction_check(self, interaction: MessageInteraction) -> bool:
+        return await ensure_authorization(interaction.bot.oauth, interaction)
+
     @ui.string_select(
         placeholder="🔊 語音設定",
         options=[
