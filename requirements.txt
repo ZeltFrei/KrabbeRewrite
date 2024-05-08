@@ -4,3 +4,4 @@ colorlog==6.8.2
 pymongo==4.6.3
 motor[srv]==3.4.0
 tzlocal==5.2
+git+https://github.com/ZeltFrei/EvanlauOauthServer.git
