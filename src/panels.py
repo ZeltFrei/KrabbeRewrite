@@ -164,9 +164,6 @@ class Title(Panel):
 
 
 class JoinChannel(Panel):
-    async def interaction_check(self, interaction: MessageInteraction) -> bool:
-        return await ensure_authorization(interaction.bot.oauth, interaction)
-
     @ui.button(
         label="加入私人語音頻道",
         custom_id="join_channel",
