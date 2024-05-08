@@ -32,10 +32,9 @@ async def ensure_authorization(oauth_client: AsyncDiscordOAuthClient, interactio
 
     await interaction.response.send_message(
         embed=ErrorEmbed(
-            title="需要驗證",
-            description="您必須先接受 Krabbe 的授權需求，以便進行更多設定。\n"
-                        f"- 不好意思，為了提供更完善的功能服務，需要請您接受授權。\n"
-                        f"- 請點選下方 `驗證` 按鈕來進行授權動作，或是點擊 [這裡]({oauth_client.api_base_url}\n"
+            title="您必須先接受 Krabbe 的授權需求，以便進行更多設定。",
+            description=f"- 不好意思，為了提供更完善的功能服務，需要請您接受授權。\n"
+                        f"- 請點選下方 `驗證` 按鈕來進行授權動作，或是點擊 [這裡]({oauth_client.api_base_url})\n"
                         f"- 別擔心，此授權用途僅為調查成員需求，不會對您的 Discord 帳戶造成任何影響。"
         ),
         ephemeral=True,
