@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Union, Dict, TYPE_CHECKING, List
 
+from ZeitfreiOauth import AsyncDiscordOAuthClient
+from aiohttp import ClientResponseError
 from disnake import PermissionOverwrite, Member, Role, Guild, User, Embed, utils
 from tzlocal import get_localzone
 
@@ -170,3 +172,22 @@ def snowflake_time(snowflake: int) -> datetime:
     :return: The time of the snowflake.
     """
     return utils.snowflake_time(snowflake).astimezone(get_localzone())
+
+
+async def is_authorized(oauth_client: AsyncDiscordOAuthClient, user_id: int) -> bool:
+    """
+    Check if a user is authorized to use the bot.
+
+    :param oauth_client: The OAuth client to use.
+    :param user_id: The user ID to check.
+    :return: True if the user is authorized, False otherwise.
+    """
+    try:
+        await oauth_client.get_user(user_id)
+    except ClientResponseError as error:
+        if error.status == 404:
+            return False
+
+        raise error
+
+    return True

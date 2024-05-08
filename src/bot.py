@@ -3,6 +3,7 @@ import logging
 from os import getenv
 from typing import Optional
 
+from ZeitfreiOauth import AsyncDiscordOAuthClient
 from aiohttp import ClientSession
 from colorlog import ColoredFormatter
 from disnake import Intents, Event, VoiceState, Member, Webhook
@@ -72,6 +73,10 @@ class Krabbe(InteractionBot):
 
         self.feedback_webhook: Optional[Webhook] = Webhook.from_url(
             getenv("FEEDBACK_WEBHOOK_URL"), session=self.webhooks_client_session
+        )
+
+        self.oauth = AsyncDiscordOAuthClient(
+            getenv("OAUTH_API_KEY"), getenv("OAUTH_API_BASE_URL", "https://oauth.zeitfrei.tw/")
         )
 
     def __load_extensions(self) -> None:
