@@ -545,10 +545,17 @@ class VoiceSettings(Panel):
             SelectOption(label="NSFW", value="nsfw", description="啟用或禁用 NSFW 內容", emoji="🔞"),
             SelectOption(label="語音區域", value="rtc_region", description="調整語音區域", emoji="🌐"),
             SelectOption(label="音效板", value="toggle_soundboard", description="啟用或禁用音效板", emoji="🔉"),
-            SelectOption(label="檔案上傳", value="media_permission", description="設定語音頻道成員檔案上傳權限", emoji="📎"),
+            SelectOption(
+                label="檔案上傳", value="media_permission", description="設定語音頻道成員檔案上傳權限", emoji="📎"
+            ),
             SelectOption(label="慢速模式", value="slowmode", description="設定慢速模式", emoji="⏳"),
-            SelectOption(label="允許/禁止畫面直播", value="stream", description="設定語音頻道成員畫面分享權限", emoji="🔴"),
-            SelectOption(label="允許/禁止建立語音活動", value="embedded_activities", description="設定語音頻道成員建立活動權限", emoji="🎮")
+            SelectOption(
+                label="允許/禁止畫面直播", value="stream", description="設定語音頻道成員畫面分享權限", emoji="🔴"
+            ),
+            SelectOption(
+                label="允許/禁止建立語音活動", value="embedded_activities", description="設定語音頻道成員建立活動權限",
+                emoji="🎮"
+            )
         ],
         custom_id="voice_settings"
     )
@@ -643,7 +650,10 @@ class VoiceSettings(Panel):
             await interaction.response.send_message(
                 embeds=[
                     SuccessEmbed(f"NSFW：{'開' if channel.channel_settings.nsfw else '關'}"),
-                    WarningEmbed("注意", "你的設定檔已更新，但這個伺服器禁用了 NSFW 內容，因此頻道的 NSFW 設定仍然為關")
+                    WarningEmbed(
+                        title="您的設定檔已更新並保存，但此伺服器設定禁止 NSFW 內容。",
+                        description=f"您的頻道因為 {interaction.guild.name} 伺服器設定的關係，無法變更為 NSFW 頻道。"
+                    )
                 ],
                 ephemeral=True
             )
