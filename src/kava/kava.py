@@ -1,3 +1,4 @@
+import json
 from typing import TYPE_CHECKING
 
 from websockets import WebSocketServerProtocol, ConnectionClosed, Data
@@ -20,7 +21,12 @@ class Kava:
         self.websocket: WebSocketServerProtocol = websocket
 
     async def on_websocket_message(self, message: Data):
-        pass
+        data = json.load(message)
+
+        match data["type"]:
+            # TODO: Implement the rest of the message types
+            case _:
+                self.manager.logger.warning("Unknown message type %s", data["type"])
 
     async def message_handler(self):
         try:
