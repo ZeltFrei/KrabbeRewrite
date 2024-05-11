@@ -5,7 +5,7 @@ from logging import getLogger
 from typing import Dict, List, Callable, Coroutine, Any, TYPE_CHECKING, Optional
 
 import websockets
-from websockets import WebSocketServerProtocol, WebSocketServer
+from websockets import WebSocketServerProtocol, WebSocketServer, ConnectionClosedError
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -36,6 +36,19 @@ class ServerSideClient:
     def __init__(self, websocket: WebSocketServerProtocol):
         self.websocket = websocket
         self.pending_responses: Dict[str, asyncio.Future] = {}
+
+        self._bot_user_id: Optional[int] = None
+
+    async def get_bot_user_id(self) -> int:
+        """
+        Get the bot user ID.
+        :return: The bot user ID.
+        """
+        if self._bot_user_id is None:
+            response = await self.request("bot_user_id")
+            self._bot_user_id = response['bot_user_id']
+
+        return self._bot_user_id
 
     async def request(self, endpoint: str, **kwargs: Any) -> Any:
         """
@@ -128,6 +141,8 @@ class KavaServer:
                     _ = self.bot.loop.create_task(self._handle_request(client, data))
                 elif data['type'] == "response":
                     await client._handle_response(data)
+        except ConnectionClosedError:
+            self.logger.info(f"Connection from {websocket.remote_address} closed.")
         finally:
             self.clients.remove(client)
 
