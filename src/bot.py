@@ -13,7 +13,7 @@ from pymongo.server_api import ServerApi
 
 from src.classes.voice_channel import VoiceChannel
 from src.errors import FailedToResolve
-from src.kava.manager import KavaManager
+from src.kava.server import KavaServer
 from src.panels import setup_views
 
 
@@ -76,11 +76,11 @@ class Krabbe(InteractionBot):
             getenv("FEEDBACK_WEBHOOK_URL"), session=self.webhooks_client_session
         )
 
-        self.oauth = AsyncDiscordOAuthClient(
+        self.oauth: AsyncDiscordOAuthClient = AsyncDiscordOAuthClient(
             getenv("OAUTH_API_KEY"), getenv("OAUTH_API_BASE_URL", "https://oauth.zeitfrei.tw/")
         )
 
-        self.kava_manager = KavaManager(self)
+        self.server: KavaServer = KavaServer(self, getenv("KAVA_HOST", "0.0.0.0"), int(getenv("KAVA_PORT", "8090")))
 
     def __load_extensions(self) -> None:
         """
@@ -115,6 +115,14 @@ class Krabbe(InteractionBot):
 
             await voice_channel.restore_state()
 
+    async def setup_kava_server(self) -> None:
+        """
+        Set up the Kava server for the bot.
+
+        :return: None
+        """
+        await self.server.start()  # TODO: Add handlers
+
     async def __on_ready(self) -> None:
         """
         Method executed when the bot is ready to start receiving events.
@@ -128,8 +136,6 @@ class Krabbe(InteractionBot):
         setup_views(self)
 
         await self.__load_channels()
-
-        await self.kava_manager.start_serving(getenv("KAVA_HOST", "0.0.0.0"), int(getenv("KAVA_PORT", "8090")))
 
     async def __on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState) -> None:
         """
