@@ -115,13 +115,13 @@ class Krabbe(InteractionBot):
 
             await voice_channel.restore_state()
 
-    async def setup_kava_server(self) -> None:
+    async def __setup_kava_server(self) -> None:
         """
         Set up the Kava server for the bot.
 
         :return: None
         """
-        await self.server.start()  # TODO: Add handlers
+        await self.server.start()  # TODO: Add necessary handlers
 
     async def __on_ready(self) -> None:
         """
@@ -136,6 +136,8 @@ class Krabbe(InteractionBot):
         setup_views(self)
 
         await self.__load_channels()
+
+        await self.__setup_kava_server()
 
     async def __on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState) -> None:
         """

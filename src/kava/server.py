@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from logging import getLogger
 from typing import Dict, List, Callable, Coroutine, Any, TYPE_CHECKING, Optional
 
 import websockets
@@ -59,7 +60,7 @@ class ServerSideClient:
 
         return await future
 
-    async def handle_response(self, message: Dict[str, Any]) -> None:
+    async def _handle_response(self, message: Dict[str, Any]) -> None:
         """
         Handle a response from the client.
         Calls the future associated with the request ID to stop request blocking.
@@ -77,6 +78,8 @@ class ServerSideClient:
 
 
 class KavaServer:
+    logger = getLogger("kava.server")
+
     def __init__(self, bot: "Krabbe", host: str = "localhost", port: int = 8765):
         self.bot = bot
         self.host = host
@@ -92,6 +95,8 @@ class KavaServer:
         :param request: The request data.
         :return: None
         """
+        self.logger.debug(f"Handling request {request}")
+
         endpoint = request["endpoint"]
         request_id = request["id"]
         data = request["data"]
@@ -104,12 +109,14 @@ class KavaServer:
         else:
             await request_obj.respond({"status": "error", "message": "No handler for endpoint"})
 
-    async def _handle_connection(self, websocket: WebSocketServerProtocol) -> None:
+    async def _handle_messages(self, websocket: WebSocketServerProtocol) -> None:
         """
-        Handles a new connection from a client.
+        Handles messages from a websocket connection.
         :param websocket: The websocket connection.
         :return: None
         """
+        self.logger.info(f"New connection from {websocket.remote_address}")
+
         client = ServerSideClient(websocket)
         self.clients.append(client)
 
@@ -120,7 +127,7 @@ class KavaServer:
                 if data['type'] == "request":
                     _ = self.bot.loop.create_task(self._handle_request(client, data))
                 elif data['type'] == "response":
-                    await client.handle_response(data)
+                    await client._handle_response(data)
         finally:
             self.clients.remove(client)
 
@@ -131,15 +138,21 @@ class KavaServer:
         :param handler: The handler to add.
         :return: None
         """
+        self.logger.debug(f"Adding handler for endpoint {endpoint}")
+
         if endpoint not in self.handlers:
             self.handlers[endpoint] = []
 
         self.handlers[endpoint].append(handler)
 
     async def start(self) -> None:
-        self.server = await websockets.serve(self._handle_connection, self.host, self.port)
+        self.logger.info(f"Starting Kava server on {self.host}:{self.port}")
+
+        self.server = await websockets.serve(self._handle_messages, self.host, self.port)
 
     def stop(self) -> None:
+        self.logger.info("Stopping Kava server")
+
         if self.server is not None:
             self.server.close()
             self.bot.loop.run_until_complete(self.server.wait_closed())
