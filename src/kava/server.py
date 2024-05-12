@@ -33,22 +33,12 @@ class Request:
 
 
 class ServerSideClient:
-    def __init__(self, websocket: WebSocketServerProtocol):
-        self.websocket = websocket
+    def __init__(self, websocket: WebSocketServerProtocol, bot_user_id: int):
         self.pending_responses: Dict[str, asyncio.Future] = {}
 
-        self._bot_user_id: Optional[int] = None
+        self.websocket: WebSocketServerProtocol = websocket
 
-    async def get_bot_user_id(self) -> int:
-        """
-        Get the bot user ID.
-        :return: The bot user ID.
-        """
-        if self._bot_user_id is None:
-            response = await self.request("bot_user_id")
-            self._bot_user_id = response['bot_user_id']
-
-        return self._bot_user_id
+        self.bot_user_id: int = bot_user_id
 
     async def request(self, endpoint: str, **kwargs: Any) -> Any:
         """
@@ -99,7 +89,7 @@ class KavaServer:
         self.port = port
         self.server: Optional[WebSocketServer] = None
         self.handlers: Dict[str, List[Callable[[Request, Any], Coroutine[Any, Any, None]]]] = {}
-        self.clients: List[ServerSideClient] = []
+        self.clients: Dict[int, ServerSideClient] = {}
 
     async def _handle_request(self, client: ServerSideClient, request: Dict[str, Any]) -> None:
         """
@@ -122,19 +112,16 @@ class KavaServer:
         else:
             await request_obj.respond({"status": "error", "message": "No handler for endpoint"})
 
-    async def _handle_messages(self, websocket: WebSocketServerProtocol) -> None:
+    async def _handle_messages(self, client: ServerSideClient) -> None:
         """
         Handles messages from a websocket connection.
-        :param websocket: The websocket connection.
+        :param client: The client to handle messages for.
         :return: None
         """
-        self.logger.info(f"New connection from {websocket.remote_address}")
-
-        client = ServerSideClient(websocket)
-        self.clients.append(client)
+        self.logger.info(f"Start handling messages from {client.websocket.remote_address}")
 
         try:
-            async for message in websocket:
+            async for message in client.websocket:
                 data = json.loads(message)
 
                 if data['type'] == "request":
@@ -142,9 +129,37 @@ class KavaServer:
                 elif data['type'] == "response":
                     await client._handle_response(data)
         except ConnectionClosedError:
-            self.logger.info(f"Connection from {websocket.remote_address} closed.")
+            self.logger.info(f"Connection from {client.websocket.remote_address} closed.")
         finally:
-            self.clients.remove(client)
+            self.clients.pop(client.bot_user_id)
+
+    async def _handle_new_connection(self, websocket: WebSocketServerProtocol):
+        """
+        Handle a new connection.
+        :param websocket: The websocket connection.
+        :return None
+        """
+        self.logger.info(f"New connection from {websocket.remote_address}")
+
+        await websocket.send(
+            json.dumps({"type": "request", "id": "initial", "endpoint": "get_client_info", "data": {}})
+        )
+
+        try:
+            response = await asyncio.wait_for(websocket.recv(), timeout=10.0)  # timeout as needed
+            client_info = json.loads(response)
+
+            if client_info['type'] == 'response' and client_info['id'] == 'initial':
+                client = ServerSideClient(websocket, **client_info['data'])
+                self.clients[client_info['data']['bot_user_id']] = client
+
+                await self._handle_messages(client)
+        except asyncio.TimeoutError:
+            self.logger.warning(f"Client {websocket.remote_address} did not respond in time.")
+            await websocket.close()
+        except TypeError:
+            self.logger.warning(f"Client {websocket.remote_address} did not send the correct data.")
+            await websocket.close()
 
     def add_handler(self, endpoint: str, handler: Callable[[Request, Any], Coroutine[Any, Any, None]]) -> None:
         """
@@ -163,7 +178,7 @@ class KavaServer:
     async def start(self) -> None:
         self.logger.info(f"Starting Kava server on {self.host}:{self.port}")
 
-        self.server = await websockets.serve(self._handle_messages, self.host, self.port)
+        self.server = await websockets.serve(self._handle_new_connection, self.host, self.port)
 
     def stop(self) -> None:
         self.logger.info("Stopping Kava server")
