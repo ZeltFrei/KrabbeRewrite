@@ -100,6 +100,7 @@ def generate_permission_overwrites(
                     attach_files=channel_settings.media_allowed,
                     embed_links=channel_settings.media_allowed,
                     use_external_sounds=True,
+                    use_application_commands=True,
                     stream=channel_settings.stream,
                     use_embedded_activities=channel_settings.use_embedded_activities
                 )
@@ -132,6 +133,7 @@ def generate_permission_overwrites(
                     attach_files=channel_settings.media_allowed,
                     embed_links=channel_settings.media_allowed,
                     use_external_sounds=True,
+                    use_application_commands=True,
                     stream=channel_settings.stream,
                     use_embedded_activities=channel_settings.use_embedded_activities
                 )
