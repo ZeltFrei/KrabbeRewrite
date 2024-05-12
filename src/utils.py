@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union, Dict, TYPE_CHECKING, List
+from typing import Union, Dict, TYPE_CHECKING, List, Iterable
 
 from ZeitfreiOauth import AsyncDiscordOAuthClient
 from aiohttp import ClientResponseError
@@ -191,3 +191,15 @@ async def is_authorized(oauth_client: AsyncDiscordOAuthClient, user_id: int) -> 
         raise error
 
     return True
+
+
+def split_list(input_list, chunk_size) -> Iterable[list]:
+    length = len(input_list)
+
+    num_sublists = length // chunk_size
+
+    for i in range(num_sublists):
+        yield input_list[i * chunk_size:(i + 1) * chunk_size]
+
+    if length % chunk_size != 0:
+        yield input_list[num_sublists * chunk_size:]
