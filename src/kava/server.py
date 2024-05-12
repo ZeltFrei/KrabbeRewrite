@@ -88,7 +88,7 @@ class KavaServer:
         self.host = host
         self.port = port
         self.server: Optional[WebSocketServer] = None
-        self.handlers: Dict[str, List[Callable[[Request, Any], Coroutine[Any, Any, None]]]] = {}
+        self.handlers: Dict[str, List[Callable[..., Coroutine[Any, Any, None]]]] = {}
         self.clients: Dict[int, ServerSideClient] = {}
 
     async def _handle_request(self, client: ServerSideClient, request: Dict[str, Any]) -> None:
@@ -161,7 +161,7 @@ class KavaServer:
             self.logger.warning(f"Client {websocket.remote_address} did not send the correct data.")
             await websocket.close()
 
-    def add_handler(self, endpoint: str, handler: Callable[[Request, Any], Coroutine[Any, Any, None]]) -> None:
+    def add_handler(self, endpoint: str, handler: Callable[..., Coroutine[Any, Any, None]]) -> None:
         """
         Add a handler for a specific endpoint.
         :param endpoint: The endpoint to add the handler for.
