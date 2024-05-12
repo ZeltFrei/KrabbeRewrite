@@ -58,7 +58,13 @@ def has_music_permissions(user_id: int, channel: VoiceChannel) -> bool:
     :param channel: The channel to check.
     :return: True if the user has music permissions. False otherwise.
     """
-    return channel.owner_id == user_id  # TODO: integrate with channel settings
+    if channel.channel_settings.shared_music_control is None:
+        return True
+
+    if channel.channel_settings.shared_music_control is False:
+        return user_id == channel.channel_settings.user_id
+
+    return True
 
 
 async def ensure_music_permissions(interaction: Interaction) -> Optional[VoiceChannel]:
@@ -69,7 +75,7 @@ async def ensure_music_permissions(interaction: Interaction) -> Optional[VoiceCh
     """
     channel = VoiceChannel.get_active_channel_from_interaction(interaction)
 
-    if not has_music_permissions(interaction.author.id, channel):  # TODO: integrate with channel settings
+    if not has_music_permissions(interaction.author.id, channel):
         await interaction.response.send_message(
             embed=ErrorEmbed("你不是這個頻道的擁有者！"),
             ephemeral=True

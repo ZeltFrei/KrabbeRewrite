@@ -28,7 +28,8 @@ class ChannelSettings(MongoObject):
             media_allowed: Optional[bool] = None,
             slowmode_delay: Optional[int] = None,
             stream: Optional[bool] = None,
-            use_embedded_activities: Optional[bool] = None
+            use_embedded_activities: Optional[bool] = None,
+            shared_music_control: Optional[bool] = None
     ):
         super().__init__(bot, database)
 
@@ -51,6 +52,8 @@ class ChannelSettings(MongoObject):
         self.stream: Optional[bool] = stream
         self.use_embedded_activities: Optional[bool] = use_embedded_activities
 
+        self.shared_music_control: Optional[bool] = shared_music_control
+
     def unique_identifier(self) -> dict:
         return {"user_id": self.user_id}
 
@@ -66,7 +69,8 @@ class ChannelSettings(MongoObject):
             "media_allowed": self.media_allowed,
             "slowmode_delay": self.slowmode_delay,
             "stream": self.stream,
-            "use_embedded_activities": self.use_embedded_activities
+            "use_embedded_activities": self.use_embedded_activities,
+            "shared_music_control": self.shared_music_control
         }
 
     def reset(self):
@@ -83,6 +87,7 @@ class ChannelSettings(MongoObject):
         self.slowmode_delay = None
         self.stream = None
         self.use_embedded_activities = None
+        self.shared_music_control = None
 
     @property
     def user(self) -> disnake.User:
@@ -127,6 +132,7 @@ class ChannelSettings(MongoObject):
         embed.add_field(name="⏳ 慢速模式延遲", value=self.slowmode_delay or "未設定", inline=True),
         embed.add_field(name="🔴 直播 / 視訊", value=self.stream or "未設定", inline=True)
         embed.add_field(name="🎮 嵌入式活動", value=self.use_embedded_activities or "未設定", inline=True)
+        embed.add_field(name="🔒 共享音樂控制", value=self.shared_music_control or "未設定", inline=True)
 
         return embed
 

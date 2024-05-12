@@ -902,9 +902,28 @@ class MusicSettings(Panel):
 
     @staticmethod
     async def toggle_music(interaction: MessageInteraction) -> None:
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        channel.channel_settings.shared_music_control = not channel.channel_settings.shared_music_control
+
+        await channel.channel_settings.upsert()
+        await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="共享音樂控制",
+                description=f"此頻道的共享音樂控制設定為：{'允許' if channel.channel_settings.shared_music_control else '禁止'}"
+            )
+        )
+
         await interaction.response.send_message(
-            embed=ErrorEmbed("此功能尚未開放，敬請期待！"),
+            embed=SuccessEmbed(f"共享音樂控制：{'開' if channel.channel_settings.shared_music_control else '關'}"),
             ephemeral=True
+        )
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的共享音樂控制為為 {channel.channel_settings.shared_music_control}"
         )
 
 
