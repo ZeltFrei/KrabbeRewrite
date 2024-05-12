@@ -509,6 +509,9 @@ class VoiceChannel(MongoObject):
         if message.flags.ephemeral:
             return
 
+        if message.author.id in self.bot.kava_server.clients:
+            return
+
         embeds = message.embeds
 
         if message.author.id == self.bot.user.id:
@@ -538,6 +541,9 @@ class VoiceChannel(MongoObject):
         if after.flags.ephemeral:
             return
 
+        if after.author.id in self.bot.kava_server.clients:
+            return
+
         await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=after.author.display_name,
@@ -560,6 +566,9 @@ class VoiceChannel(MongoObject):
             return
 
         if message.flags.ephemeral:
+            return
+
+        if message.author.id in self.bot.kava_server.clients:
             return
 
         await self.guild_settings.message_logging_webhook.send(
