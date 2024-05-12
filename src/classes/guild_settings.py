@@ -33,7 +33,8 @@ class GuildSettings(MongoObject):
             event_logging_channel_id: int,
             message_logging_channel_id: int,
             message_logging_webhook_url: str,
-            allow_nsfw: bool
+            allow_nsfw: bool,
+            lock_message_dm: bool
     ):
         super().__init__(bot, database)
 
@@ -45,6 +46,7 @@ class GuildSettings(MongoObject):
         self.message_logging_channel_id: int = message_logging_channel_id
         self.message_logging_webhook_url: str = message_logging_webhook_url
         self.allow_nsfw: bool = allow_nsfw
+        self.lock_message_dm: bool = lock_message_dm
 
         self._guild: Optional[Guild] = None
         self._category_channel: Optional[CategoryChannel] = None
@@ -66,7 +68,8 @@ class GuildSettings(MongoObject):
             "event_logging_channel_id": self.event_logging_channel_id,
             "message_logging_channel_id": self.message_logging_channel_id,
             "message_logging_webhook_url": self.message_logging_webhook_url,
-            "allow_nsfw": self.allow_nsfw
+            "allow_nsfw": self.allow_nsfw,
+            "lock_message_dm": self.lock_message_dm
         }
 
     @property
@@ -173,6 +176,7 @@ class GuildSettings(MongoObject):
         embed.add_field(name="📃 事件紀錄頻道", value=self.event_logging_channel.mention)
         embed.add_field(name="💬 訊息紀錄頻道", value=self.message_logging_channel.mention)
         embed.add_field(name="🔞 NSFW 允許", value="是" if self.allow_nsfw else "否")
+        embed.add_field(name="🔒 鎖定訊息 DM", value="是" if self.lock_message_dm else "否")
 
         return embed
 

@@ -66,6 +66,15 @@ class Channels(Cog):
             view=view
         )
 
+        if voice_channel.guild_settings.lock_message_dm:
+            await voice_channel.owner.send(
+                embeds=[
+                    voice_channel.channel_settings.as_embed(),
+                    view.embed
+                ],
+                view=view
+            )
+
     @Cog.listener(name="on_voice_channel_restored")
     async def on_voice_channel_restored(self, voice_channel: VoiceChannel) -> None:
         view = ChannelRestored(self.bot)  # The Panel is a singleton, so we can reuse it

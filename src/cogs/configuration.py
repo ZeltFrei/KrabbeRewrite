@@ -52,7 +52,8 @@ class Setup(Cog):
             event_logging_channel_id=event_logging_channel.id,
             message_logging_channel_id=message_logging_channel.id,
             message_logging_webhook_url=message_logging_webhook.url,
-            allow_nsfw=True
+            allow_nsfw=True,
+            lock_message_dm=False
         )
 
         await guild_settings.upsert()
@@ -113,6 +114,11 @@ class Setup(Cog):
                 name="allow_nsfw",
                 description="是否允許 NSFW 頻道",
                 type=OptionType.boolean
+            ),
+            Option(
+                name="lock_message_dm",
+                description="是否將鎖定通知訊息發送到私人訊息中",
+                type=OptionType.boolean
             )
         ]
     )
@@ -123,7 +129,8 @@ class Setup(Cog):
                         event_logging_channel: Optional[ForumChannel] = None,
                         message_logging_channel: Optional[ForumChannel] = None,
                         message_logging_webhook: Optional[str] = None,
-                        allow_nsfw: Optional[bool] = None) -> None:
+                        allow_nsfw: Optional[bool] = None,
+                        lock_message_dm: Optional[bool] = None) -> None:
         guild_settings = await GuildSettings.find_one(self.bot, self.bot.database, guild_id=interaction.guild.id)
 
         if not guild_settings:
@@ -155,6 +162,9 @@ class Setup(Cog):
 
         if allow_nsfw is not None:
             guild_settings.allow_nsfw = allow_nsfw
+
+        if lock_message_dm is not None:
+            guild_settings.lock_message_dm = lock_message_dm
 
         await guild_settings.upsert()
 
