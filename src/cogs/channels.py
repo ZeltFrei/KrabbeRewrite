@@ -55,7 +55,7 @@ class Channels(Cog):
 
     @Cog.listener(name="on_voice_channel_created")
     async def on_voice_channel_created(self, voice_channel: VoiceChannel) -> None:
-        view = LockChannel()  # The Panel is a singleton, so we can reuse it
+        view = LockChannel(self.bot)  # The Panel is a singleton, so we can reuse it
 
         await voice_channel.notify(
             wait=True,
@@ -68,7 +68,7 @@ class Channels(Cog):
 
     @Cog.listener(name="on_voice_channel_restored")
     async def on_voice_channel_restored(self, voice_channel: VoiceChannel) -> None:
-        view = ChannelRestored()
+        view = ChannelRestored(self.bot)  # The Panel is a singleton, so we can reuse it
 
         await voice_channel.notify(
             wait=True,

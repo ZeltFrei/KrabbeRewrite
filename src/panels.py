@@ -10,6 +10,7 @@ from disnake.ui import View, Button, Select
 
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
+from src.kava.utils import get_playing_client_in, get_idle_clients_in
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
 from src.utils import max_bitrate, is_authorized
 
@@ -81,10 +82,12 @@ class Panel(View, ABC):
     """
     _instance: Optional["Panel"] = None
 
-    def __init__(self):
+    def __init__(self, bot: "Krabbe"):
         super().__init__(timeout=None)
 
-    def __new__(cls) -> "Panel":
+        self.bot: "Krabbe" = bot
+
+    def __new__(cls, bot: "Krabbe") -> "Panel":
         if cls._instance:
             return cls._instance
 
@@ -840,6 +843,71 @@ class VoiceSettings(Panel):
         )
 
 
+class MusicSettings(Panel):
+    @ui.string_select(
+        placeholder="🎵 音樂設定",
+        options=[
+            reset_option,
+            SelectOption(label="召喚音樂機器人", value="summon_bot", description="召喚音樂機器人", emoji="🤖"),
+            SelectOption(
+                label="允許/禁止頻道成員使用音樂", value="toggle_music", description="啟用或禁用音樂功能", emoji="🎶"
+            )
+        ],
+        custom_id="music_settings"
+    )
+    async def select_setting(self, _select: Select, interaction: MessageInteraction):
+        match interaction.values[0]:
+            case "summon_bot":
+                await self.summon_bot(interaction)
+            case "toggle_music":
+                await self.toggle_music(interaction)
+
+    async def summon_bot(self, interaction: MessageInteraction) -> None:
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        if get_playing_client_in(self.bot.kava_server, channel):
+            await interaction.response.send_message(
+                embed=ErrorEmbed("音樂機器人已經在這個頻道了！"),
+                ephemeral=True
+            )
+            return
+
+        idle_clients = get_idle_clients_in(self.bot.kava_server, channel.channel.guild)
+
+        if not idle_clients:
+            await interaction.response.send_message(
+                embed=ErrorEmbed("目前沒有可用的音樂機器人，請稍後再試"),
+                ephemeral=True
+            )
+            return
+
+        response = await idle_clients[0].request('connect', channel_id=channel.channel_id)
+
+        if response['status'] == 'success':
+            await interaction.response.send_message(
+                embed=SuccessEmbed(response['message']),
+                ephemeral=True
+            )
+        elif response['status'] == 'error':
+            await interaction.response.send_message(
+                embed=ErrorEmbed(response['message']),
+                ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                embed=ErrorEmbed("未知的錯誤"),
+                ephemeral=True
+            )
+
+    @staticmethod
+    async def toggle_music(interaction: MessageInteraction) -> None:
+        await interaction.response.send_message(
+            embed=ErrorEmbed("此功能尚未開放，敬請期待！"),
+            ephemeral=True
+        )
+
+
 class LockChannel(Panel):
     @property
     def embed(self) -> Embed:
@@ -918,11 +986,12 @@ def setup_views(bot: "Krabbe") -> None:
     """
     panels.update(
         {
-            "title": Title(),
-            "join_channel": JoinChannel(),
-            "channel_settings": ChannelSettings(),
-            "member_settings": MemberSettings(),
-            "voice_settings": VoiceSettings()
+            "title": Title(bot),
+            "join_channel": JoinChannel(bot),
+            "channel_settings": ChannelSettings(bot),
+            "member_settings": MemberSettings(bot),
+            "voice_settings": VoiceSettings(bot),
+            "music_settings": MusicSettings(bot)
         }
     )
 
