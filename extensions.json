@@ -1,4 +1,5 @@
 [
     "src.cogs.channels",
-    "src.cogs.configuration"
+    "src.cogs.configuration",
+    "src.cogs.music",
 ]
