@@ -111,7 +111,12 @@ class Music(Cog):
 
     @play.autocomplete("query")
     async def play_autocomplete(self, interaction: ApplicationCommandInteraction, query: str):
-        client = get_active_clients_in(self.server, VoiceChannel.get_active_channel_from_interaction(interaction))
+        channel = VoiceChannel.get_active_channel_from_interaction(interaction)
+
+        if not channel:
+            return [OptionChoice(name="請先加入一個語音頻道！", value="")]
+
+        client = get_active_clients_in(self.server, channel)
 
         if not client:
             return [OptionChoice(name="請先召喚一隻音樂機器人！", value="")]
