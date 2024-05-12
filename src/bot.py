@@ -13,6 +13,7 @@ from pymongo.server_api import ServerApi
 
 from src.classes.voice_channel import VoiceChannel
 from src.errors import FailedToResolve
+from src.kava.handlers import add_handlers
 from src.kava.server import KavaServer
 from src.panels import setup_views
 
@@ -80,7 +81,9 @@ class Krabbe(InteractionBot):
             getenv("OAUTH_API_KEY"), getenv("OAUTH_API_BASE_URL", "https://oauth.zeitfrei.tw/")
         )
 
-        self.kava_server: KavaServer = KavaServer(self, getenv("KAVA_HOST", "0.0.0.0"), int(getenv("KAVA_PORT", "8090")))
+        self.kava_server: KavaServer = KavaServer(
+            self, getenv("KAVA_HOST", "0.0.0.0"), int(getenv("KAVA_PORT", "8090"))
+        )
 
     def __load_extensions(self) -> None:
         """
@@ -121,7 +124,9 @@ class Krabbe(InteractionBot):
 
         :return: None
         """
-        await self.kava_server.start()  # TODO: Add necessary handlers
+        await self.kava_server.start()
+        
+        add_handlers(self.kava_server)
 
     async def __on_ready(self) -> None:
         """
