@@ -77,7 +77,7 @@ async def ensure_music_permissions(interaction: Interaction) -> Optional[VoiceCh
 
     if not has_music_permissions(interaction.author.id, channel):
         await interaction.response.send_message(
-            embed=ErrorEmbed("你不是這個頻道的擁有者！"),
+            embed=ErrorEmbed("此語音頻道擁有者不允許其他成員使用音樂功能"),
             ephemeral=True
         )
         return None
