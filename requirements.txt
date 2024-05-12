@@ -6,3 +6,4 @@ motor[srv]==3.4.0
 tzlocal==5.2
 websockets==12.0
 git+https://github.com/ZeltFrei/EvanlauOauthServer.git
+git+https://github.com/Snipy7374/disnake-ext-paginator.git
