@@ -764,7 +764,7 @@ class VoiceChannel(MongoObject):
         return voice_channel
 
     @classmethod
-    async def get_active_channel_from_interaction(cls, interaction: Interaction) -> Optional["VoiceChannel"]:
+    def get_active_channel_from_interaction(cls, interaction: Interaction) -> Optional["VoiceChannel"]:
         """
         Get the active voice channel object that the interaction author is in if any.
         :param interaction: The interaction object.
