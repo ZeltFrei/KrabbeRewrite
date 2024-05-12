@@ -9,6 +9,7 @@ import disnake
 from disnake import Member, NotFound, VoiceState, Message, Interaction, User, PermissionOverwrite, Thread, \
     AllowedMentions, Object, HTTPException
 from disnake.ui import Button
+from disnake.utils import MISSING
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from src.classes.channel_settings import ChannelSettings
@@ -516,7 +517,7 @@ class VoiceChannel(MongoObject):
         await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=message.author.display_name,
-            avatar_url=message.author.avatar.url,
+            avatar_url=message.author.avatar.url if message.author.avatar else MISSING,
             content=message.content,
             embeds=embeds,
             wait=False,
@@ -540,7 +541,7 @@ class VoiceChannel(MongoObject):
         await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=after.author.display_name,
-            avatar_url=after.author.avatar.url,
+            avatar_url=after.author.avatar.url if after.author.avatar else MISSING,
             content=f"{before.content} => {after.content} (edited)",
             embeds=after.embeds,
             wait=False,
@@ -564,7 +565,7 @@ class VoiceChannel(MongoObject):
         await self.guild_settings.message_logging_webhook.send(
             thread=Object(self.logging_thread_id),
             username=message.author.display_name,
-            avatar_url=message.author.avatar.url,
+            avatar_url=message.author.avatar.url if message.author.avatar else MISSING,
             content=message.content + "(deleted)",
             embeds=message.embeds,
             wait=False,
