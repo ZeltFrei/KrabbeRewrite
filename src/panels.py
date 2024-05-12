@@ -885,7 +885,7 @@ class MusicSettings(Panel):
             )
             return
 
-        response = await idle_clients[0].request('connect', channel_id=channel.channel_id)
+        response = await idle_clients[0].request('connect', owner_id=channel.owner_id, channel_id=channel.channel_id)
 
         if response['status'] == 'success':
             await interaction.response.send_message(
