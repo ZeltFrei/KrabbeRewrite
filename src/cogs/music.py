@@ -85,12 +85,12 @@ class Music(Cog):
         ]
     )
     async def play(self, interaction: ApplicationCommandInteraction, query: str, index: int = None):
-        await interaction.response.defer(ephemeral=True)
-
         check_passed, client, channel = await music_check(self.server, interaction)
 
         if not check_passed:
             return
+
+        await interaction.response.defer(ephemeral=True)
 
         response = await client.request(
             "play", channel_id=channel.channel_id, author_id=interaction.author.id, query=query, index=index
