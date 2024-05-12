@@ -844,6 +844,9 @@ class VoiceSettings(Panel):
 
 
 class MusicSettings(Panel):
+    async def interaction_check(self, interaction: MessageInteraction) -> bool:
+        return await ensure_authorization(interaction.bot.oauth, interaction)
+
     @ui.string_select(
         placeholder="🎵 音樂設定",
         options=[
