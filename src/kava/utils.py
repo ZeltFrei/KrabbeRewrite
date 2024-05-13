@@ -58,10 +58,7 @@ def has_music_permissions(user_id: int, channel: VoiceChannel) -> bool:
     :param channel: The channel to check.
     :return: True if the user has music permissions. False otherwise.
     """
-    if channel.channel_settings.shared_music_control is None:
-        return True
-
-    if channel.channel_settings.shared_music_control is False:
+    if not channel.channel_settings.shared_music_control:
         return user_id == channel.channel_settings.user_id
 
     return True

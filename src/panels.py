@@ -890,6 +890,13 @@ class MusicSettings(Panel):
         if response['status'] == 'success':
             await interaction.response.send_message(
                 embed=SuccessEmbed(response['message']),
+                components=[
+                    Button(
+                        label=channel.channel.name,
+                        style=ButtonStyle.url,
+                        url=channel.channel.jump_url
+                    )
+                ],
                 ephemeral=True
             )
         elif response['status'] == 'error':
