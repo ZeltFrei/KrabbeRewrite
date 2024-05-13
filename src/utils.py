@@ -187,10 +187,7 @@ async def is_authorized(oauth_client: AsyncDiscordOAuthClient, user_id: int) -> 
     try:
         await oauth_client.get_user(user_id)
     except ClientResponseError as error:
-        if error.status == 404:
-            return False
-
-        raise error
+        return False
 
     return True
 
