@@ -892,7 +892,7 @@ class MusicSettings(Panel):
                 embed=SuccessEmbed(response['message']),
                 components=[
                     Button(
-                        label=channel.name,
+                        label=channel.channel.name,
                         style=ButtonStyle.url,
                         url=channel.channel.jump_url
                     )
