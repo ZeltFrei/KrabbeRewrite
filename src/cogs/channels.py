@@ -1,7 +1,8 @@
 from typing import Union
 
 import disnake
-from disnake import VoiceState, Member, Event
+from disnake import ButtonStyle, VoiceState, Member, Event
+from disnake.ui import Button
 from disnake.abc import GuildChannel
 from disnake.ext.commands import Cog
 
@@ -57,7 +58,7 @@ class Channels(Cog):
     async def on_voice_channel_created(self, voice_channel: VoiceChannel) -> None:
         view = LockChannel(self.bot)  # The Panel is a singleton, so we can reuse it
 
-        await voice_channel.notify(
+        message = await voice_channel.notify(
             wait=True,
             embeds=[
                 voice_channel.channel_settings.as_embed(),
@@ -72,7 +73,13 @@ class Channels(Cog):
                     voice_channel.channel_settings.as_embed(),
                     view.embed
                 ],
-                view=view
+                components=[
+                    Button(
+                        label="前往鎖定",
+                        style=ButtonStyle.url,
+                        url=message.jump_url
+                    )
+                ]
             )
 
     @Cog.listener(name="on_voice_channel_restored")
