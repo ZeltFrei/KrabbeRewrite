@@ -10,7 +10,7 @@ async def can_use_music(request: "Request", user_id: int, channel_id: int):
         await request.respond(
             {
                 "status": "error",
-                "message": "這不是一個有效的動態語音頻道！"
+                "message": "Not a valid channel!"
             }
         )
         return
@@ -19,7 +19,7 @@ async def can_use_music(request: "Request", user_id: int, channel_id: int):
         await request.respond(
             {
                 "status": "error",
-                "message": "您沒有權限在這個頻道播放音樂！"
+                "message": "You do not have permission to use music commands in this channel!"
             }
         )
         return
