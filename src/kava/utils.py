@@ -35,7 +35,7 @@ def get_idle_clients_in(server: KavaServer, guild: Guild) -> list[ServerSideClie
     ]
 
 
-def get_active_clients_in(server: KavaServer, channel: VoiceChannel) -> Optional[ServerSideClient]:
+def get_active_client_in(server: KavaServer, channel: VoiceChannel) -> Optional[ServerSideClient]:
     """
     Get the active client in the channel.
 
@@ -105,7 +105,7 @@ async def ensure_music_client(server: KavaServer, interaction: Interaction) -> O
         )
         return
 
-    client = get_active_clients_in(server, channel)
+    client = get_active_client_in(server, channel)
 
     if client is None:
         await interaction.response.send_message(

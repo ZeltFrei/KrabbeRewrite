@@ -10,7 +10,6 @@ from disnake.ui import View, Button, Select
 
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
-from src.kava.utils import get_active_clients_in, get_idle_clients_in
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
 from src.utils import max_bitrate, is_authorized
 
@@ -869,46 +868,20 @@ class MusicSettings(Panel):
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
-        if get_active_clients_in(self.bot.kava_server, channel):
-            await interaction.response.send_message(
-                embed=ErrorEmbed("音樂機器人已經在這個頻道了！"),
-                ephemeral=True
-            )
-            return
-
-        idle_clients = get_idle_clients_in(self.bot.kava_server, channel.channel.guild)
-
-        if not idle_clients:
-            await interaction.response.send_message(
-                embed=ErrorEmbed("目前沒有可用的音樂機器人，請稍後再試"),
-                ephemeral=True
-            )
-            return
-
-        response = await idle_clients[0].request('connect', owner_id=channel.owner_id, channel_id=channel.channel_id)
-
-        if response['status'] == 'success':
-            await interaction.response.send_message(
-                embed=SuccessEmbed(response['message']),
-                components=[
-                    Button(
-                        label=channel.channel.name,
-                        style=ButtonStyle.url,
-                        url=channel.channel.jump_url
-                    )
-                ],
-                ephemeral=True
-            )
-        elif response['status'] == 'error':
-            await interaction.response.send_message(
-                embed=ErrorEmbed(response['message']),
-                ephemeral=True
-            )
-        else:
-            await interaction.response.send_message(
-                embed=ErrorEmbed("未知的錯誤"),
-                ephemeral=True
-            )
+        await interaction.response.send_message(
+            embed=InfoEmbed(
+                title="召喚音樂機器人",
+                description="請在您的文字頻道中輸入 `/play` 來召喚音樂機器人！"
+            ),
+            ephemeral=True,
+            components=[
+                Button(
+                    style=ButtonStyle.url,
+                    label=channel.channel.name,
+                    url=channel.channel.jump_url
+                )
+            ]
+        )
 
     @staticmethod
     async def toggle_music(interaction: MessageInteraction) -> None:

@@ -1,3 +1,4 @@
+import random
 from typing import TYPE_CHECKING, Tuple, Optional
 
 from disnake import ApplicationCommandInteraction, Option, OptionType, OptionChoice, ButtonStyle
@@ -7,7 +8,7 @@ from disnake_ext_paginator import Paginator
 
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import SuccessEmbed, ErrorEmbed, InfoEmbed
-from src.kava.utils import ensure_music_client, ensure_music_permissions, get_active_clients_in
+from src.kava.utils import ensure_music_client, ensure_music_permissions, get_active_client_in, get_idle_clients_in
 from src.utils import split_list
 
 if TYPE_CHECKING:
@@ -85,12 +86,33 @@ class Music(Cog):
         ]
     )
     async def play(self, interaction: ApplicationCommandInteraction, query: str, index: int = None):
-        check_passed, client, channel = await music_check(self.server, interaction)
-
-        if not check_passed:
+        if not (channel := await ensure_music_permissions(interaction)):
             return
 
         await interaction.response.defer(ephemeral=True)
+
+        if not (client := get_active_client_in(self.bot.kava_server, channel)):
+            idle_clients = get_idle_clients_in(self.bot.kava_server, channel.channel.guild)
+
+            if not idle_clients:
+                await interaction.response.send_message(
+                    embed=ErrorEmbed("目前沒有可用的音樂機器人，請稍後再試"),
+                    ephemeral=True
+                )
+                return
+
+            client = idle_clients[0]
+
+            response = await client.request(
+                'connect', owner_id=channel.owner_id, channel_id=channel.channel_id
+            )
+
+            if not response["status"] == "success":
+                await interaction.response.send_message(
+                    embed=ErrorEmbed(response["message"]),
+                    ephemeral=True
+                )
+                return
 
         response = await client.request(
             "play", channel_id=channel.channel_id, author_id=interaction.author.id, query=query, index=index
@@ -116,12 +138,7 @@ class Music(Cog):
         if not channel:
             return [OptionChoice(name="請先加入一個語音頻道！", value="")]
 
-        client = get_active_clients_in(self.server, channel)
-
-        if not client:
-            return [OptionChoice(name="請先召喚一隻音樂機器人！", value="")]
-
-        response = await client.request("search", query=query)
+        response = await random.choice(list(self.server.clients.values())).request("search", query=query)
 
         return [OptionChoice.from_dict(choice) for choice in response['results']]
 
