@@ -207,6 +207,38 @@ class JoinChannel(Panel):
             ephemeral=True
         )
 
+    @ui.button(
+        label="回報問題",
+        emoji="🔧",
+        custom_id="feedback"
+    )
+    async def feedback(self, _button: Button, interaction: MessageInteraction):
+        interaction, feedback = await quick_modal(
+            interaction,
+            title="回報問題",
+            field_name="請詳細描述您遇到的問題",
+            placeholder="請描述您遇到的問題",
+            max_length=2000,
+            min_length=5,
+            required=True,
+            style=TextInputStyle.long
+        )
+
+        await interaction.bot.feedback_webhook.send(
+            username=interaction.author.name,
+            avatar_url=interaction.author.avatar.url,
+            content=feedback,
+            allowed_mentions=AllowedMentions.none()
+        )
+
+        await interaction.response.send_message(
+            embed=SuccessEmbed(
+                title="已回報問題",
+                description="您的問題已經成功回報給我們了！"
+            ),
+            ephemeral=True
+        )
+
 
 class ChannelSettings(Panel):
     async def interaction_check(self, interaction: MessageInteraction) -> bool:
