@@ -889,7 +889,7 @@ class MusicSettings(Panel):
         placeholder="🎵 音樂設定",
         options=[
             reset_option,
-            SelectOption(label="召喚音樂機器人", value="summon_bot", description="召喚音樂機器人", emoji="🤖"),
+            SelectOption(label="召喚音樂機器人", value="summon_bot", description="在您的語音頻道播放音樂", emoji="🤖"),
             SelectOption(
                 label="允許/禁止頻道成員使用音樂", value="toggle_music", description="啟用或禁用音樂功能", emoji="🎶"
             )
@@ -903,7 +903,8 @@ class MusicSettings(Panel):
             case "toggle_music":
                 await self.toggle_music(interaction)
 
-    async def summon_bot(self, interaction: MessageInteraction) -> None:
+    @staticmethod
+    async def summon_bot(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -971,6 +972,14 @@ class LockChannel(Panel):
     )
     async def lock_channel(self, _button: Button, interaction: MessageInteraction) -> None:
         await MemberSettings.lock_channel(interaction)
+
+    @ui.button(
+        label="播放音樂",
+        custom_id="play_music",
+        emoji="🎵"
+    )
+    async def play_music(self, _button: Button, interaction: MessageInteraction) -> None:
+        await MusicSettings.summon_bot(interaction)
 
 
 class ChannelRestored(Panel):
