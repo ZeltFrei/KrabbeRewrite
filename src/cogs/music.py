@@ -67,7 +67,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="play",
+        name="py",
         description="播放音樂",
         options=[
             Option(
@@ -143,7 +143,7 @@ class Music(Cog):
         return [OptionChoice.from_dict(choice) for choice in response['results']]
 
     @slash_command(
-        name="skip",
+        name="sk",
         description="跳過當前播放的歌曲",
         options=[
             Option(
@@ -186,7 +186,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="remove",
+        name="rm",
         description="移除歌曲",
         options=[
             Option(
@@ -223,7 +223,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="clean",
+        name="clear",
         description="清除播放序列",
     )
     async def clean(self, interaction: ApplicationCommandInteraction):
@@ -252,7 +252,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="pause",
+        name="ps",
         description="暫停當前播放的歌曲"
     )
     async def pause(self, interaction: ApplicationCommandInteraction):
@@ -281,7 +281,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="resume",
+        name="ct",
         description="恢復當前播放的歌曲"
     )
     async def resume(self, interaction: ApplicationCommandInteraction):
@@ -310,7 +310,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="stop",
+        name="sp",
         description="停止播放並清空播放序列",
     )
     async def stop(self, interaction: ApplicationCommandInteraction):
@@ -339,7 +339,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="queue",
+        name="qe",
         description="顯示播放序列",
     )
     async def queue(self, interaction: ApplicationCommandInteraction):
