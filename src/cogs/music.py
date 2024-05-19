@@ -223,7 +223,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="clear",
+        name="cl",
         description="清除播放序列",
     )
     async def clean(self, interaction: ApplicationCommandInteraction):
