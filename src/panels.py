@@ -6,11 +6,11 @@ from ZeitfreiOauth import AsyncDiscordOAuthClient
 from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message, Color, \
     TextInputStyle, AllowedMentions
 from disnake.abc import Messageable
-from disnake.ui import View, Button, Select
+from disnake.ui import View, Button, Select, Modal, TextInput
 
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
-from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal
+from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal, quick_long_modal
 from src.utils import max_bitrate, is_authorized
 
 if TYPE_CHECKING:
@@ -220,21 +220,56 @@ class JoinChannel(Panel):
         custom_id="feedback"
     )
     async def feedback(self, _button: Button, interaction: MessageInteraction):
-        interaction, feedback = await quick_modal(
+        interaction, feedbacks = await quick_long_modal(
             interaction,
-            title="回報問題",
-            field_name="請詳細描述您遇到的問題",
-            placeholder="請描述您遇到的問題",
-            max_length=2000,
-            min_length=5,
-            required=True,
-            style=TextInputStyle.long
+            modal=Modal(
+                title="回報問題",
+                components=[
+                    TextInput(
+                        label="回報問題還是提供建議",
+                        placeholder="回報問題 / 提供建議",
+                        style=TextInputStyle.short,
+                        custom_id="type",
+                        required=True
+                    ),
+                    TextInput(
+                        label="請闡述您遇到的問題",
+                        placeholder="我在使用過程中遇到了...",
+                        style=TextInputStyle.long,
+                        custom_id="description",
+                        required=False
+                    ),
+                    TextInput(
+                        label="如何觸發該問題？",
+                        placeholder="我是這樣做的...",
+                        style=TextInputStyle.long,
+                        custom_id="trigger",
+                        required=False
+                    ),
+                    TextInput(
+                        label="請您敘述您期望的建議",
+                        placeholder="我希望能夠...",
+                        style=TextInputStyle.long,
+                        custom_id="suggestion",
+                        required=False
+                    )
+                ]
+            )
         )
 
         await interaction.bot.feedback_webhook.send(
             username=interaction.author.name,
             avatar_url=interaction.author.avatar.url,
-            content=feedback,
+            content=f"# 回報問題還是提供建議\n"
+                    f"{feedbacks['type']}\n"
+                    f"# 請闡述您遇到的問題\n"
+                    f"{feedbacks.get('description', '無')}\n"
+                    f"# 如何觸發該問題？\n"
+                    f"{feedbacks.get('trigger', '無')}\n"
+                    f"# 請您敘述您期望的建議\n"
+                    f"{feedbacks.get('suggestion', '無')}"
+                    f"\n\n"
+                    f"**{interaction.author.mention}** ({interaction.author.id})",
             allowed_mentions=AllowedMentions.none()
         )
 
@@ -997,21 +1032,56 @@ class ChannelRestored(Panel):
         custom_id="feedback"
     )
     async def feedback(self, _button: Button, interaction: MessageInteraction):
-        interaction, feedback = await quick_modal(
+        interaction, feedbacks = await quick_long_modal(
             interaction,
-            title="回報問題",
-            field_name="請詳細描述您遇到的問題",
-            placeholder="請描述您遇到的問題",
-            max_length=2000,
-            min_length=5,
-            required=True,
-            style=TextInputStyle.long
+            modal=Modal(
+                title="回報問題",
+                components=[
+                    TextInput(
+                        label="回報問題還是提供建議",
+                        placeholder="回報問題 / 提供建議",
+                        style=TextInputStyle.short,
+                        custom_id="type",
+                        required=True
+                    ),
+                    TextInput(
+                        label="請闡述您遇到的問題",
+                        placeholder="我在使用過程中遇到了...",
+                        style=TextInputStyle.long,
+                        custom_id="description",
+                        required=False
+                    ),
+                    TextInput(
+                        label="如何觸發該問題？",
+                        placeholder="我是這樣做的...",
+                        style=TextInputStyle.long,
+                        custom_id="trigger",
+                        required=False
+                    ),
+                    TextInput(
+                        label="請您敘述您期望的建議",
+                        placeholder="我希望能夠...",
+                        style=TextInputStyle.long,
+                        custom_id="suggestion",
+                        required=False
+                    )
+                ]
+            )
         )
 
         await interaction.bot.feedback_webhook.send(
             username=interaction.author.name,
             avatar_url=interaction.author.avatar.url,
-            content=feedback,
+            content=f"# 回報問題還是提供建議\n"
+                    f"{feedbacks['type']}\n"
+                    f"# 請闡述您遇到的問題\n"
+                    f"{feedbacks.get('description', '無')}\n"
+                    f"# 如何觸發該問題？\n"
+                    f"{feedbacks.get('trigger', '無')}\n"
+                    f"# 請您敘述您期望的建議\n"
+                    f"{feedbacks.get('suggestion', '無')}"
+                    f"\n\n"
+                    f"**{interaction.author.mention}** ({interaction.author.id})",
             allowed_mentions=AllowedMentions.none()
         )
 

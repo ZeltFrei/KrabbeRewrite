@@ -1,5 +1,5 @@
 import uuid
-from typing import Tuple, Optional, List, Union
+from typing import Tuple, Optional, List, Union, Dict
 
 from disnake import Interaction, MessageInteraction, ButtonStyle, Event, SelectOption, Member, User, TextInputStyle, \
     ModalInteraction, ChannelType
@@ -230,6 +230,34 @@ async def quick_modal(
     )
 
     return modal_interaction, modal_interaction.text_values.get("text_field")
+
+
+async def quick_long_modal(
+        interaction: Interaction,
+        modal: Modal,
+        timeout=180
+) -> Tuple[ModalInteraction, Dict[str, str]]:
+    """
+    Quickly create a long modal interaction.
+    :param interaction: The interaction object.
+    :param modal: The modal object.
+    :param timeout: The timeout of the modal.
+    :return: The modal interaction object and the values of the fields.
+    """
+    custom_id = uuid.uuid1().hex
+
+    modal.custom_id = custom_id
+
+    await interaction.response.send_modal(
+        modal=modal
+    )
+
+    modal_interaction: ModalInteraction = await interaction.bot.wait_for(
+        Event.modal_submit, check=lambda i: i.data.custom_id == custom_id,
+        timeout=timeout
+    )
+
+    return modal_interaction, modal_interaction.text_values
 
 
 async def confirm_modal(
