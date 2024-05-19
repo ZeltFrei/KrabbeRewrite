@@ -911,7 +911,7 @@ class MusicSettings(Panel):
         await interaction.response.send_message(
             embed=InfoEmbed(
                 title="召喚音樂機器人",
-                description="請在您的文字頻道中輸入 `/play` 來召喚音樂機器人！"
+                description="請在您的文字頻道中輸入 `/py` 來召喚音樂機器人！"
             ),
             ephemeral=True,
             components=[
