@@ -2,9 +2,9 @@ from typing import Union
 
 import disnake
 from disnake import ButtonStyle, VoiceState, Member, Event
-from disnake.ui import Button
 from disnake.abc import GuildChannel
 from disnake.ext.commands import Cog
+from disnake.ui import Button
 
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
@@ -75,7 +75,7 @@ class Channels(Cog):
                 ],
                 components=[
                     Button(
-                        label="前往鎖定",
+                        label="前往設定",
                         style=ButtonStyle.url,
                         url=message.jump_url
                     )
