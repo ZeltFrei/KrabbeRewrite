@@ -159,6 +159,13 @@ class Title(Panel):
             inline=False
         )
 
+        embed.add_field(
+            name="音樂功能設定 【使用的音樂機器人為『Krabbe 2.0』】",
+            value="* 召喚音樂機器人：在您的語音頻道中播放音樂。\n"
+                  "* 允許/禁止頻道成員使用音樂：由其他成員操控您的音樂。",
+            inline=False
+        )
+
         embed.set_image(url="https://i.imgur.com/BaXj26Y.gif")
 
         embed.set_footer(text="如果遇到交互失敗的訊息，屬於正常現象，重新操作即可。")
