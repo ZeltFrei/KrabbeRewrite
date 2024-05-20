@@ -18,7 +18,7 @@ class Setup(Cog):
 
     @has_permissions(administrator=True)
     @slash_command(
-        name="setup",
+        name="old_setup",
         description="快捷設定",
         options=[
             Option(
