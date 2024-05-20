@@ -33,12 +33,17 @@ class Request:
 
 
 class ServerSideClient:
-    def __init__(self, websocket: WebSocketServerProtocol, bot_user_id: int):
+    def __init__(self, websocket: WebSocketServerProtocol, bot_user_id: int, bot_user_name: str):
         self.pending_responses: Dict[str, asyncio.Future] = {}
 
         self.websocket: WebSocketServerProtocol = websocket
 
         self.bot_user_id: int = bot_user_id
+        self.bot_user_name: str = bot_user_name
+
+    @property
+    def invite_link(self) -> str:
+        return f"https://discord.com/oauth2/authorize?client_id={self.bot_user_id}&permissions=274881333248&scope=bot"
 
     async def request(self, endpoint: str, **kwargs: Any) -> Any:
         """
