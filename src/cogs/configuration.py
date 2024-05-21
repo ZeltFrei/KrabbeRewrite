@@ -37,7 +37,7 @@ class Setup(Cog):
         if not category:
             category = await interaction.guild.create_category("🔊 動態語音頻道")
 
-        root_channel = await interaction.guild.create_voice_channel("🔊 建立語音頻道", category=category)
+        root_channel = await interaction.guild.create_voice_channel("🔊 Krabbe 2 - 自動化語音頻道", category=category)
         event_logging_channel = await interaction.guild.create_forum_channel("事件紀錄", category=category)
         message_logging_channel = await interaction.guild.create_forum_channel(name="訊息紀錄", category=category)
         message_logging_webhook = await message_logging_channel.create_webhook(name="Krabbe Logging")
