@@ -320,6 +320,8 @@ class ChannelSettings(Panel):
             case "remove_channel":
                 await self.remove_channel(interaction)
 
+        await interaction.edit_original_message()
+
     @staticmethod
     async def rename_channel(interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
@@ -461,6 +463,8 @@ class MemberSettings(Panel):
                 await self.lock_channel(interaction)
             case "limit_members":
                 await self.limit_members(interaction)
+
+        await interaction.edit_original_message()
 
     @staticmethod
     async def invite_member(interaction: MessageInteraction) -> None:
@@ -667,6 +671,8 @@ class VoiceSettings(Panel):
                 await self.toggle_stream(interaction)
             case "embedded_activities":
                 await self.use_embedded_activities(interaction)
+
+        await interaction.edit_original_message()
 
     @staticmethod
     async def bitrate(interaction: MessageInteraction) -> None:
@@ -952,6 +958,8 @@ class MusicSettings(Panel):
                 await self.summon_bot(interaction)
             case "toggle_music":
                 await self.toggle_music(interaction)
+
+        await interaction.edit_original_message()
 
     @staticmethod
     async def summon_bot(interaction: MessageInteraction) -> None:
