@@ -230,7 +230,7 @@ class JoinChannel(Panel):
         )
 
     @ui.button(
-        label="回報問題",
+        label="回報問題&提供建議",
         emoji="🔧",
         custom_id="feedback"
     )
@@ -1056,7 +1056,7 @@ class ChannelRestored(Panel):
         )
 
     @ui.button(
-        label="回報問題",
+        label="回報問題&提供建議",
         emoji="🔧",
         custom_id="feedback"
     )
