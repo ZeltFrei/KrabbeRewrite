@@ -121,6 +121,7 @@ class Title(Panel):
     def embed(self) -> Optional[Embed]:
         embed = Embed(
             color=0x2b2d31,
+            title="語音頻道控制介面使用說明",
             description="""
 ### 加入私人語音頻道
  * **您可以透過此按鈕來加入上鎖的語音頻道。**
