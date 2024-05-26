@@ -133,10 +133,8 @@ class VoiceChannel(MongoObject):
         :raise FailedToResolve: If the thread is not found.
         :return: The logging thread object.
         """
-        if self._logging_thread is None:
-            self._logging_thread = self.guild_settings.message_logging_channel.get_thread(self.logging_thread_id)
-
-        elif self._logging_thread.id != self.logging_thread_id:
+        
+        if self._logging_thread is None or self._logging_thread.id != self.logging_thread_id:
             self._logging_thread = self.guild_settings.message_logging_channel.get_thread(self.logging_thread_id)
 
         if self._logging_thread:
