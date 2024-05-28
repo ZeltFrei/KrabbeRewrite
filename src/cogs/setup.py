@@ -3,7 +3,7 @@ import uuid
 from typing import TYPE_CHECKING, Literal, Tuple, Dict, Union
 
 from disnake import ApplicationCommandInteraction, SelectOption, Event, MessageInteraction, ChannelType, \
-    CategoryChannel, Interaction, VoiceChannel, Webhook, ButtonStyle
+    CategoryChannel, Interaction, VoiceChannel, Webhook, ButtonStyle, PermissionOverwrite
 from disnake.ext.commands import Cog, has_permissions, slash_command
 from disnake.ui import StringSelect, ChannelSelect, Button
 
@@ -219,8 +219,24 @@ class Setup(Cog):
         )
 
         root_channel = await category.create_voice_channel("🔊 建立語音頻道")
-        event_logging_channel = await category.create_forum_channel("事件紀錄")
-        message_logging_channel = await category.create_forum_channel("訊息紀錄")
+        event_logging_channel = await category.create_forum_channel(
+            "事件紀錄",
+            overwrites={
+                interaction.guild.default_role: PermissionOverwrite(
+                    send_messages=False,
+                    view_channel=True
+                )
+            }
+        )
+        message_logging_channel = await category.create_forum_channel(
+            "訊息紀錄",
+            overwrites={
+                interaction.guild.default_role: PermissionOverwrite(
+                    send_messages=False,
+                    view_channel=True
+                )
+            }
+        )
         message_logging_webhook = await message_logging_channel.create_webhook(name="Krabbe Logging")
 
         await interaction.edit_original_message(
