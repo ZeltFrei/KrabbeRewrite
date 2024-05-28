@@ -3,10 +3,11 @@ import uuid
 from typing import TYPE_CHECKING, Literal, Tuple, Dict, Union
 
 from disnake import ApplicationCommandInteraction, SelectOption, Event, MessageInteraction, ChannelType, \
-    CategoryChannel, Interaction, VoiceChannel, Webhook
+    CategoryChannel, Interaction, VoiceChannel, Webhook, ButtonStyle
 from disnake.ext.commands import Cog, has_permissions, slash_command
-from disnake.ui import StringSelect, ChannelSelect
+from disnake.ui import StringSelect, ChannelSelect, Button
 
+from src.classes.guild_settings import GuildSettings
 from src.embeds import InfoEmbed, SuccessEmbed, ErrorEmbed
 from src.panels import panels
 
@@ -37,11 +38,57 @@ class Setup(Cog):
             self.create_channels_and_webhooks(self.bot, interaction, category)
         )
 
-        # TODO: Ask for settings
+        nsfw, interaction = await self.ask_for_nsfw(interaction)
+        lock_message_dm, interaction = await self.ask_for_lock_message_dm(interaction)
 
-        # TODO: Await for the task to be done
+        await interaction.response.send_message(
+            embed=InfoEmbed(
+                title="動態語音設定",
+                description="正在設定..."
+            ),
+            ephemeral=True
+        )
 
-        # TODO: Upsert
+        await channels_and_webhooks_task
+
+        guild_settings = GuildSettings(
+            bot=self.bot,
+            database=self.bot.database,
+            guild_id=interaction.guild.id,
+            category_channel_id=category.id,
+            root_channel_id=channels_and_webhooks_task.result()["root_channel"].id,
+            base_role_id=interaction.guild.default_role.id,
+            event_logging_channel_id=channels_and_webhooks_task.result()["event_logging_channel"].id,
+            message_logging_channel_id=channels_and_webhooks_task.result()["message_logging_channel"].id,
+            message_logging_webhook_url=channels_and_webhooks_task.result()["message_logging_webhook"].url,
+            allow_nsfw=nsfw == "yes",
+            lock_message_dm=lock_message_dm == "yes"
+        )
+
+        await guild_settings.upsert()
+
+        await interaction.edit_original_message(
+            embeds=[
+                SuccessEmbed(
+                    title="動態語音設定",
+                    description="設定完成！"
+                ),
+                guild_settings.as_embed(),
+                InfoEmbed(
+                    title="音樂系統",
+                    description="在你邀請音樂機器人以前，你將無法使用音樂功能。\n"
+                                "請透過以下的任意一個連結邀請音樂機器人：",
+                )
+            ],
+            components=[
+                Button(
+                    label=kava.bot_user_name,
+                    url=kava.invite_link,
+                    style=ButtonStyle.url
+                )
+                for kava in self.bot.kava_server.clients.values()
+            ]
+        )
 
     @staticmethod
     async def use_custom_category(
@@ -75,7 +122,7 @@ class Setup(Cog):
 
         try:
             new_interaction: MessageInteraction = await interaction.bot.wait_for(
-                Event.message_interaction, check=lambda i: i.custom_id == custom_id, timeout=180
+                Event.message_interaction, check=lambda i: i.data.custom_id == custom_id, timeout=180
             )
         except asyncio.TimeoutError:
             await interaction.edit_original_message(
@@ -136,7 +183,7 @@ class Setup(Cog):
 
         try:
             new_interaction: MessageInteraction = await interaction.bot.wait_for(
-                Event.message_interaction, check=lambda i: i.custom_id == custom_id, timeout=180
+                Event.message_interaction, check=lambda i: i.data.custom_id == custom_id, timeout=180
             )
         except asyncio.TimeoutError:
             await interaction.edit_original_message(
@@ -151,7 +198,7 @@ class Setup(Cog):
 
         category: CategoryChannel = new_interaction.resolved_values[0]
 
-        await new_interaction.edit_original_message(
+        await interaction.edit_original_message(
             embed=SuccessEmbed(
                 title="動態語音設定",
                 description=f"好，我將會在 {category.name} 中建立動態語音頻道"
@@ -189,6 +236,163 @@ class Setup(Cog):
             content="✅ 設定完成！"
         )
 
+        return {
+            "category": category,
+            "root_channel": root_channel,
+            "event_logging_channel": event_logging_channel,
+            "message_logging_channel": message_logging_channel,
+            "message_logging_webhook": message_logging_webhook,
+            "control_panel_channel": control_panel_channel
+        }
+
+    @staticmethod
+    async def ask_for_nsfw(interaction: Interaction):
+        custom_id = str(uuid.uuid1())
+
+        await interaction.response.send_message(
+            embed=InfoEmbed(
+                title="動態語音設定",
+                description="你是否想要成員在動態語音頻道中發送 NSFW 內容？"
+            ),
+            components=[StringSelect(
+                custom_id=custom_id,
+                placeholder="選擇",
+                options=[
+                    SelectOption(
+                        label="是",
+                        value="yes",
+                        description="成員可以在動態語音頻道中發送 NSFW 內容",
+                        emoji="✅"
+                    ),
+                    SelectOption(
+                        label="否",
+                        value="no",
+                        description="成員不可以在動態語音頻道中發送 NSFW 內容",
+                        emoji="❌"
+                    )
+                ]
+            )],
+            ephemeral=True
+        )
+
+        try:
+            new_interaction: MessageInteraction = await interaction.bot.wait_for(
+                Event.message_interaction, check=lambda i: i.data.custom_id == custom_id, timeout=180
+            )
+        except asyncio.TimeoutError:
+            await interaction.edit_original_message(
+                embed=ErrorEmbed(
+                    title="錯誤",
+                    description="操作超時！"
+                ),
+                components=[]
+            )
+
+            raise asyncio.TimeoutError
+
+        if new_interaction.values[0] == "yes":
+            await interaction.edit_original_message(
+                embed=SuccessEmbed(
+                    title="動態語音設定",
+                    description="好，我將會啟用 NSFW"
+                ),
+                components=[]
+            )
+        elif new_interaction.values[0] == "no":
+            await interaction.edit_original_message(
+                embed=SuccessEmbed(
+                    title="動態語音設定",
+                    description="好，我將不會啟用 NSFW"
+                ),
+                components=[]
+            )
+        else:
+            await new_interaction.response.send_message(
+                embed=ErrorEmbed(
+                    title="錯誤",
+                    description="未知的選項！"
+                ),
+                ephemeral=True
+            )
+
+            raise ValueError("Unknown option")
+
+        return new_interaction.values[0], new_interaction
+
+    @staticmethod
+    async def ask_for_lock_message_dm(interaction: Interaction):
+        custom_id = str(uuid.uuid1())
+
+        await interaction.response.send_message(
+            embed=InfoEmbed(
+                title="動態語音設定",
+                description="你是否想要在成員創建動態語音頻道時通知他們？"
+            ),
+            components=[StringSelect(
+                custom_id=custom_id,
+                placeholder="選擇",
+                options=[
+                    SelectOption(
+                        label="是",
+                        value="yes",
+                        description="成員創建動態語音頻道時將會收到一則私人訊息",
+                        emoji="✅"
+                    ),
+                    SelectOption(
+                        label="否",
+                        value="no",
+                        description="成員創建動態語音頻道時不會收到任何訊息",
+                        emoji="❌"
+                    )
+                ]
+            )],
+            ephemeral=True
+        )
+
+        try:
+            new_interaction: MessageInteraction = await interaction.bot.wait_for(
+                Event.message_interaction, check=lambda i: i.data.custom_id == custom_id, timeout=180
+            )
+        except asyncio.TimeoutError:
+            await interaction.edit_original_message(
+                embed=ErrorEmbed(
+                    title="錯誤",
+                    description="操作超時！"
+                ),
+                components=[]
+            )
+
+            raise asyncio.TimeoutError
+
+        if new_interaction.values[0] == "yes":
+            await interaction.edit_original_message(
+                embed=SuccessEmbed(
+                    title="動態語音設定",
+                    description="好，我將會通知成員"
+                ),
+                components=[]
+            )
+        elif new_interaction.values[0] == "no":
+            await interaction.edit_original_message(
+                embed=SuccessEmbed(
+                    title="動態語音設定",
+                    description="好，我將不會通知成員"
+                ),
+                components=[]
+            )
+        else:
+            await new_interaction.response.send_message(
+                embed=ErrorEmbed(
+                    title="錯誤",
+                    description="未知的選項！"
+                ),
+                ephemeral=True
+            )
+
+            raise ValueError("Unknown option")
+
+        return new_interaction.values[0], new_interaction
+
     # @staticmethod
     # async def wait_for_music_bots(
     #         bot: "Krabbe",
@@ -221,7 +425,7 @@ class Setup(Cog):
     #
     #     try:
     #         interaction: MessageInteraction = await interaction.bot.wait_for(
-    #             Event.message_interaction, check=lambda i: i.custom_id == custom_id, timeout=180
+    #             Event.message_interaction, check=lambda i: i.data.custom_id == custom_id, timeout=180
     #         )
     #     except asyncio.TimeoutError:
     #         await interaction.edit_original_message(

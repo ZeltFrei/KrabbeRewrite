@@ -12,7 +12,7 @@ from src.embeds import SuccessEmbed, ErrorEmbed
 from src.panels import panels
 
 
-class Setup(Cog):
+class Configuration(Cog):
     def __init__(self, bot: Krabbe):
         self.bot: Krabbe = bot
 
@@ -227,4 +227,4 @@ class Setup(Cog):
 
 
 def setup(bot: Krabbe) -> None:
-    bot.add_cog(Setup(bot))
+    bot.add_cog(Configuration(bot))
