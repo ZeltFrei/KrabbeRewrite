@@ -137,7 +137,7 @@ class Configuration(Cog):
             return await interaction.response.send_message(
                 embed=ErrorEmbed(
                     title="伺服器設定不存在！",
-                    description="請先執行 `/setup` 來設定伺服器"
+                    description="請先執行 `/start` 來設定伺服器"
                 ),
                 ephemeral=True
             )

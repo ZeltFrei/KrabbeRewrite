@@ -31,7 +31,7 @@ class Setup(Cog):
                     embed=InfoEmbed(
                         title="歡迎使用 Krabbe",
                         description="感謝你邀請 Krabbe 進入你的伺服器！\n"
-                                    "要開始使用 Krabbe，請使用 `/setup` 指令進行設定。"
+                                    "要開始使用 Krabbe，請使用 `/start` 指令進行設定。"
                     )
                 )
                 break
@@ -41,10 +41,10 @@ class Setup(Cog):
 
     @has_permissions(administrator=True)
     @slash_command(
-        name="setup",
+        name="start",
         description="快捷設定",
     )
-    async def setup(self, interaction: ApplicationCommandInteraction):
+    async def start(self, interaction: ApplicationCommandInteraction):
         use_custom_category, interaction = await self.use_custom_category(interaction)
 
         if use_custom_category == "existing":
