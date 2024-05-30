@@ -3,7 +3,7 @@ import uuid
 from typing import TYPE_CHECKING, Literal, Tuple, Dict, Union
 
 from disnake import ApplicationCommandInteraction, SelectOption, Event, MessageInteraction, ChannelType, \
-    CategoryChannel, Interaction, VoiceChannel, Webhook, ButtonStyle, PermissionOverwrite
+    CategoryChannel, Interaction, VoiceChannel, Webhook, ButtonStyle, PermissionOverwrite, Guild
 from disnake.ext.commands import Cog, has_permissions, slash_command
 from disnake.ui import StringSelect, ChannelSelect, Button
 
@@ -18,6 +18,26 @@ if TYPE_CHECKING:
 class Setup(Cog):
     def __init__(self, bot: "Krabbe"):
         self.bot: "Krabbe" = bot
+
+    @Cog.listener(name="on_guild_join")
+    async def on_guild_join(self, guild: Guild):
+        self.bot.logger.info("Joined guild %s", guild.name)
+
+        for text_channel in guild.text_channels:
+            self.bot.logger.info("Trying to send setup message to %s", text_channel.name)
+
+            try:
+                await text_channel.send(
+                    embed=InfoEmbed(
+                        title="歡迎使用 Krabbe",
+                        description="感謝你邀請 Krabbe 進入你的伺服器！\n"
+                                    "要開始使用 Krabbe，請使用 `/setup` 指令進行設定。"
+                    )
+                )
+                break
+            except Exception as error:
+                self.bot.logger.warning("Failed to send setup message to %s: %s", text_channel.name, error)
+                continue
 
     @has_permissions(administrator=True)
     @slash_command(
