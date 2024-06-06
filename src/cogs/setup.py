@@ -429,66 +429,6 @@ class Setup(Cog):
 
         return new_interaction.values[0], new_interaction
 
-    # @staticmethod
-    # async def wait_for_music_bots(
-    #         bot: "Krabbe",
-    #         interaction: Interaction
-    # ) -> Interaction:
-    #     clients = get_clients_in(bot.kava_server, interaction.guild)
-    #
-    #     if clients:
-    #         return interaction
-    #
-    #     invite_link_buttons = [Button(
-    #         label=client.bot_user_name,
-    #         url=client.invite_link,
-    #         style=ButtonStyle.url
-    #     ) for client in bot.kava_server.clients]
-    #
-    #     custom_id = str(uuid.uuid1())
-    #
-    #     await interaction.response.send_message(
-    #         embed=InfoEmbed(
-    #             title="等待音樂機器人",
-    #             description="我在你的伺服器中找不到任何音樂機器人！如果你想要使用音樂功能，請先邀請以下任何一隻 (或全部) 音樂機器人加入，並點擊繼續"
-    #         ),
-    #         components=invite_link_buttons + [Button(
-    #             label="繼續",
-    #             custom_id=custom_id,
-    #             style=ButtonStyle.primary,
-    #         )]
-    #     )
-    #
-    #     try:
-    #         interaction: MessageInteraction = await interaction.bot.wait_for(
-    #             Event.message_interaction, check=lambda i: i.data.custom_id == custom_id, timeout=180
-    #         )
-    #     except asyncio.TimeoutError:
-    #         await interaction.edit_original_message(
-    #             embed=ErrorEmbed(
-    #                 title="錯誤",
-    #                 description="操作超時！"
-    #             ),
-    #             components=[]
-    #         )
-    #
-    #         raise asyncio.TimeoutError
-    #
-    #     clients = get_clients_in(bot.kava_server, interaction.guild)
-    #
-    #     if not clients:
-    #         await interaction.edit_original_message(
-    #             embed=ErrorEmbed(
-    #                 title="錯誤",
-    #                 description="我在你的伺服器中找不到任何音樂機器人！"
-    #             ),
-    #             components=[]
-    #         )
-    #
-    #         raise ValueError("No music bots found")
-    #
-    #     return interaction
-
 
 def setup(bot: "Krabbe"):
     bot.add_cog(Setup(bot))
