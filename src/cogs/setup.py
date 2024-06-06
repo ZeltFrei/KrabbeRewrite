@@ -3,7 +3,7 @@ import uuid
 from typing import TYPE_CHECKING, Literal, Tuple, Dict, Union
 
 from disnake import ApplicationCommandInteraction, SelectOption, Event, MessageInteraction, ChannelType, \
-    CategoryChannel, Interaction, VoiceChannel, Webhook, ButtonStyle, PermissionOverwrite, Guild
+    CategoryChannel, Interaction, VoiceChannel, Webhook, ButtonStyle, Guild
 from disnake.ext.commands import Cog, has_permissions, slash_command
 from disnake.ui import StringSelect, ChannelSelect, Button
 
@@ -238,24 +238,17 @@ class Setup(Cog):
             content="⌛ 正在創建頻道和 Webhook..."
         )
 
-        root_channel = await category.create_voice_channel("🔊 建立語音頻道")
+        root_channel = await category.create_voice_channel(
+            "🔊 建立語音頻道",
+            overwrites=category.overwrites
+        )
         event_logging_channel = await category.create_forum_channel(
             "事件紀錄",
-            overwrites={
-                interaction.guild.default_role: PermissionOverwrite(
-                    send_messages=False,
-                    view_channel=True
-                )
-            }
+            overwrites=category.overwrites
         )
         message_logging_channel = await category.create_forum_channel(
             "訊息紀錄",
-            overwrites={
-                interaction.guild.default_role: PermissionOverwrite(
-                    send_messages=False,
-                    view_channel=True
-                )
-            }
+            overwrites=category.overwrites
         )
         message_logging_webhook = await message_logging_channel.create_webhook(name="Krabbe Logging")
 
@@ -263,7 +256,10 @@ class Setup(Cog):
             content="⌛ 正在設置控制面板...",
         )
 
-        control_panel_channel = await category.create_text_channel("控制面板")
+        control_panel_channel = await category.create_text_channel(
+            "控制面板",
+            overwrites=category.overwrites
+        )
 
         for panel in panels.values():
             await panel.send_to(control_panel_channel)
