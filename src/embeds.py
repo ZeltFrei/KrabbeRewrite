@@ -74,3 +74,11 @@ class ChannelNotificationEmbed(Embed):
         self.set_image(url=image)
         self.add_field(name="⚠️ Krabbe+ 2", value=left_message, inline=True)
         self.add_field(name="⚠️ 請注意", value=right_message, inline=True)
+
+
+class VoiceSetupEmbed(Embed):
+    def __init__(self, status: Optional[str] = None, title: Optional[str] = None, description: Optional[str] = None,
+                 *args, **kwargs):
+        super().__init__(color=Color.blurple(), title=title, description=description, *args, **kwargs)
+
+        self.set_author(name=f"安裝導引〡{status}")

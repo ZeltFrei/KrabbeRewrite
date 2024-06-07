@@ -8,7 +8,7 @@ from disnake.ext.commands import Cog, has_permissions, slash_command
 from disnake.ui import StringSelect, ChannelSelect, Button
 
 from src.classes.guild_settings import GuildSettings
-from src.embeds import InfoEmbed, SuccessEmbed, ErrorEmbed
+from src.embeds import InfoEmbed, SuccessEmbed, ErrorEmbed, VoiceSetupEmbed
 from src.panels import panels
 
 if TYPE_CHECKING:
@@ -58,13 +58,13 @@ class Setup(Cog):
             self.create_channels_and_webhooks(self.bot, interaction, category)
         )
 
+        use_music, interaction = await self.ask_for_music(interaction)
         nsfw, interaction = await self.ask_for_nsfw(interaction)
         lock_message_dm, interaction = await self.ask_for_lock_message_dm(interaction)
 
         await interaction.response.send_message(
-            embed=InfoEmbed(
-                title="動態語音設定",
-                description="正在設定..."
+            embed=VoiceSetupEmbed(
+                status="正在設定..."
             ),
             ephemeral=True
         )
@@ -87,19 +87,33 @@ class Setup(Cog):
 
         await guild_settings.upsert()
 
+        settings_embed = guild_settings.as_embed()
+
+        settings_embed.set_author(name="成功安裝〡這是您的伺服器語音設定", icon_url="https://i.imgur.com/lsTtd9c.png")
+
+        settings_embed.description = "### 系統頻道介紹\n" \
+                                     "請記得檢查語音頻道權限是否與您的伺服器權限符合。\n\n" \
+                                     "語音事件紀錄：此論壇頻道用於紀錄所有語音的動態，包含成員語音設定，任何加入、退出等資訊。\n" \
+                                     "語音訊息紀錄：此論壇頻道用於紀錄所有語音文字頻道中的所有發佈的訊息紀錄（不包含語音設定）\n。" \
+                                     "語音控制面板：此文字頻道用於成員設定自己的語音頻道相關內容。\n" \
+                                     "建立語音頻道：此語音頻道用於自動建立語音頻道，並根據用戶名稱來設定頻道名稱"
+
         await interaction.edit_original_message(
             embeds=[
-                SuccessEmbed(
-                    title="動態語音設定",
-                    description="設定完成！"
-                ),
-                guild_settings.as_embed(),
-                InfoEmbed(
-                    title="音樂系統",
-                    description="在你邀請音樂機器人以前，你將無法使用音樂功能。\n"
-                                "請透過以下的任意一個連結邀請音樂機器人：",
-                )
-            ],
+                       SuccessEmbed(
+                           title="設定完成",
+                           description="成功設定動態語音頻道！\n"
+                                       "你可能需要調整權限設定。"
+                       ),
+                       settings_embed
+                   ] + [
+                       VoiceSetupEmbed(
+                           status="邀請音樂機器人",
+                           description="請邀請音樂機器人進入伺服器，並設定權限。\n"
+                                       "### 提醒您\n"
+                                       "系統會根據您邀請的機器人數量，來決定伺服器同時支援播放數量"
+                       )
+                   ],
             components=[
                 Button(
                     label=kava.bot_user_name,
@@ -107,7 +121,7 @@ class Setup(Cog):
                     style=ButtonStyle.url
                 )
                 for kava in self.bot.kava_server.clients.values()
-            ]
+            ] if use_music == "yes" else []
         )
 
     @staticmethod
@@ -117,9 +131,14 @@ class Setup(Cog):
         custom_id = str(uuid.uuid1())
 
         await interaction.response.send_message(
-            embed=InfoEmbed(
-                title="動態語音設定",
-                description="你想要將動態語音設置在一個現成的類別底下嗎？"
+            embed=VoiceSetupEmbed(
+                status="設定建立系統時的頻道類別",
+                description="## 請選擇您想要如何建立語音系統？\n"
+                            "### 功能建立時會自動跟隨頻道類別設定的權限。\n"
+                            "* 使用現成的類別：\n"
+                            "- 將系統建立在目前伺服器擁有的頻道類別（由自己選擇頻道類別）\n"
+                            "* 建立全新的類別：\n"
+                            "- 系統將自動建立新類別來存放所有相關頻道（頻道權限預設查看全開）"
             ),
             components=[StringSelect(
                 custom_id=custom_id,
@@ -128,7 +147,7 @@ class Setup(Cog):
                     SelectOption(
                         label="我想要使用現成的類別",
                         value="existing",
-                        description="選擇這個選項，你將會在現有的類別底下建立動態語音頻道"
+                        description="選擇這個選項，你將會在現有的類別底下建立動態語音頻道，功能建立時會自動跟隨頻道類別設定的權限。"
                     ),
                     SelectOption(
                         label="我想要建立新的類別",
@@ -155,32 +174,12 @@ class Setup(Cog):
 
             raise asyncio.TimeoutError
 
-        if new_interaction.values[0] == "existing":
-            await interaction.edit_original_message(
-                embed=SuccessEmbed(
-                    title="動態語音設定",
-                    description="好，我將會使用現成的類別"
-                ),
-                components=[]
-            )
-        elif new_interaction.values[0] == "new":
-            await interaction.edit_original_message(
-                embed=SuccessEmbed(
-                    title="動態語音設定",
-                    description="好，我將會為你創建一個新類別"
-                ),
-                components=[]
-            )
-        else:
-            await new_interaction.response.send_message(
-                embed=ErrorEmbed(
-                    title="錯誤",
-                    description="未知的選項！"
-                ),
-                ephemeral=True
-            )
-
-            raise ValueError("Unknown option")
+        await interaction.edit_original_message(
+            embed=VoiceSetupEmbed(
+                status="設定成功，請繼續下一步"
+            ),
+            components=[]
+        )
 
         return new_interaction.values[0], new_interaction
 
@@ -219,9 +218,8 @@ class Setup(Cog):
         category: CategoryChannel = new_interaction.resolved_values[0]
 
         await interaction.edit_original_message(
-            embed=SuccessEmbed(
-                title="動態語音設定",
-                description=f"好，我將會在 {category.name} 中建立動態語音頻道"
+            embed=VoiceSetupEmbed(
+                status="設定成功，請繼續下一步"
             ),
             components=[]
         )
@@ -278,13 +276,92 @@ class Setup(Cog):
         }
 
     @staticmethod
+    async def ask_for_music(interaction: Interaction):
+        custom_id = str(uuid.uuid1())
+
+        await interaction.response.send_message(
+            embed=VoiceSetupEmbed(
+                status="設定音樂功能",
+                title="您是否想要讓成員使用此系統專屬的音樂功能？",
+                description="使用我們的音樂機器人有幾點好處。\n"
+                            "1. 直接在我們的系統的語音文字頻道輸入相關命令播放\n"
+                            "2. 您的Discord伺服器最多可以在不同語音頻道播放多達三個的音樂系統\n"
+                            "3  根據您邀請的機器人數量來決定播放數量\n"
+                            "4. 相關命令只要在 Krabbe 2.0 中選擇並輸入即可，不用在不同機器人輸入\n"
+                            "5. 每個成員都可以決定是否讓其他成員操作音樂系統\n"
+                            "6. 可以使用 YouTube, Spotify 等音樂平台進行播放\n"
+                            "7. 全中文操作介面，相關指令不會與其他機器人衝突\n\n"
+                            "Krabbe 2.0 使用 [Lava](https://github.com/Nat1anWasTaken/Lava) 來播放音樂。"
+            ),
+            components=[StringSelect(
+                custom_id=custom_id,
+                placeholder="選擇",
+                options=[
+                    SelectOption(
+                        label="是",
+                        value="yes",
+                        description="邀請音樂機器人",
+                        emoji="✅"
+                    ),
+                    SelectOption(
+                        label="否",
+                        value="no",
+                        description="不邀請音樂機器人",
+                        emoji="❌"
+                    )
+                ]
+            )],
+            ephemeral=True
+        )
+
+        try:
+            new_interaction: MessageInteraction = await interaction.bot.wait_for(
+                Event.message_interaction, check=lambda i: i.data.custom_id == custom_id, timeout=180
+            )
+        except asyncio.TimeoutError:
+            await interaction.edit_original_message(
+                embed=ErrorEmbed(
+                    title="錯誤",
+                    description="操作超時！"
+                ),
+                components=[]
+            )
+
+            raise asyncio.TimeoutError
+
+        if new_interaction.values[0] == "yes":
+            await interaction.edit_original_message(
+                embed=VoiceSetupEmbed(
+                    status="設定音樂功能",
+                    title="請在語音設定完畢後邀請音樂機器人，會給予邀請按鈕。\n",
+                    description="如果您找不到邀請按鈕，您可以輸入 `/music_bot` 命令呼叫邀請。\n"
+                                "### 提醒您\n"
+                                "系統會根據您邀請的機器人數量，來決定伺服器同時支援播放數量"
+                ),
+                components=[]
+            )
+
+        elif new_interaction.values[0] == "no":
+            await interaction.edit_original_message(
+                embed=VoiceSetupEmbed(
+                    status="設定成功，請繼續下一步"
+                ),
+                components=[]
+            )
+        else:
+            raise ValueError("Unknown option")
+
+        return new_interaction.values[0], new_interaction
+
+    @staticmethod
     async def ask_for_nsfw(interaction: Interaction):
         custom_id = str(uuid.uuid1())
 
         await interaction.response.send_message(
-            embed=InfoEmbed(
-                title="動態語音設定",
-                description="你是否想要成員在動態語音頻道中發送 NSFW 內容？"
+            embed=VoiceSetupEmbed(
+                status="限制級內容允許或禁止",
+                title="請選擇是否允許所有成員在語音文字頻道中發送 NSFW 內容。",
+                description="此設定可以再次使用指令：`/configure allow_nsfw:true/false` 來更改"
             ),
             components=[StringSelect(
                 custom_id=custom_id,
@@ -322,32 +399,12 @@ class Setup(Cog):
 
             raise asyncio.TimeoutError
 
-        if new_interaction.values[0] == "yes":
-            await interaction.edit_original_message(
-                embed=SuccessEmbed(
-                    title="動態語音設定",
-                    description="好，我將會啟用 NSFW"
-                ),
-                components=[]
-            )
-        elif new_interaction.values[0] == "no":
-            await interaction.edit_original_message(
-                embed=SuccessEmbed(
-                    title="動態語音設定",
-                    description="好，我將不會啟用 NSFW"
-                ),
-                components=[]
-            )
-        else:
-            await new_interaction.response.send_message(
-                embed=ErrorEmbed(
-                    title="錯誤",
-                    description="未知的選項！"
-                ),
-                ephemeral=True
-            )
-
-            raise ValueError("Unknown option")
+        await interaction.edit_original_message(
+            embed=VoiceSetupEmbed(
+                status="設定成功，請繼續下一步"
+            ),
+            components=[]
+        )
 
         return new_interaction.values[0], new_interaction
 
@@ -356,9 +413,10 @@ class Setup(Cog):
         custom_id = str(uuid.uuid1())
 
         await interaction.response.send_message(
-            embed=InfoEmbed(
-                title="動態語音設定",
-                description="你是否想要在成員創建動態語音頻道時通知他們？"
+            embed=VoiceSetupEmbed(
+                status="系統私訊通知開啟或關閉",
+                title="請選擇是否開啟發送成員建立頻道成功時的私人訊息通知。",
+                description="此設定可以再次使用指令：`/configure lock_message_dm:true/false` 來更改"
             ),
             components=[StringSelect(
                 custom_id=custom_id,
@@ -396,32 +454,12 @@ class Setup(Cog):
 
             raise asyncio.TimeoutError
 
-        if new_interaction.values[0] == "yes":
-            await interaction.edit_original_message(
-                embed=SuccessEmbed(
-                    title="動態語音設定",
-                    description="好，我將會通知成員"
-                ),
-                components=[]
-            )
-        elif new_interaction.values[0] == "no":
-            await interaction.edit_original_message(
-                embed=SuccessEmbed(
-                    title="動態語音設定",
-                    description="好，我將不會通知成員"
-                ),
-                components=[]
-            )
-        else:
-            await new_interaction.response.send_message(
-                embed=ErrorEmbed(
-                    title="錯誤",
-                    description="未知的選項！"
-                ),
-                ephemeral=True
-            )
-
-            raise ValueError("Unknown option")
+        await interaction.edit_original_message(
+            embed=VoiceSetupEmbed(
+                status="設定成功，請繼續下一步"
+            ),
+            components=[]
+        )
 
         return new_interaction.values[0], new_interaction
 
