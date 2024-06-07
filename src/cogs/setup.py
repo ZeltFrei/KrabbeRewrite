@@ -241,11 +241,11 @@ class Setup(Cog):
             overwrites=category.overwrites
         )
         event_logging_channel = await category.create_forum_channel(
-            "事件紀錄",
+            "語音事件記錄",
             overwrites=category.overwrites
         )
         message_logging_channel = await category.create_forum_channel(
-            "訊息紀錄",
+            "語音訊息記錄",
             overwrites=category.overwrites
         )
         message_logging_webhook = await message_logging_channel.create_webhook(name="Krabbe Logging")
@@ -255,7 +255,7 @@ class Setup(Cog):
         )
 
         control_panel_channel = await category.create_text_channel(
-            "控制面板",
+            "語音控制面板",
             overwrites=category.overwrites
         )
 
