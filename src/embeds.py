@@ -81,4 +81,4 @@ class VoiceSetupEmbed(Embed):
                  *args, **kwargs):
         super().__init__(color=Color.blurple(), title=title, description=description, *args, **kwargs)
 
-        self.set_author(name=f"安裝導引〡{status}")
+        self.set_author(name=f"安裝導引〡{status}", icon_url="https://i.imgur.com/lsTtd9c.png")
