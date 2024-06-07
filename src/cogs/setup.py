@@ -8,7 +8,7 @@ from disnake.ext.commands import Cog, has_permissions, slash_command
 from disnake.ui import StringSelect, ChannelSelect, Button
 
 from src.classes.guild_settings import GuildSettings
-from src.embeds import InfoEmbed, SuccessEmbed, ErrorEmbed, VoiceSetupEmbed
+from src.embeds import SuccessEmbed, ErrorEmbed, VoiceSetupEmbed
 from src.panels import panels
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ class Setup(Cog):
 
             try:
                 await text_channel.send(
-                    embed=InfoEmbed(
+                    embed=VoiceSetupEmbed(
                         title="歡迎使用 Krabbe",
                         description="感謝你邀請 Krabbe 進入你的伺服器！\n"
                                     "要開始使用 Krabbe，請使用 `/start` 指令進行設定。"
@@ -188,9 +188,9 @@ class Setup(Cog):
         custom_id = str(uuid.uuid1())
 
         await interaction.response.send_message(
-            embed=InfoEmbed(
-                title="動態語音設定",
-                description="請選擇一個類別"
+            embed=VoiceSetupEmbed(
+                status="設定建立系統時的頻道類別",
+                title="請選擇一個類別"
             ),
             components=[ChannelSelect(
                 custom_id=custom_id,
