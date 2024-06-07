@@ -45,6 +45,14 @@ class Setup(Cog):
         description="快捷設定",
     )
     async def start(self, interaction: ApplicationCommandInteraction):
+        if "COMMUNITY" not in interaction.guild.features:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed(
+                    title="錯誤",
+                    description="此功能僅支援社群伺服器！"
+                )
+            )
+
         use_custom_category, interaction = await self.use_custom_category(interaction)
 
         if use_custom_category == "existing":
