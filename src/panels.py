@@ -1,6 +1,7 @@
 import asyncio
 from abc import ABC
-from typing import Dict, TYPE_CHECKING, Optional
+from datetime import datetime
+from typing import Dict, TYPE_CHECKING, Optional, Literal
 
 from ZeitfreiOauth import AsyncDiscordOAuthClient
 from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, SelectOption, Message, Color, \
@@ -30,21 +31,11 @@ async def ensure_authorization(oauth_client: AsyncDiscordOAuthClient, interactio
     if await is_authorized(oauth_client, interaction.author.id):
         return True
 
+    authorization_terms_panel = AuthorizationTerms(interaction.bot, oauth_client)
+
     await interaction.response.send_message(
-        embed=ErrorEmbed(
-            title="您必須先接受 Krabbe 的授權需求，以便進行更多設定。",
-            description=f"- 不好意思，為了提供更完善的功能服務，需要請您接受授權。\n"
-                        f"- 請點選下方 `驗證` 按鈕來進行授權動作，或是點擊 [這裡]({oauth_client.api_base_url})\n"
-                        f"- 別擔心，此授權用途僅為調查成員需求，不會對您的 Discord 帳戶造成任何影響。"
-        ),
-        ephemeral=True,
-        components=[
-            Button(
-                style=ButtonStyle.url,
-                label="驗證",
-                url=oauth_client.api_base_url
-            )
-        ]
+        embed=authorization_terms_panel.embed,
+        view=authorization_terms_panel
     )
 
     return False
@@ -114,6 +105,90 @@ class Panel(View, ABC):
             embed=self.embed,
             view=self._instance
         )
+
+
+class AuthorizationTerms(Panel):
+    _instance: Optional["AuthorizationTerms"] = None
+
+    def __init__(self, bot: "Krabbe", oauth_client: AsyncDiscordOAuthClient,
+                 locale: Literal["zh_TW", "en_US"] = "zh_TW"):
+        super().__init__(bot)
+
+        self.oauth_client: AsyncDiscordOAuthClient = oauth_client
+        self.locale: Literal["zh_TW", "en_US"] = locale
+
+        self.add_item(Button(style=ButtonStyle.url, label="授權", url=oauth_client.api_base_url))
+
+    def __new__(cls, bot: "Krabbe", oauth_client: AsyncDiscordOAuthClient) -> "AuthorizationTerms":
+        if cls._instance:
+            return cls._instance
+
+        cls._instance = super().__new__(cls)
+        return cls._instance
+
+    @property
+    def embed(self) -> Optional[Embed]:
+        if self.locale == "zh_TW":
+            embed = Embed(
+                title="您必須先同意 Krabbe 2 的授權需求，以便您進行更多操作設定。",
+                description="`Krabbe 2.0〡自動化語音&音樂系統` 以下說明簡稱 `本系統`\n"
+                            "### 本系統為了打造更多豐富的機器人功能服務，需要請您同意。\n"
+                            ">>>  1. 本系統只會進行一次授權，短時間內多次要求授權，屬於異常，請使用回饋按鈕回報。\n"
+                            " 2. 本系統都會符合 [Discord 官方開發人員政策](https://discord.com/developers/docs/policies-and-agreements/developer-policy) 的所有條款。\n"
+                            " 3. 本系統會在您授權許可後將您加入我們的 Discord 社群伺服器。\n"
+                            " 4. 本系統並不會透過私訊來對您的帳戶發送與 __本系統__ 毫無相關的訊息。\n"
+                            " 5. 本系統不會對您的個人資料頭像、個人資料橫幅、使用者名稱進行操作。\n"
+                            " 6. 本系統不會將您的個人信箱進行任何操作。\n"
+                            " 7. 本系統不支持&不接受用戶使用本系統來進行任何違反官方規定的行為。\n"
+                            " 8. 本系統符合官方所有條款：\n"
+                            "[開發人員政策](https://discord.com/developers/docs/policies-and-agreements/developer-policy), [開發人員服務條款](https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service), [社群守則](https://discord.com/guidelines), [服務條款](https://discord.com/terms)\n"
+                            " 9. 您沒有同意也可以繼續使用本系統的其他功能，例如加入語音進行對話。\n"
+                            "### 請點選 `我同意` 按鈕來進行授權動作，或是點擊 `這裡`",
+                timestamp=datetime.now()
+            )
+
+            embed.set_author(name="系統通知〡機器人授權同意書", icon_url="https://i.imgur.com/lsTtd9c.png")
+
+            return embed
+
+        elif self.locale == "en_US":
+            embed = Embed(
+                title="You must agree to the authorization request from Krabbe 2 to proceed with more settings.",
+                description="`Krabbe 2.0〡Auto Voice & Music System` is referred to as `this system` below.\n"
+                            "### This system needs you to agree to the following:\n"
+                            ">>>  1. This system will only request authorization once, multiple requests in a short period of time are abnormal, please report using the feedback button.\n"
+                            " 2. This system will comply with all terms of the [Discord Official Developer Policy](https://discord.com/developers/docs/policies-and-agreements/developer-policy).\n"
+                            " 3. This system will add you to our Discord community server after you authorize it.\n"
+                            " 4. This system will not send you messages unrelated to __this system__ through private messages.\n"
+                            " 5. This system will not operate on your personal data, avatar, profile banner, or username.\n"
+                            " 6. This system will not operate on your personal email.\n"
+                            " 7. This system does not support & accept users using this system to perform any behavior that violates official regulations.\n"
+                            " 8. This system complies with all official terms:\n"
+                            "[Developer Policy](https://discord.com/developers/docs/policies-and-agreements/developer-policy), [Developer Terms of Service](https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service), [Community Guidelines](https://discord.com/guidelines), [Terms of Service](https://discord.com/terms)\n"
+                            " 9. You can continue to use other functions of this system without agreeing, such as joining a voice chat.\n"
+                            "### Please click the `I agree` button to authorize, or click `here`",
+                timestamp=datetime.now()
+            )
+
+            embed.set_author(name="System Notification〡Bot Authorization Agreement", icon_url="https://i.imgur.com/lsTtd9c.png")
+
+            return embed
+
+        else:
+            return None
+
+    @ui.string_select(
+        placeholder="語言選擇 / Language Selection",
+        options=[
+            SelectOption(label="繁體中文", value="zh_TW"),
+            SelectOption(label="English", value="en_US")
+        ],
+        custom_id="locale"
+    )
+    async def select_locale(self, _select, interaction: MessageInteraction):
+        self.locale = interaction.values[0]
+
+        await interaction.edit_original_message(embed=self.embed, view=self)
 
 
 class Title(Panel):
