@@ -969,7 +969,7 @@ class MusicSettings(Panel):
 
         embed = InfoEmbed(
             title="想使用音樂功能嗎？",
-            description=f"* 請在您的語音文字頻道中 (點選按鈕或這裡)[{channel.channel.jump_url}] 選擇機器人並進行播放即可\n"
+            description=f"* 請在您的語音文字頻道中 [點選按鈕或這裡]({channel.channel.jump_url}])選擇機器人並進行播放即可\n"
                         "* 使用的音樂機器人為『Krabbe 2.0』"
                         "* 請在語音文字頻道中輸入「 /py 」"
         )
