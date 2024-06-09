@@ -366,8 +366,8 @@ class Music(Cog):
                     title="播放序列",
                     description='\n'.join(
                         [
-                            f"**[{index + 1 + (iteration * 10)}]** {track['title']}"
-                            for index, track in enumerate(songs_in_page)
+                            f"**[{index + 1 + (iteration * 10)}]** {track_title}"
+                            for index, track_title in enumerate(songs_in_page)
                         ]
                     )
                 )
