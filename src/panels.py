@@ -35,7 +35,8 @@ async def ensure_authorization(oauth_client: AsyncDiscordOAuthClient, interactio
 
     await interaction.response.send_message(
         embed=authorization_terms_panel.embed,
-        view=authorization_terms_panel
+        view=authorization_terms_panel,
+        ephemeral=True
     )
 
     return False
@@ -123,7 +124,8 @@ class AuthorizationTerms(Panel):
         if cls._instance:
             return cls._instance
 
-        cls._instance = super().__new__(cls)
+        # noinspection PyTypeChecker
+        cls._instance = super().__new__(cls, bot)
         return cls._instance
 
     @property
@@ -188,7 +190,7 @@ class AuthorizationTerms(Panel):
     async def select_locale(self, _select, interaction: MessageInteraction):
         self.locale = interaction.values[0]
 
-        await interaction.edit_original_message(embed=self.embed, view=self)
+        await interaction.response.edit_message(embed=self.embed, view=self)
 
 
 class Title(Panel):
