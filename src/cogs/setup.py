@@ -49,7 +49,9 @@ class Setup(Cog):
         interaction, is_to_continue = await self.check_previous_settings(self.bot, interaction)
 
         if not is_to_continue:
-            return
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("已取消設定")
+            )
 
         if "COMMUNITY" not in interaction.guild.features:
             return await interaction.response.send_message(
