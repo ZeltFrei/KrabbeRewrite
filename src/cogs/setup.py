@@ -16,6 +16,19 @@ if TYPE_CHECKING:
     from src.bot import Krabbe
 
 
+async def delete_old_channels(bot: "Krabbe", guild_settings: GuildSettings):
+    try:
+        tasks = [
+            bot.loop.create_task(guild_settings.root_channel.delete()),
+            bot.loop.create_task(guild_settings.category_channel.delete()),
+            bot.loop.create_task(guild_settings.event_logging_channel.delete()),
+            bot.loop.create_task(guild_settings.message_logging_channel.delete())
+        ]
+        await asyncio.gather(*tasks)
+    except Exception as e:
+        print(f"An error occurred while deleting the channels: {e}")
+
+
 class Setup(Cog):
     def __init__(self, bot: "Krabbe"):
         self.bot: "Krabbe" = bot
@@ -159,10 +172,7 @@ class Setup(Cog):
         if not confirmed:
             return new_interaction, False
 
-        _ = bot.loop.create_task(guild_settings.root_channel.delete())
-        _ = bot.loop.create_task(guild_settings.category_channel.delete())
-        _ = bot.loop.create_task(guild_settings.event_logging_channel.delete())
-        _ = bot.loop.create_task(guild_settings.message_logging_channel.delete())
+        _ = bot.loop.create_task(delete_old_channels(bot, guild_settings)
 
         await guild_settings.delete()
 
