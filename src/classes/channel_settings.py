@@ -73,22 +73,6 @@ class ChannelSettings(MongoObject):
             "shared_music_control": self.shared_music_control
         }
 
-    def reset(self):
-        """
-        Reset the settings to default values.
-        This method does not update the database. Use the upsert method to update the database.
-        """
-        self.channel_name = None
-        self.user_limit = None
-        self.bitrate = None
-        self.rtc_region = None
-        self.soundboard_enabled = None
-        self.media_allowed = None
-        self.slowmode_delay = None
-        self.stream = None
-        self.use_embedded_activities = None
-        self.shared_music_control = None
-
     @property
     def user(self) -> disnake.User:
         """
