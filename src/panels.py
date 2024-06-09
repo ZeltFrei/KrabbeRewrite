@@ -714,7 +714,7 @@ class MemberSettings(Panel):
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
-        channel.channel_settings.nsfw = not channel.channel_settings.nsfw
+        channel.channel_settings.join_notifications = not channel.channel_settings.join_notifications
 
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
