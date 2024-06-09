@@ -353,8 +353,16 @@ class Music(Cog):
         )
 
         if response["status"] == "error":
-            await interaction.edit_original_response(
+            await interaction.response.send_message(
                 embed=ErrorEmbed(response["message"]),
+                ephemeral=True
+            )
+            return
+
+        if len(response["queue"]) == 0:
+            await interaction.response.send_message(
+                embed=InfoEmbed("播放序列", "目前沒有歌曲在播放序列中"),
+                ephemeral=True
             )
             return
 
