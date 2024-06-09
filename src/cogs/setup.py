@@ -58,10 +58,17 @@ class Setup(Cog):
     async def music_bot(self, interaction: ApplicationCommandInteraction):
         await interaction.response.send_message(
             embed=VoiceSetupEmbed(
-                status="邀請音樂機器人",
-                description="請邀請音樂機器人進入伺服器，並設定權限。\n"
-                            "### 提醒您\n"
-                            "系統會根據您邀請的機器人數量，來決定伺服器同時支援播放數量"
+                status="設定音樂功能",
+                title="您是否想要讓成員使用此系統專屬的音樂功能？",
+                description="使用我們的音樂機器人有幾點好處。\n"
+                            "1. 直接在我們的系統的語音文字頻道輸入相關命令播放\n"
+                            "2. 您的Discord伺服器最多可以在不同語音頻道播放多達三個的音樂系統\n"
+                            "3  根據您邀請的機器人數量來決定播放數量\n"
+                            "4. 相關命令只要在 Krabbe 2.0 中選擇並輸入即可，不用在不同機器人輸入\n"
+                            "5. 每個成員都可以決定是否讓其他成員操作音樂系統\n"
+                            "6. 可以使用 YouTube, Spotify 等音樂平台進行播放\n"
+                            "7. 全中文操作介面，相關指令不會與其他機器人衝突\n\n"
+                            "Krabbe 2.0 使用 [Lava](https://github.com/Nat1anWasTaken/Lava) 來播放音樂。"
             ),
             components=[
                 Button(
