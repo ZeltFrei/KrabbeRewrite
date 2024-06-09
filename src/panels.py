@@ -118,7 +118,7 @@ class AuthorizationTerms(Panel):
         self.oauth_client: AsyncDiscordOAuthClient = oauth_client
         self.locale: Literal["zh_TW", "en_US"] = locale
 
-        self.add_item(Button(style=ButtonStyle.url, label="授權", url=oauth_client.api_base_url))
+        self.add_item(Button(style=ButtonStyle.url, label="授權 / Authorize", url=oauth_client.api_base_url))
 
     def __new__(cls, bot: "Krabbe", oauth_client: AsyncDiscordOAuthClient) -> "AuthorizationTerms":
         if cls._instance:
@@ -168,7 +168,7 @@ class AuthorizationTerms(Panel):
                             " 8. This system complies with all official terms:\n"
                             "[Developer Policy](https://discord.com/developers/docs/policies-and-agreements/developer-policy), [Developer Terms of Service](https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service), [Community Guidelines](https://discord.com/guidelines), [Terms of Service](https://discord.com/terms)\n"
                             " 9. You can continue to use other functions of this system without agreeing, such as joining a voice chat.\n"
-                            "### Please click the `I agree` button to authorize, or click `here`",
+                            "### Please click the `Authorize` button below to authorize",
                 timestamp=datetime.now()
             )
 
