@@ -145,7 +145,7 @@ class AuthorizationTerms(Panel):
                             " 8. 本系統符合官方所有條款：\n"
                             "[開發人員政策](https://discord.com/developers/docs/policies-and-agreements/developer-policy), [開發人員服務條款](https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service), [社群守則](https://discord.com/guidelines), [服務條款](https://discord.com/terms)\n"
                             " 9. 您沒有同意也可以繼續使用本系統的其他功能，例如加入語音進行對話。\n"
-                            "### 請點選 `授權` 按鈕來進行授權動作，或是點擊 `這裡`",
+                            "### 請點選 `授權` 按鈕來進行授權動作",
                 timestamp=datetime.now()
             )
 
