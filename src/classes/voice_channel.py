@@ -1,6 +1,7 @@
 import asyncio
 import random
 from asyncio import Event, Future
+from datetime import datetime
 from enum import Enum
 from logging import getLogger
 from typing import Optional, TYPE_CHECKING, AsyncIterator, Union, List, Dict
@@ -278,7 +279,7 @@ class VoiceChannel(MongoObject):
                 ChannelNotificationEmbed(
                     left_message=f"語音頻道 {self.channel.name} 擁有者已進行變更",
                     right_message=f"此語音頻道的擁有者已變更為 {self.owner.mention}",
-                    image="https://i.imgur.com/JVumKnF.png"
+                    image_url="https://i.imgur.com/JVumKnF.png"
                 ),
                 self.channel_settings.as_embed()
             ]
@@ -415,7 +416,7 @@ class VoiceChannel(MongoObject):
                 embed=ChannelNotificationEmbed(
                     left_message=f"{self.owner.mention} 退出了他建立的語音頻道 {self.channel.name}",
                     right_message="如果沒有在 60 秒內重新加入，會轉移此頻道設定權限",
-                    image="https://i.imgur.com/24YsyvX.png"
+                    image_url="https://i.imgur.com/24YsyvX.png"
                 )
             )
 
@@ -426,7 +427,7 @@ class VoiceChannel(MongoObject):
                     embed=ChannelNotificationEmbed(
                         left_message=f"語音頻道 {self.channel.name} 權限沒有進行任何更動",
                         right_message=f"擁有者 {self.owner.mention} 重新加入語音頻道",
-                        image="https://i.imgur.com/A7K16RX.png"
+                        image_url="https://i.imgur.com/A7K16RX.png"
                     )
                 )
 
@@ -441,7 +442,7 @@ class VoiceChannel(MongoObject):
                 embed=ChannelNotificationEmbed(
                     left_message=f"語音頻道 {self.channel.name} 開始進行權限轉移",
                     right_message=f"擁有者 {self.owner.mention} 沒有在 60 秒重新加入",
-                    image="https://i.imgur.com/24YsyvX.png"
+                    image_url="https://i.imgur.com/24YsyvX.png"
                 )
             )
 
@@ -452,7 +453,7 @@ class VoiceChannel(MongoObject):
                 embed=ChannelNotificationEmbed(
                     left_message=f"語音頻道 {self.channel.name} 沒有成員在頻道中",
                     right_message="若 60 秒內沒有成員加入頻道，語音頻道將執行刪除動作",
-                    image="https://i.imgur.com/56Aifqg.png"
+                    image_url="https://i.imgur.com/56Aifqg.png"
                 )
             )
 
@@ -463,7 +464,7 @@ class VoiceChannel(MongoObject):
                     embed=ChannelNotificationEmbed(
                         left_message=f"語音頻道 {self.channel.mention} 繼續運作中",
                         right_message=f"{self.non_bot_members[0].mention} 加入語音頻道並成為新的頻道擁有者",
-                        image="https://i.imgur.com/R3Rl1e2.png"
+                        image_url="https://i.imgur.com/R3Rl1e2.png"
                     )
                 )
 
@@ -480,6 +481,14 @@ class VoiceChannel(MongoObject):
         if member in self.member_queue:
             self.member_queue.remove(member)
 
+        if self.channel_settings.join_notifications:
+            await self.notify(
+                embed=ChannelNotificationEmbed(
+                    left_message=f"成員加入語音頻道 {self.channel.name}",
+                    right_message=f"剛剛在 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} 時，{member.mention} 加入了頻道"
+                )
+            )
+
         await self.guild_settings.log_event(
             f"{member.mention} 加入了 {self.channel.name}"
         )
@@ -495,6 +504,14 @@ class VoiceChannel(MongoObject):
                 f"{self.channel.name} 的擁有者 {member.mention} 離開了頻道"
             )
             return
+
+        if self.channel_settings.join_notifications:
+            await self.notify(
+                embed=ChannelNotificationEmbed(
+                    left_message=f"成員離開語音頻道 {self.channel.name}",
+                    right_message=f"剛剛在 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} 時，{member.mention} 離開了頻道"
+                )
+            )
 
         await self.apply_setting_and_permissions()
 

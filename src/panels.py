@@ -1161,7 +1161,7 @@ class ChannelRestored(Panel):
         return ChannelNotificationEmbed(
             left_message="系統伺服器完成重新啟動！請注意，所有邀請已刪除",
             right_message="您可能會遇到一些問題可以點選按鈕進行回報",
-            image="https://i.imgur.com/9Pt1NZA.png"
+            image_url="https://i.imgur.com/9Pt1NZA.png"
         )
 
     @ui.button(
