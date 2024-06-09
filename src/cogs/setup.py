@@ -54,6 +54,27 @@ class Setup(Cog):
                 continue
 
     @has_permissions(administrator=True)
+    @slash_command(name="music_bot", description="顯示音樂機器人連結")
+    async def music_bot(self, interaction: ApplicationCommandInteraction):
+        await interaction.response.send_message(
+            embed=VoiceSetupEmbed(
+                status="邀請音樂機器人",
+                description="請邀請音樂機器人進入伺服器，並設定權限。\n"
+                            "### 提醒您\n"
+                            "系統會根據您邀請的機器人數量，來決定伺服器同時支援播放數量"
+            ),
+            components=[
+                Button(
+                    label=kava.bot_user_name,
+                    url=kava.invite_link,
+                    style=ButtonStyle.url
+                )
+                for kava in self.bot.kava_server.clients.values()
+            ],
+            ephemeral=True
+        )
+
+    @has_permissions(administrator=True)
     @slash_command(
         name="start",
         description="快捷設定",
