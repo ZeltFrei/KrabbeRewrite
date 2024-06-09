@@ -172,7 +172,7 @@ class Setup(Cog):
         if not confirmed:
             return new_interaction, False
 
-        _ = bot.loop.create_task(delete_old_channels(bot, guild_settings)
+        _ = bot.loop.create_task(delete_old_channels(bot, guild_settings))
 
         await guild_settings.delete()
 
