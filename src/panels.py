@@ -220,6 +220,8 @@ class Title(Panel):
  - **將頻道變更為私人頻道，透過邀請或輸入密碼加入。**
 * 人數限制：
  - **設定頻道可以加入多少位成員。**
+* 進出通知：
+ - **設定語音頻道的進出通知。**
 ### 語音設定
 * 語音位元率：
  - **選擇適合您頻道的位元率。**
@@ -527,7 +529,8 @@ class MemberSettings(Panel):
             SelectOption(label="邀請成員", value="invite_member", description="邀請成員加入頻道", emoji="📩"),
             SelectOption(label="移出成員", value="remove_member", description="移出成員出頻道", emoji="🚪"),
             SelectOption(label="頻道鎖", value="lock_channel", description="鎖定或解鎖頻道", emoji="🔒"),
-            SelectOption(label="人數限制", value="limit_members", description="設定頻道人數上限", emoji="🔢")
+            SelectOption(label="人數限制", value="limit_members", description="設定頻道人數上限", emoji="🔢"),
+            SelectOption(label="進出通知", value="join_notifications", description="設定進出通知", emoji="🔔")
         ],
         custom_id="member_settings"
     )
@@ -541,6 +544,8 @@ class MemberSettings(Panel):
                 await self.lock_channel(interaction)
             case "limit_members":
                 await self.limit_members(interaction)
+            case "join_notifications":
+                await self.join_notifications(interaction)
 
         await interaction.edit_original_message()
 
@@ -702,6 +707,32 @@ class MemberSettings(Panel):
 
         await channel.guild_settings.log_event(
             f"{interaction.author.mention} 設定了 {channel.channel.name} 的人數上限為 {limit}"
+        )
+
+    @staticmethod
+    async def join_notifications(interaction: MessageInteraction) -> None:
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        channel.channel_settings.nsfw = not channel.channel_settings.nsfw
+
+        await channel.channel_settings.upsert()
+        await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="當前語音頻道進出通知",
+                description=f"進出通知已{'啟用' if channel.channel_settings.join_notifications else '禁用'}"
+            )
+        )
+
+        await interaction.response.send_message(
+            embed=SuccessEmbed(f"已{'啟用' if channel.channel_settings.join_notifications else '禁用'}進出通知"),
+            ephemeral=True
+        )
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的進出通知為 {channel.channel_settings.join_notifications}"
         )
 
 

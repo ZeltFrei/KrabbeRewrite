@@ -21,6 +21,7 @@ class ChannelSettings(MongoObject):
             user_id: int,
             channel_name: Optional[str] = None,
             user_limit: Optional[int] = None,
+            join_notifications: Optional[bool] = None,
             bitrate: Optional[int] = None,
             rtc_region: Optional[str] = None,
             nsfw: Optional[bool] = None,
@@ -43,6 +44,7 @@ class ChannelSettings(MongoObject):
 
         self.user_limit: Optional[int] = user_limit
 
+        self.join_notifications: Optional[bool] = join_notifications
         self.bitrate: Optional[int] = bitrate
         self.rtc_region: Optional[str] = rtc_region
         self.nsfw: Optional[bool] = nsfw
@@ -62,6 +64,7 @@ class ChannelSettings(MongoObject):
             "user_id": self.user_id,
             "channel_name": self.channel_name,
             "user_limit": self.user_limit,
+            "join_notifications": self.join_notifications,
             "bitrate": self.bitrate,
             "rtc_region": self.rtc_region,
             "nsfw": self.nsfw,
@@ -106,6 +109,7 @@ class ChannelSettings(MongoObject):
 
         embed.add_field(name="✒️ 頻道名稱", value=self.channel_name or "未設定", inline=True)
         embed.add_field(name="🔢 用戶上限", value=self.user_limit or "未設定", inline=True)
+        embed.add_field(name="🔔 加入通知", value=self.join_notifications or "未設定", inline=True)
         embed.add_field(
             name="📶 比特率", value=f"{self.bitrate // 1000} Kbps" if self.bitrate else "未設定", inline=True
         )
