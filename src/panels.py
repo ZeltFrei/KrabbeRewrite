@@ -145,11 +145,13 @@ class AuthorizationTerms(Panel):
                             " 8. 本系統符合官方所有條款：\n"
                             "[開發人員政策](https://discord.com/developers/docs/policies-and-agreements/developer-policy), [開發人員服務條款](https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service), [社群守則](https://discord.com/guidelines), [服務條款](https://discord.com/terms)\n"
                             " 9. 您沒有同意也可以繼續使用本系統的其他功能，例如加入語音進行對話。\n"
-                            "### 請點選 `我同意` 按鈕來進行授權動作，或是點擊 `這裡`",
+                            "### 請點選 `授權` 按鈕來進行授權動作，或是點擊 `這裡`",
                 timestamp=datetime.now()
             )
 
             embed.set_author(name="系統通知〡機器人授權同意書", icon_url="https://i.imgur.com/lsTtd9c.png")
+
+            embed.set_footer(text="請注意，同意授權即代表您個人（Discord帳戶）許可授權項目的所有操作")
 
             return embed
 
@@ -174,7 +176,9 @@ class AuthorizationTerms(Panel):
 
             embed.set_author(
                 name="System Notification〡Bot Authorization Agreement", icon_url="https://i.imgur.com/lsTtd9c.png"
-                )
+            )
+
+            embed.set_footer(text="Please note that by agreeing to the authorization, you (your Discord account) permit all operations of the authorized items.")
 
             return embed
 
