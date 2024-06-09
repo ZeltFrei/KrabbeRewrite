@@ -172,7 +172,9 @@ class AuthorizationTerms(Panel):
                 timestamp=datetime.now()
             )
 
-            embed.set_author(name="System Notification〡Bot Authorization Agreement", icon_url="https://i.imgur.com/lsTtd9c.png")
+            embed.set_author(
+                name="System Notification〡Bot Authorization Agreement", icon_url="https://i.imgur.com/lsTtd9c.png"
+                )
 
             return embed
 
@@ -1158,11 +1160,15 @@ class LockChannel(Panel):
 class ChannelRestored(Panel):
     @property
     def embed(self) -> Embed:
-        return ChannelNotificationEmbed(
+        embed = ChannelNotificationEmbed(
             left_message="系統伺服器完成重新啟動！請注意，所有邀請已刪除",
             right_message="您可能會遇到一些問題可以點選按鈕進行回報",
             image_url="https://i.imgur.com/9Pt1NZA.png"
         )
+
+        embed.set_footer(text="請重新建立語音頻道讓功能保持正常狀態")
+
+        return embed
 
     @ui.button(
         label="回報問題&提供建議",
