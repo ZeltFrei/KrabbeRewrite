@@ -10,6 +10,7 @@ from disnake.ui import StringSelect, ChannelSelect, Button
 from src.classes.guild_settings import GuildSettings
 from src.embeds import SuccessEmbed, ErrorEmbed, VoiceSetupEmbed
 from src.panels import panels
+from src.quick_ui import confirm_button
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -45,6 +46,11 @@ class Setup(Cog):
         description="快捷設定",
     )
     async def start(self, interaction: ApplicationCommandInteraction):
+        interaction, is_to_continue = await self.check_previous_settings(self.bot, interaction)
+
+        if not is_to_continue:
+            return
+
         if "COMMUNITY" not in interaction.guild.features:
             return await interaction.response.send_message(
                 embed=ErrorEmbed(
@@ -131,6 +137,33 @@ class Setup(Cog):
                 for kava in self.bot.kava_server.clients.values()
             ] if use_music == "yes" else []
         )
+
+    @staticmethod
+    async def check_previous_settings(bot: "Krabbe", interaction: Interaction) -> Tuple[Interaction, bool]:
+        guild_settings = await GuildSettings.find_one(
+            bot, bot.database, guild_id=interaction.guild.id
+        )
+
+        if not guild_settings:
+            return interaction, True
+
+        new_interaction, confirmed = await confirm_button(
+            interaction,
+            message="您已經在這個伺服器設定過動態語音系統，繼續設定將會移除先前的所有設定，並刪除舊有的頻道，是否要繼續設定？\n"
+                    "註：控制面板頻道將不會被自動刪除"
+        )
+
+        if not confirmed:
+            return new_interaction, False
+
+        _ = bot.loop.create_task(guild_settings.root_channel.delete())
+        _ = bot.loop.create_task(guild_settings.category_channel.delete())
+        _ = bot.loop.create_task(guild_settings.event_logging_channel.delete())
+        _ = bot.loop.create_task(guild_settings.message_logging_channel.delete())
+
+        await guild_settings.delete()
+
+        return new_interaction, True
 
     @staticmethod
     async def use_custom_category(
