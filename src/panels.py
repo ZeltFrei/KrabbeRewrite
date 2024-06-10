@@ -423,8 +423,6 @@ class ChannelSettings(Panel):
         custom_id="channel_settings"
     )
     async def select_setting(self, _select, interaction: MessageInteraction):
-        await interaction.edit_original_message(view=self)
-
         match interaction.values[0]:
             case "rename_channel":
                 await self.rename_channel(interaction)
@@ -432,6 +430,8 @@ class ChannelSettings(Panel):
                 await self.transfer_ownership(interaction)
             case "remove_channel":
                 await self.remove_channel(interaction)
+
+        await interaction.edit_original_message(view=self)
 
     @staticmethod
     async def rename_channel(interaction: MessageInteraction) -> None:
@@ -566,8 +566,6 @@ class MemberSettings(Panel):
         custom_id="member_settings"
     )
     async def select_setting(self, _select, interaction: MessageInteraction):
-        await interaction.edit_original_message(view=self)
-
         match interaction.values[0]:
             case "invite_member":
                 await self.invite_member(interaction)
@@ -579,6 +577,8 @@ class MemberSettings(Panel):
                 await self.limit_members(interaction)
             case "join_notifications":
                 await self.join_notifications(interaction)
+
+        await interaction.edit_original_message(view=self)
 
     @staticmethod
     async def invite_member(interaction: MessageInteraction) -> None:
@@ -794,8 +794,6 @@ class VoiceSettings(Panel):
         custom_id="voice_settings"
     )
     async def select_setting(self, _select: Select, interaction: MessageInteraction):
-        await interaction.edit_original_message(view=self)
-
         match interaction.values[0]:
             case "bitrate":
                 await self.bitrate(interaction)
@@ -813,6 +811,8 @@ class VoiceSettings(Panel):
                 await self.toggle_stream(interaction)
             case "embedded_activities":
                 await self.use_embedded_activities(interaction)
+
+        await interaction.edit_original_message(view=self)
 
     @staticmethod
     async def bitrate(interaction: MessageInteraction) -> None:
@@ -1093,13 +1093,13 @@ class MusicSettings(Panel):
         custom_id="music_settings"
     )
     async def select_setting(self, _select: Select, interaction: MessageInteraction):
-        await interaction.edit_original_message(view=self)
-
         match interaction.values[0]:
             case "summon_bot":
                 await self.summon_bot(interaction)
             case "toggle_music":
                 await self.toggle_music(interaction)
+
+        await interaction.edit_original_message(view=self)
 
     @staticmethod
     async def summon_bot(interaction: MessageInteraction) -> None:
