@@ -108,6 +108,7 @@ async def feedback(interaction: Interaction) -> None:
                                 "輸入 `none` 來取消邀請連結的創建。",
                     style=TextInputStyle.short,
                     custom_id="invite",
+                    required=False
                 )
             ]
         )
