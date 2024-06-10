@@ -118,7 +118,7 @@ async def feedback(interaction: Interaction) -> None:
 
     if (not invite) and (invite.lower() != "none"):
         try:
-            invite = await interaction.channel.create_invite(unique=True).url
+            invite = (await interaction.channel.create_invite(unique=True)).url
         except Exception as error:
             invite = f"創建邀請連結時遇到了錯誤 {str(error)[:60]}"
 
