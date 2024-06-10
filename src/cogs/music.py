@@ -67,6 +67,13 @@ class Music(Cog):
             )
 
     @slash_command(
+        name="radio",
+        description="將ZeitFrei 電台的內容加入播放序列"
+    )
+    async def radio(self, interaction: ApplicationCommandInteraction):
+        await self.play(interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR")
+
+    @slash_command(
         name="py",
         description="播放音樂",
         options=[

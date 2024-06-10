@@ -1085,7 +1085,9 @@ class MusicSettings(Panel):
         placeholder="🎵 音樂設定",
         options=[
             reset_option,
-            SelectOption(label="召喚音樂機器人", value="summon_bot", description="在您的語音頻道播放音樂", emoji="🤖"),
+            SelectOption(
+                label="播放 ZeitFrei 電台", value="play_radio", description="在您的語音頻道播放 ZeitFrei 電台", emoji="📻"
+            ),
             SelectOption(
                 label="允許/禁止頻道成員使用音樂", value="toggle_music", description="啟用或禁用音樂功能", emoji="🎶"
             )
@@ -1094,38 +1096,19 @@ class MusicSettings(Panel):
     )
     async def select_setting(self, _select: Select, interaction: MessageInteraction):
         match interaction.values[0]:
-            case "summon_bot":
-                await self.summon_bot(interaction)
+            case "play_radio":
+                await self.play_radio(interaction)
             case "toggle_music":
                 await self.toggle_music(interaction)
 
         await interaction.edit_original_message(view=self)
 
     @staticmethod
-    async def summon_bot(interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_owned_channel(interaction)):
+    async def play_radio(interaction: MessageInteraction) -> None:
+        if not await ensure_owned_channel(interaction):
             return
 
-        embed = InfoEmbed(
-            title="想使用音樂功能嗎？",
-            description=f"* 請在您的語音文字頻道中 [點選按鈕或這裡]({channel.channel.jump_url}])選擇機器人並進行播放即可\n"
-                        "* 使用的音樂機器人為『Krabbe 2.0』"
-                        "* 請在語音文字頻道中輸入「 /py 」"
-        )
-
-        embed.set_image(url="https://imgur.com/VRuqoF4")
-
-        await interaction.response.send_message(
-            embed=embed,
-            ephemeral=True,
-            components=[
-                Button(
-                    style=ButtonStyle.url,
-                    label=channel.channel.name,
-                    url=channel.channel.jump_url
-                )
-            ]
-        )
+        await interaction.bot.get_slash_command("py").invoke(interaction)
 
     @staticmethod
     async def toggle_music(interaction: MessageInteraction) -> None:
