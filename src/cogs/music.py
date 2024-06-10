@@ -108,9 +108,8 @@ class Music(Cog):
             )
 
             if not response["status"] == "success":
-                await interaction.response.send_message(
-                    embed=ErrorEmbed(response["message"]),
-                    ephemeral=True
+                await interaction.edit_original_response(
+                    embed=ErrorEmbed(response["message"])
                 )
                 return
 
