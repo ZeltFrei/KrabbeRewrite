@@ -67,6 +67,87 @@ async def ensure_owned_channel(interaction: Interaction) -> Optional[VoiceChanne
     return channel
 
 
+async def feedback(interaction: Interaction) -> None:
+    interaction, feedbacks = await quick_long_modal(
+        interaction,
+        modal=Modal(
+            title="回報問題",
+            components=[
+                TextInput(
+                    label="回報問題還是提供建議",
+                    placeholder="回報問題 / 提供建議",
+                    style=TextInputStyle.short,
+                    custom_id="type",
+                    required=True
+                ),
+                TextInput(
+                    label="請闡述您遇到的問題",
+                    placeholder="我在使用過程中遇到了...",
+                    style=TextInputStyle.long,
+                    custom_id="description",
+                    required=False
+                ),
+                TextInput(
+                    label="如何觸發該問題？",
+                    placeholder="我是這樣做的...",
+                    style=TextInputStyle.long,
+                    custom_id="trigger",
+                    required=False
+                ),
+                TextInput(
+                    label="請您敘述您期望的建議",
+                    placeholder="我希望能夠...",
+                    style=TextInputStyle.long,
+                    custom_id="suggestion",
+                    required=False
+                ),
+                TextInput(
+                    label="伺服器邀請連結",
+                    placeholder="https://discord.gg/...\n"
+                                "如果不輸入，機器人將會自動創建一個邀請連結。\n"
+                                "輸入 `none` 來取消邀請連結的創建。",
+                    style=TextInputStyle.short,
+                    custom_id="invite",
+                )
+            ]
+        )
+    )
+
+    invite = feedbacks.get("invite")
+
+    if (not invite) and (invite.lower() != "none"):
+        try:
+            invite = await interaction.channel.create_invite(unique=True).url
+        except Exception as error:
+            invite = f"創建邀請連結時遇到了錯誤 {str(error)[:60]}"
+
+    await interaction.bot.feedback_webhook.send(
+        username=interaction.author.name,
+        avatar_url=interaction.author.avatar.url,
+        content=f"# 回報問題還是提供建議\n"
+                f"{feedbacks['type']}\n"
+                f"# 請闡述您遇到的問題\n"
+                f"{feedbacks.get('description', '無')}\n"
+                f"# 如何觸發該問題？\n"
+                f"{feedbacks.get('trigger', '無')}\n"
+                f"# 請您敘述您期望的建議\n"
+                f"{feedbacks.get('suggestion', '無')}"
+                f"# 伺服器邀請連結\n"
+                f"{invite}"
+                f"\n\n"
+                f"**{interaction.author.mention}** ({interaction.author.id})",
+        allowed_mentions=AllowedMentions.none()
+    )
+
+    await interaction.response.send_message(
+        embed=SuccessEmbed(
+            title="已回報問題",
+            description="您的問題已經成功回報給我們了！"
+        ),
+        ephemeral=True
+    )
+
+
 class Panel(View, ABC):
     """
     The base class for all panels.
@@ -178,7 +259,9 @@ class AuthorizationTerms(Panel):
                 name="System Notification〡Bot Authorization Agreement", icon_url="https://i.imgur.com/lsTtd9c.png"
             )
 
-            embed.set_footer(text="Please note that by agreeing to the authorization, you (your Discord account) permit all operations of the authorized items.")
+            embed.set_footer(
+                text="Please note that by agreeing to the authorization, you (your Discord account) permit all operations of the authorized items."
+            )
 
             return embed
 
@@ -321,66 +404,7 @@ class JoinChannel(Panel):
         custom_id="feedback"
     )
     async def feedback(self, _button: Button, interaction: MessageInteraction):
-        interaction, feedbacks = await quick_long_modal(
-            interaction,
-            modal=Modal(
-                title="回報問題",
-                components=[
-                    TextInput(
-                        label="回報問題還是提供建議",
-                        placeholder="回報問題 / 提供建議",
-                        style=TextInputStyle.short,
-                        custom_id="type",
-                        required=True
-                    ),
-                    TextInput(
-                        label="請闡述您遇到的問題",
-                        placeholder="我在使用過程中遇到了...",
-                        style=TextInputStyle.long,
-                        custom_id="description",
-                        required=False
-                    ),
-                    TextInput(
-                        label="如何觸發該問題？",
-                        placeholder="我是這樣做的...",
-                        style=TextInputStyle.long,
-                        custom_id="trigger",
-                        required=False
-                    ),
-                    TextInput(
-                        label="請您敘述您期望的建議",
-                        placeholder="我希望能夠...",
-                        style=TextInputStyle.long,
-                        custom_id="suggestion",
-                        required=False
-                    )
-                ]
-            )
-        )
-
-        await interaction.bot.feedback_webhook.send(
-            username=interaction.author.name,
-            avatar_url=interaction.author.avatar.url,
-            content=f"# 回報問題還是提供建議\n"
-                    f"{feedbacks['type']}\n"
-                    f"# 請闡述您遇到的問題\n"
-                    f"{feedbacks.get('description', '無')}\n"
-                    f"# 如何觸發該問題？\n"
-                    f"{feedbacks.get('trigger', '無')}\n"
-                    f"# 請您敘述您期望的建議\n"
-                    f"{feedbacks.get('suggestion', '無')}"
-                    f"\n\n"
-                    f"**{interaction.author.mention}** ({interaction.author.id})",
-            allowed_mentions=AllowedMentions.none()
-        )
-
-        await interaction.response.send_message(
-            embed=SuccessEmbed(
-                title="已回報問題",
-                description="您的問題已經成功回報給我們了！"
-            ),
-            ephemeral=True
-        )
+        await feedback(interaction)
 
 
 class ChannelSettings(Panel):
@@ -1180,66 +1204,7 @@ class ChannelRestored(Panel):
         custom_id="feedback"
     )
     async def feedback(self, _button: Button, interaction: MessageInteraction):
-        interaction, feedbacks = await quick_long_modal(
-            interaction,
-            modal=Modal(
-                title="回報問題",
-                components=[
-                    TextInput(
-                        label="回報問題還是提供建議",
-                        placeholder="回報問題 / 提供建議",
-                        style=TextInputStyle.short,
-                        custom_id="type",
-                        required=True
-                    ),
-                    TextInput(
-                        label="請闡述您遇到的問題",
-                        placeholder="我在使用過程中遇到了...",
-                        style=TextInputStyle.long,
-                        custom_id="description",
-                        required=False
-                    ),
-                    TextInput(
-                        label="如何觸發該問題？",
-                        placeholder="我是這樣做的...",
-                        style=TextInputStyle.long,
-                        custom_id="trigger",
-                        required=False
-                    ),
-                    TextInput(
-                        label="請您敘述您期望的建議",
-                        placeholder="我希望能夠...",
-                        style=TextInputStyle.long,
-                        custom_id="suggestion",
-                        required=False
-                    )
-                ]
-            )
-        )
-
-        await interaction.bot.feedback_webhook.send(
-            username=interaction.author.name,
-            avatar_url=interaction.author.avatar.url,
-            content=f"# 回報問題還是提供建議\n"
-                    f"{feedbacks['type']}\n"
-                    f"# 請闡述您遇到的問題\n"
-                    f"{feedbacks.get('description', '無')}\n"
-                    f"# 如何觸發該問題？\n"
-                    f"{feedbacks.get('trigger', '無')}\n"
-                    f"# 請您敘述您期望的建議\n"
-                    f"{feedbacks.get('suggestion', '無')}"
-                    f"\n\n"
-                    f"**{interaction.author.mention}** ({interaction.author.id})",
-            allowed_mentions=AllowedMentions.none()
-        )
-
-        await interaction.response.send_message(
-            embed=SuccessEmbed(
-                title="已回報問題",
-                description="您的問題已經成功回報給我們了！"
-            ),
-            ephemeral=True
-        )
+        await feedback(interaction)
 
 
 panels: Dict[str, Panel] = {}
