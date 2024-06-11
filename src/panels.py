@@ -448,7 +448,7 @@ class ChannelSettings(Panel):
             case "remove_channel":
                 await self.remove_channel(interaction)
 
-        await interaction.edit_original_message(view=self)
+        await interaction.message.edit(view=self)
 
     @staticmethod
     async def rename_channel(interaction: MessageInteraction) -> None:
@@ -595,7 +595,7 @@ class MemberSettings(Panel):
             case "join_notifications":
                 await self.join_notifications(interaction)
 
-        await interaction.edit_original_message(view=self)
+        await interaction.message.edit(view=self)
 
     @staticmethod
     async def invite_member(interaction: MessageInteraction) -> None:
@@ -829,7 +829,7 @@ class VoiceSettings(Panel):
             case "embedded_activities":
                 await self.use_embedded_activities(interaction)
 
-        await interaction.edit_original_message(view=self)
+        await interaction.message.edit(view=self)
 
     @staticmethod
     async def bitrate(interaction: MessageInteraction) -> None:
@@ -1124,7 +1124,7 @@ class MusicSettings(Panel):
             case "edit_volume":
                 await self.edit_volume(interaction)
 
-        await interaction.edit_original_message(view=self)
+        await interaction.message.edit(view=self)
 
     @staticmethod
     async def play_radio(bot: "Krabbe", interaction: MessageInteraction) -> None:
