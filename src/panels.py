@@ -1235,14 +1235,6 @@ class LockChannel(Panel):
     async def lock_channel(self, _button: Button, interaction: MessageInteraction) -> None:
         await MemberSettings.lock_channel(interaction)
 
-    @ui.button(
-        label="播放音樂",
-        custom_id="play_music",
-        emoji="🎵"
-    )
-    async def play_music(self, _button: Button, interaction: MessageInteraction) -> None:
-        await MusicSettings.summon_bot(interaction)
-
 
 class ChannelRestored(Panel):
     @property
