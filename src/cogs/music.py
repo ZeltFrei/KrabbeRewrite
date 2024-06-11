@@ -100,6 +100,8 @@ class Music(Cog):
                 )
                 return
 
+            await channel.apply_setting_and_permissions()  # To update permissions for the kava client.
+
             client = idle_clients[0]
 
             response = await client.request(
@@ -159,7 +161,6 @@ class Music(Cog):
     )
     async def play_command(self, interaction: ApplicationCommandInteraction, query: str, index: Optional[int] = None,
                            volume: Optional[int] = None):
-
         await interaction.response.defer(ephemeral=True)
 
         await self.play(self.bot, interaction, query, index, volume)

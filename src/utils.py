@@ -7,6 +7,9 @@ from disnake import PermissionOverwrite, Member, Role, Guild, User, Embed, utils
 from tzlocal import get_localzone
 
 if TYPE_CHECKING:
+    from src.bot import Krabbe
+
+if TYPE_CHECKING:
     from src.classes.guild_settings import GuildSettings
     from src.classes.channel_settings import ChannelSettings
 
@@ -32,6 +35,7 @@ def max_bitrate(guild: Guild) -> int:
 
 
 def generate_channel_metadata(
+        bot: "Krabbe",
         owner: Union[Role, Member],
         members: List[Union[User, Member]],
         channel_settings: "ChannelSettings",
@@ -41,6 +45,7 @@ def generate_channel_metadata(
     """
     Generate the metadata for a channel.
 
+    :param bot: The bot instance.
     :param owner: The owner of the channel.
     :param members: The members of the channel.
     :param channel_settings: The channel settings object.
@@ -48,11 +53,9 @@ def generate_channel_metadata(
     :param locked: Whether the channel is locked.
     :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method.
     """
-        pass
-
     return {
         "name": channel_settings.channel_name or f"{channel_settings.user} 的語音頻道",
-        "overwrites": generate_permission_overwrites(owner, members, channel_settings, guild_settings, locked),
+        "overwrites": generate_permission_overwrites(bot, owner, members, channel_settings, guild_settings, locked),
         "bitrate": max_bitrate(guild_settings.guild)
         if channel_settings.bitrate and channel_settings.bitrate >= max_bitrate(guild_settings.guild)
         else channel_settings.bitrate or 64000,
@@ -64,6 +67,7 @@ def generate_channel_metadata(
 
 
 def generate_permission_overwrites(
+        bot: "Krabbe",
         owner: Union[Role, Member],
         members: List[Union[User, Member]],
         channel_settings: "ChannelSettings",
@@ -111,6 +115,12 @@ def generate_permission_overwrites(
                 connect=True
             )
 
+        for kava_id in bot.kava_server.clients:
+            overwrites[guild_settings.guild.get_member(kava_id)] = PermissionOverwrite(
+                connect=True,
+                speak=True
+            )
+
         return overwrites
 
     else:
@@ -138,6 +148,12 @@ def generate_permission_overwrites(
                 )
             }
         )
+
+        for kava_id in bot.kava_server.clients:
+            overwrites[guild_settings.guild.get_member(kava_id)] = PermissionOverwrite(
+                connect=True,
+                speak=True
+            )
 
         return overwrites
 

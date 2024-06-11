@@ -177,6 +177,7 @@ class VoiceChannel(MongoObject):
             )
 
         new_metadata = generate_channel_metadata(
+            bot=self.bot,
             owner=self.owner,
             members=self.members,
             channel_settings=self.channel_settings,
@@ -748,6 +749,7 @@ class VoiceChannel(MongoObject):
 
         created_channel = await guild_settings.category_channel.create_voice_channel(
             **generate_channel_metadata(
+                bot=bot,
                 owner=owner,
                 members=[],
                 channel_settings=channel_settings,
