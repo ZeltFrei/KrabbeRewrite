@@ -48,7 +48,6 @@ def generate_channel_metadata(
     :param locked: Whether the channel is locked.
     :return: The metadata for the channel, usually can be passed as kwargs to a channel creation or edit method.
     """
-    if not guild_settings.allow_nsfw:
         pass
 
     return {
