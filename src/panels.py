@@ -400,6 +400,18 @@ class JoinChannel(Panel):
         )
 
     @ui.button(
+        label="播放 ZeitFrei 廣播",
+        emoji="📻",
+        custom_id="play_radio",
+        style=ButtonStyle.green
+    )
+    async def play_radio(self, _button: Button, interaction: MessageInteraction) -> None:
+        if not await ensure_owned_channel(interaction):
+            return
+
+        await interaction.bot.get_slash_command("py").invoke(interaction)
+
+    @ui.button(
         label="回報問題&提供建議",
         emoji="🔧",
         custom_id="feedback"
@@ -1086,7 +1098,8 @@ class MusicSettings(Panel):
         options=[
             reset_option,
             SelectOption(
-                label="播放 ZeitFrei 電台", value="play_radio", description="在您的語音頻道播放 ZeitFrei 電台", emoji="📻"
+                label="播放 ZeitFrei 電台", value="play_radio", description="在您的語音頻道播放 ZeitFrei 電台",
+                emoji="📻"
             ),
             SelectOption(
                 label="允許/禁止頻道成員使用音樂", value="toggle_music", description="啟用或禁用音樂功能", emoji="🎶"
