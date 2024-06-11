@@ -1,7 +1,7 @@
 import random
 from typing import TYPE_CHECKING, Tuple, Optional
 
-from disnake import ApplicationCommandInteraction, Option, OptionType, OptionChoice, ButtonStyle
+from disnake import ApplicationCommandInteraction, Option, OptionType, OptionChoice, ButtonStyle, Interaction
 from disnake.ext.commands import Cog, slash_command
 from disnake.ui import Button
 from disnake_ext_paginator import Paginator
@@ -71,35 +71,27 @@ class Music(Cog):
         description="將ZeitFrei 電台的內容加入播放序列"
     )
     async def radio(self, interaction: ApplicationCommandInteraction):
-        await self.play(interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR")
+        await self.play_command(
+            interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR"
+        )
 
-    @slash_command(
-        name="py",
-        description="播放音樂",
-        options=[
-            Option(
-                name="query",
-                description="歌曲名稱或網址，支援 YouTube, YouTube Music, SoundCloud, Spotify",
-                type=OptionType.string,
-                autocomplete=True,
-                required=True
-            ),
-            Option(
-                name="index",
-                description="要將歌曲放置於當前播放序列的位置",
-                type=OptionType.integer,
-                required=False
-            )
-        ]
-    )
-    async def play(self, interaction: ApplicationCommandInteraction, query: str, index: int = None):
+    @staticmethod
+    async def play(bot: "Krabbe", interaction: Interaction, query: str, index: Optional[int] = None,
+                   volume: Optional[int] = None):
+        """
+        Function for the play command, this is extracted from the play command to be reused in the other place.
+        :param bot: The bot instance.
+        :param interaction: The interaction that triggered the command. Should be responded before.
+        :param query: The query to search for.
+        :param index: The index to insert the song to.
+        :param volume: The volume to set.
+        :return: None
+        """
         if not (channel := await ensure_music_permissions(interaction)):
             return
 
-        await interaction.response.defer(ephemeral=True)
-
-        if not (client := get_active_client_in(self.bot.kava_server, channel)):
-            idle_clients = get_idle_clients_in(self.bot.kava_server, channel.channel.guild)
+        if not (client := get_active_client_in(bot.kava_server, channel)):
+            idle_clients = get_idle_clients_in(bot.kava_server, channel.channel.guild)
 
             if not idle_clients:
                 await interaction.response.send_message(
@@ -120,8 +112,11 @@ class Music(Cog):
                 )
                 return
 
+        volume = volume or channel.channel_settings.volume or 100
+
         response = await client.request(
-            "play", channel_id=channel.channel_id, author_id=interaction.author.id, query=query, index=index
+            "play", channel_id=channel.channel_id, author_id=interaction.author.id, query=query,
+            index=index, volume=volume
         )
 
         if response["status"] == "success":
@@ -137,7 +132,39 @@ class Music(Cog):
                 embed=ErrorEmbed("未知的錯誤"),
             )
 
-    @play.autocomplete("query")
+    @slash_command(
+        name="py",
+        description="播放音樂",
+        options=[
+            Option(
+                name="query",
+                description="歌曲名稱或網址，支援 YouTube, YouTube Music, SoundCloud, Spotify",
+                type=OptionType.string,
+                autocomplete=True,
+                required=True
+            ),
+            Option(
+                name="index",
+                description="要將歌曲放置於當前播放序列的位置",
+                type=OptionType.integer,
+                required=False
+            ),
+            Option(
+                name="volume",
+                description="音量",
+                type=OptionType.integer,
+                required=False
+            )
+        ]
+    )
+    async def play_command(self, interaction: ApplicationCommandInteraction, query: str, index: Optional[int] = None,
+                           volume: Optional[int] = None):
+
+        await interaction.response.defer(ephemeral=True)
+
+        await self.play(self.bot, interaction, query, index, volume)
+
+    @play_command.autocomplete("query")
     async def play_autocomplete(self, interaction: ApplicationCommandInteraction, query: str):
         channel = VoiceChannel.get_active_channel_from_interaction(interaction)
 

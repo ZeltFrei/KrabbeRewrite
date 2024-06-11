@@ -10,6 +10,7 @@ from disnake.abc import Messageable
 from disnake.ui import View, Button, Select, Modal, TextInput
 
 from src.classes.voice_channel import VoiceChannel
+from src.cogs.music import Music
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal, quick_long_modal
 from src.utils import max_bitrate, is_authorized
@@ -409,7 +410,11 @@ class JoinChannel(Panel):
         if not await ensure_owned_channel(interaction):
             return
 
-        await interaction.bot.get_slash_command("py").invoke(interaction)
+        await interaction.response.send_message("Loading...", ephemeral=True)
+
+        await Music.play(
+            self.bot, interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR"
+        )
 
     @ui.button(
         label="回報問題&提供建議",
@@ -1103,6 +1108,9 @@ class MusicSettings(Panel):
             ),
             SelectOption(
                 label="允許/禁止頻道成員使用音樂", value="toggle_music", description="啟用或禁用音樂功能", emoji="🎶"
+            ),
+            SelectOption(
+                label="調整預設音量", value="edit_volume", description="調整音樂機器人的預設音量", emoji="🔊"
             )
         ],
         custom_id="music_settings"
@@ -1110,18 +1118,26 @@ class MusicSettings(Panel):
     async def select_setting(self, _select: Select, interaction: MessageInteraction):
         match interaction.values[0]:
             case "play_radio":
-                await self.play_radio(interaction)
+                await self.play_radio(self.bot, interaction)
             case "toggle_music":
                 await self.toggle_music(interaction)
+            case "edit_volume":
+                await self.edit_volume(interaction)
 
         await interaction.edit_original_message(view=self)
 
     @staticmethod
-    async def play_radio(interaction: MessageInteraction) -> None:
+    async def play_radio(bot: "Krabbe", interaction: MessageInteraction) -> None:
         if not await ensure_owned_channel(interaction):
             return
 
-        await interaction.bot.get_slash_command("py").invoke(interaction)
+        await interaction.response.send_message(
+            embed=InfoEmbed("Loading..."), ephemeral=True
+        )
+
+        await Music.play(
+            bot, interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR"
+        )
 
     @staticmethod
     async def toggle_music(interaction: MessageInteraction) -> None:
@@ -1147,6 +1163,52 @@ class MusicSettings(Panel):
 
         await channel.guild_settings.log_event(
             f"{interaction.author.mention} 設定了 {channel.channel.name} 的共享音樂控制為為 {channel.channel_settings.shared_music_control}"
+        )
+
+    @staticmethod
+    async def edit_volume(interaction: MessageInteraction) -> None:
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        interaction, volume = await quick_modal(
+            interaction,
+            title="🔊 調整音量",
+            field_name="請輸入 1~100 數字來為您的音樂機器人設置預設音量，0 為無限制",
+            placeholder="輸入人數限制",
+            value=str(channel.channel_settings.user_limit or 100),
+            max_length=3,
+            min_length=1,
+            required=True
+        )
+
+        if int(volume) < 0:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("預設音量必須大於 0"),
+                ephemeral=True
+            )
+
+        if int(volume) > 100:
+            return await interaction.response.send_message(
+                embed=ErrorEmbed("預設音量必須小於或等於 100"),
+                ephemeral=True
+            )
+
+        channel.channel_settings.volume = int(volume)
+
+        await channel.channel_settings.upsert()
+        await channel.apply_setting_and_permissions()
+
+        await channel.notify(
+            embed=InfoEmbed(
+                title="當前語音頻道預設音量",
+                description=f"此語音頻道的預設音量為：{volume}%"
+            )
+        )
+
+        await interaction.response.send_message(embed=SuccessEmbed(f"已設定預設音量為 {volume}"), ephemeral=True)
+
+        await channel.guild_settings.log_event(
+            f"{interaction.author.mention} 設定了 {channel.channel.name} 的預設音量為 {volume}"
         )
 
 
