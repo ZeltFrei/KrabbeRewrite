@@ -12,6 +12,7 @@ from disnake.ui import View, Button, Select, Modal, TextInput
 from src.classes.voice_channel import VoiceChannel
 from src.cogs.music import Music
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
+from src.kava.utils import get_active_client_in
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal, quick_long_modal
 from src.utils import max_bitrate, is_authorized
 
@@ -1122,7 +1123,7 @@ class MusicSettings(Panel):
             case "toggle_music":
                 await self.toggle_music(interaction)
             case "edit_volume":
-                await self.edit_volume(interaction)
+                await self.edit_volume(self.bot, interaction)
 
         await interaction.message.edit(view=self)
 
@@ -1166,7 +1167,7 @@ class MusicSettings(Panel):
         )
 
     @staticmethod
-    async def edit_volume(interaction: MessageInteraction) -> None:
+    async def edit_volume(bot: "Krabbe", interaction: MessageInteraction) -> None:
         if not (channel := await ensure_owned_channel(interaction)):
             return
 
@@ -1175,7 +1176,7 @@ class MusicSettings(Panel):
             title="🔊 調整音量",
             field_name="請輸入 1~100 數字來為您的音樂機器人設置預設音量，0 為無限制",
             placeholder="輸入人數限制",
-            value=str(channel.channel_settings.user_limit or 100),
+            value=str(channel.channel_settings.volume or 100),
             max_length=3,
             min_length=1,
             required=True
@@ -1197,6 +1198,9 @@ class MusicSettings(Panel):
 
         await channel.channel_settings.upsert()
         await channel.apply_setting_and_permissions()
+
+        if client := get_active_client_in(bot.kava_server, channel):
+            await client.request("volume", channel_id=channel.channel_id, vol=int(volume))
 
         await channel.notify(
             embed=InfoEmbed(

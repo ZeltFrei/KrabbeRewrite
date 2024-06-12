@@ -114,7 +114,7 @@ class Music(Cog):
                 )
                 return
 
-        volume = volume or channel.channel_settings.volume or 100
+        volume = volume or channel.channel_settings.volume or 75
 
         response = await client.request(
             "play", channel_id=channel.channel_id, author_id=interaction.author.id, query=query,
