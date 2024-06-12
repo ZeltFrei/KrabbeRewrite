@@ -78,12 +78,12 @@ class Music(Cog):
             await client.request("clean", channel_id=channel.channel_id)
 
         await self.play_command(
-            interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR"
+            interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR", shuffle=True
         )
 
     @staticmethod
     async def play(bot: "Krabbe", interaction: Interaction, query: str, index: Optional[int] = None,
-                   volume: Optional[int] = None):
+                   volume: Optional[int] = None, shuffle: Optional[bool] = False):
         """
         Function for the play command, this is extracted from the play command to be reused in the other place.
         :param bot: The bot instance.
@@ -91,6 +91,7 @@ class Music(Cog):
         :param query: The query to search for.
         :param index: The index to insert the song to.
         :param volume: The volume to set.
+        :param shuffle: Whether to shuffle the queue.
         :return: None
         """
         if not (channel := await ensure_music_permissions(interaction)):
@@ -124,7 +125,7 @@ class Music(Cog):
 
         response = await client.request(
             "play", channel_id=channel.channel_id, author_id=interaction.author.id, query=query,
-            index=index, volume=volume
+            index=index, volume=volume, shuffle=shuffle
         )
 
         if response["status"] == "success":
