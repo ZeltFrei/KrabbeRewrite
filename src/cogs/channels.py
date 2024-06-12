@@ -10,7 +10,7 @@ from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed, WarningEmbed
-from src.panels import LockChannel, ChannelRestored
+from src.panels import LockChannelNotification, ChannelRestoredNotification
 
 
 class Channels(Cog):
@@ -56,7 +56,7 @@ class Channels(Cog):
 
     @Cog.listener(name="on_voice_channel_created")
     async def on_voice_channel_created(self, voice_channel: VoiceChannel) -> None:
-        view = LockChannel(self.bot)  # The Panel is a singleton, so we can reuse it
+        view = LockChannelNotification(self.bot)  # The Panel is a singleton, so we can reuse it
 
         message = await voice_channel.notify(
             wait=True,
@@ -84,7 +84,7 @@ class Channels(Cog):
 
     @Cog.listener(name="on_voice_channel_restored")
     async def on_voice_channel_restored(self, voice_channel: VoiceChannel) -> None:
-        view = ChannelRestored(self.bot)  # The Panel is a singleton, so we can reuse it
+        view = ChannelRestoredNotification(self.bot)  # The Panel is a singleton, so we can reuse it
 
         await voice_channel.notify(
             wait=True,

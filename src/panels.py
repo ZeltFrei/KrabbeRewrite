@@ -33,7 +33,7 @@ async def ensure_authorization(oauth_client: AsyncDiscordOAuthClient, interactio
     if await is_authorized(oauth_client, interaction.author.id):
         return True
 
-    authorization_terms_panel = AuthorizationTerms(interaction.bot, oauth_client)
+    authorization_terms_panel = AuthorizationTermsPanel(interaction.bot, oauth_client)
 
     await interaction.response.send_message(
         embed=authorization_terms_panel.embed,
@@ -192,8 +192,8 @@ class Panel(View, ABC):
         )
 
 
-class AuthorizationTerms(Panel):
-    _instance: Optional["AuthorizationTerms"] = None
+class AuthorizationTermsPanel(Panel):
+    _instance: Optional["AuthorizationTermsPanel"] = None
 
     def __init__(self, bot: "Krabbe", oauth_client: AsyncDiscordOAuthClient,
                  locale: Literal["zh_TW", "en_US"] = "zh_TW"):
@@ -204,7 +204,7 @@ class AuthorizationTerms(Panel):
 
         self.add_item(Button(style=ButtonStyle.url, label="授權 / Authorize", url=oauth_client.api_base_url))
 
-    def __new__(cls, bot: "Krabbe", oauth_client: AsyncDiscordOAuthClient) -> "AuthorizationTerms":
+    def __new__(cls, bot: "Krabbe", oauth_client: AsyncDiscordOAuthClient) -> "AuthorizationTermsPanel":
         if cls._instance:
             return cls._instance
 
@@ -285,7 +285,7 @@ class AuthorizationTerms(Panel):
         await interaction.response.edit_message(embed=self.embed, view=self)
 
 
-class Title(Panel):
+class TitlePanel(Panel):
     @property
     def embed(self) -> Optional[Embed]:
         embed = Embed(
@@ -362,7 +362,7 @@ class Title(Panel):
         return embed
 
 
-class JoinChannel(Panel):
+class JoinChannelPanel(Panel):
     @ui.button(
         label="加入私人語音頻道",
         custom_id="join_channel",
@@ -426,7 +426,7 @@ class JoinChannel(Panel):
         await feedback(interaction)
 
 
-class ChannelSettings(Panel):
+class ChannelSettingsPanel(Panel):
     async def interaction_check(self, interaction: MessageInteraction) -> bool:
         return await ensure_authorization(interaction.bot.oauth, interaction)
 
@@ -567,7 +567,7 @@ class ChannelSettings(Panel):
         await interaction.response.send_message(embed=SuccessEmbed("頻道已移除"), ephemeral=True)
 
 
-class MemberSettings(Panel):
+class MemberSettingsPanel(Panel):
     async def interaction_check(self, interaction: MessageInteraction) -> bool:
         return await ensure_authorization(interaction.bot.oauth, interaction)
 
@@ -785,7 +785,7 @@ class MemberSettings(Panel):
         )
 
 
-class VoiceSettings(Panel):
+class VoiceSettingsPanel(Panel):
     async def interaction_check(self, interaction: MessageInteraction) -> bool:
         return await ensure_authorization(interaction.bot.oauth, interaction)
 
@@ -1095,7 +1095,7 @@ class VoiceSettings(Panel):
         )
 
 
-class MusicSettings(Panel):
+class MusicSettingsPanel(Panel):
     async def interaction_check(self, interaction: MessageInteraction) -> bool:
         return await ensure_authorization(interaction.bot.oauth, interaction)
 
@@ -1214,7 +1214,7 @@ class MusicSettings(Panel):
         )
 
 
-class LockChannel(Panel):
+class LockChannelNotification(Panel):
     @property
     def embed(self) -> Embed:
         embed = Embed(
@@ -1235,10 +1235,10 @@ class LockChannel(Panel):
         emoji="🔒"
     )
     async def lock_channel(self, _button: Button, interaction: MessageInteraction) -> None:
-        await MemberSettings.lock_channel(interaction)
+        await MemberSettingsPanel.lock_channel(interaction)
 
 
-class ChannelRestored(Panel):
+class ChannelRestoredNotification(Panel):
     @property
     def embed(self) -> Embed:
         embed = ChannelNotificationEmbed(
@@ -1272,12 +1272,12 @@ def setup_views(bot: "Krabbe") -> None:
     """
     panels.update(
         {
-            "title": Title(bot),
-            "join_channel": JoinChannel(bot),
-            "channel_settings": ChannelSettings(bot),
-            "member_settings": MemberSettings(bot),
-            "voice_settings": VoiceSettings(bot),
-            "music_settings": MusicSettings(bot)
+            "title": TitlePanel(bot),
+            "join_channel": JoinChannelPanel(bot),
+            "channel_settings": ChannelSettingsPanel(bot),
+            "member_settings": MemberSettingsPanel(bot),
+            "voice_settings": VoiceSettingsPanel(bot),
+            "music_settings": MusicSettingsPanel(bot)
         }
     )
 
