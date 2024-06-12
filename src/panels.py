@@ -404,7 +404,7 @@ class JoinChannel(Panel):
         )
 
     @ui.button(
-        label="播放 ZeitFrei 廣播",
+        label="播放 Krabbe 2 電台",
         emoji="📻",
         custom_id="play_radio",
         style=ButtonStyle.green
@@ -1106,7 +1106,7 @@ class MusicSettings(Panel):
         options=[
             reset_option,
             SelectOption(
-                label="播放 ZeitFrei 電台", value="play_radio", description="在您的語音頻道播放 ZeitFrei 電台",
+                label="播放隨機音樂", value="play_radio", description="在您的語音頻道播放 Krabbe 2 電台",
                 emoji="📻"
             ),
             SelectOption(
@@ -1138,9 +1138,7 @@ class MusicSettings(Panel):
             embed=InfoEmbed("Loading..."), ephemeral=True
         )
 
-        await Music.play(
-            bot, interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR"
-        )
+        await Music.radio(bot, interaction)
 
     @staticmethod
     async def toggle_music(interaction: MessageInteraction) -> None:
