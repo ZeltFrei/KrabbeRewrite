@@ -84,6 +84,8 @@ class Music(Cog):
         description="將 Krabbe 2.0 電台的內容加入播放序列 (⚠️ 這個指令會清空目前的播放序列)"
     )
     async def radio_command(self, interaction: ApplicationCommandInteraction):
+        await interaction.response.defer(ephemeral=True)
+
         await self.radio(self.bot, interaction)
 
     @staticmethod
