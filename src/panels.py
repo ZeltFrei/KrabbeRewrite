@@ -1167,7 +1167,12 @@ class MusicSettingsPanel(Panel):
 
     @staticmethod
     async def edit_volume(bot: "Krabbe", interaction: MessageInteraction) -> None:
-        channel_settings = await ChannelSettings.get_settings(bot, bot.database, interaction.author.id)
+        active_channel = VoiceChannel.get_active_channel_from_interaction(interaction)
+
+        if active_channel:
+            channel_settings = active_channel.channel_settings
+        else:
+            channel_settings = ChannelSettings.get_settings(bot, bot.database, interaction.author.id)
 
         interaction, volume = await quick_modal(
             interaction,
@@ -1193,10 +1198,6 @@ class MusicSettingsPanel(Panel):
             )
 
         channel_settings.volume = int(volume)
-
-        await channel_settings.upsert()
-
-        active_channel = VoiceChannel.get_active_channel_from_interaction(interaction)
 
         if active_channel:
             await active_channel.apply_setting_and_permissions()
