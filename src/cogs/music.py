@@ -68,9 +68,15 @@ class Music(Cog):
 
     @slash_command(
         name="radio",
-        description="將ZeitFrei 電台的內容加入播放序列"
+        description="將 Krabbe 2.0 電台的內容加入播放序列 (⚠️ 這個指令會清空目前的播放序列)"
     )
     async def radio(self, interaction: ApplicationCommandInteraction):
+        if not (channel := await ensure_music_permissions(interaction)):
+            return
+
+        if client := get_active_client_in(self.bot.kava_server, channel):
+            await client.request("clean", channel_id=channel.channel_id)
+
         await self.play_command(
             interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR"
         )
