@@ -75,7 +75,8 @@ class Music(Cog):
             await client.request("clean", channel_id=channel.channel_id)
 
         await Music.play(
-            interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR", shuffle=True
+            bot, interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR",
+            shuffle=True
         )
 
     @slash_command(
@@ -134,14 +135,17 @@ class Music(Cog):
 
         if response["status"] == "success":
             await interaction.edit_original_response(
+                content="",
                 embed=SuccessEmbed(response["message"]),
             )
         elif response["status"] == "error":
             await interaction.edit_original_response(
+                content="",
                 embed=ErrorEmbed(response["message"]),
             )
         else:
             await interaction.edit_original_response(
+                content="",
                 embed=ErrorEmbed("未知的錯誤"),
             )
 

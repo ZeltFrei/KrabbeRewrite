@@ -404,7 +404,7 @@ class JoinChannel(Panel):
         )
 
     @ui.button(
-        label="播放 Krabbe 2 電台",
+        label="播放隨機音樂",
         emoji="📻",
         custom_id="play_radio",
         style=ButtonStyle.green
@@ -415,9 +415,7 @@ class JoinChannel(Panel):
 
         await interaction.response.send_message("Loading...", ephemeral=True)
 
-        await Music.play(
-            self.bot, interaction, query="https://www.youtube.com/playlist?list=PL5WxzmH3aonl25d6gv48o1ByFmy05RBSR"
-        )
+        await Music.radio(self.bot, interaction)
 
     @ui.button(
         label="回報問題&提供建議",
