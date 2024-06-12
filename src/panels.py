@@ -9,6 +9,7 @@ from disnake import Embed, ButtonStyle, MessageInteraction, ui, Interaction, Sel
 from disnake.abc import Messageable
 from disnake.ui import View, Button, Select, Modal, TextInput
 
+from src.classes.channel_settings import ChannelSettings
 from src.classes.voice_channel import VoiceChannel
 from src.cogs.music import Music
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
@@ -1166,15 +1167,14 @@ class MusicSettingsPanel(Panel):
 
     @staticmethod
     async def edit_volume(bot: "Krabbe", interaction: MessageInteraction) -> None:
-        if not (channel := await ensure_owned_channel(interaction)):
-            return
+        channel_settings = await ChannelSettings.get_settings(bot, bot.database, interaction.author.id)
 
         interaction, volume = await quick_modal(
             interaction,
             title="🔊 調整音量",
             field_name="請輸入 1~100 數字來為您的音樂機器人設置預設音量，0 為無限制",
             placeholder="輸入人數限制",
-            value=str(channel.channel_settings.volume or 100),
+            value=str(channel_settings.volume or 100),
             max_length=3,
             min_length=1,
             required=True
@@ -1192,26 +1192,30 @@ class MusicSettingsPanel(Panel):
                 ephemeral=True
             )
 
-        channel.channel_settings.volume = int(volume)
+        channel_settings.volume = int(volume)
 
-        await channel.channel_settings.upsert()
-        await channel.apply_setting_and_permissions()
+        await channel_settings.upsert()
 
-        if client := get_active_client_in(bot.kava_server, channel):
-            await client.request("volume", channel_id=channel.channel_id, vol=int(volume))
+        active_channel = VoiceChannel.get_active_channel_from_interaction(interaction)
 
-        await channel.notify(
-            embed=InfoEmbed(
-                title="當前語音頻道預設音量",
-                description=f"此語音頻道的預設音量為：{volume}%"
+        if active_channel:
+            await active_channel.apply_setting_and_permissions()
+
+            if client := get_active_client_in(bot.kava_server, active_channel):
+                await client.request("volume", channel_id=active_channel.channel_id, vol=int(volume))
+
+            await active_channel.notify(
+                embed=InfoEmbed(
+                    title="當前語音頻道預設音量",
+                    description=f"此語音頻道的預設音量為：{volume}%"
+                )
             )
-        )
 
-        await interaction.response.send_message(embed=SuccessEmbed(f"已設定預設音量為 {volume}"), ephemeral=True)
+            await interaction.response.send_message(embed=SuccessEmbed(f"已設定預設音量為 {volume}"), ephemeral=True)
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的預設音量為 {volume}"
-        )
+            await active_channel.guild_settings.log_event(
+                f"{interaction.author.mention} 設定了 {active_channel.channel.name} 的預設音量為 {volume}"
+            )
 
 
 class LockChannelNotification(Panel):
