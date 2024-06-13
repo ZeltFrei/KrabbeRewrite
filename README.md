@@ -1,15 +1,5 @@
 # Krabbe 2.0〡自動化語音&音樂系統
 
-## 開發人員
-功能編寫：[ @ne](https://github.com/Nat1anWasTaken)
-![image](https://github.com/ZeltFrei/KrabbeRewrite/assets/89194114/7d8a792c-2db1-4956-a539-86637e5b7d54)
-
-系統設計：[KiziRay](https://github.com/KiziRay)
-![image](https://github.com/ZeltFrei/KrabbeRewrite/assets/89194114/099590f7-3b59-496e-82f4-083998295a56)
-
-授權系統：[Evanlau1798](https://github.com/Evanlau1798)
-![image](https://github.com/ZeltFrei/KrabbeRewrite/assets/89194114/dd9eabc4-dcfc-4a93-b567-9930adfa8362)
-
 ## 目前狀態
 
 主要功能已經全數完成，包含語音建立、設定、紀錄、音樂等...
@@ -135,3 +125,10 @@
 ## 授權機制
 
 透過 [EvanlauOauthServer](https://github.com/ZeltFrei/EvanlauOauthServer) 存取 Qlipoth 的成員驗證資料庫，僅限已驗證的成員可以使用設定
+
+## 開發人員
+功能編寫：[ @ne](https://github.com/Nat1anWasTaken) ![image](https://github.com/ZeltFrei/KrabbeRewrite/assets/89194114/7d8a792c-2db1-4956-a539-86637e5b7d54)
+
+系統設計：[KiziRay](https://github.com/KiziRay) ![image](https://github.com/ZeltFrei/KrabbeRewrite/assets/89194114/099590f7-3b59-496e-82f4-083998295a56)
+
+授權系統：[Evanlau1798](https://github.com/Evanlau1798) ![image](https://github.com/ZeltFrei/KrabbeRewrite/assets/89194114/dd9eabc4-dcfc-4a93-b567-9930adfa8362)
