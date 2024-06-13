@@ -1171,8 +1171,14 @@ class MusicSettingsPanel(Panel):
 
         if active_channel:
             channel_settings = active_channel.channel_settings
+
+            if interaction.author.id != active_channel.owner_id:
+                return await interaction.response.send_message(
+                    embed=ErrorEmbed("只有頻道擁有者可以設定頻道音量"), ephemeral=True
+                )
+
         else:
-            channel_settings = ChannelSettings.get_settings(bot, bot.database, interaction.author.id)
+            channel_settings = await ChannelSettings.get_settings(bot, bot.database, interaction.author.id)
 
         interaction, volume = await quick_modal(
             interaction,
