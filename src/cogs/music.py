@@ -446,7 +446,8 @@ class Music(Cog):
                 emoji='⏹️'
             ),
             page_counter_style=ButtonStyle.green,
-            interaction_check_message=ErrorEmbed("沒事戳這顆幹嘛？")
+            interaction_check_message=ErrorEmbed("沒事戳這顆幹嘛？"),
+            ephemeral=True
         )
 
         await paginator.start(interaction, pages)
