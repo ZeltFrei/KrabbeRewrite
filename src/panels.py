@@ -1206,7 +1206,7 @@ class MusicSettingsPanel(Panel):
         channel_settings.volume = int(volume)
 
         if active_channel:
-            active_channel.apply_setting_and_permissions()
+            await active_channel.apply_setting_and_permissions()
 
             if client := get_active_client_in(bot.kava_server, active_channel):
                 await client.request("volume", channel_id=active_channel.channel_id, vol=int(volume))
