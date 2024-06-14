@@ -135,3 +135,6 @@
 系統設計：[KiziRay](https://github.com/KiziRay) ![image](https://github.com/ZeltFrei/KrabbeRewrite/assets/89194114/099590f7-3b59-496e-82f4-083998295a56)
 
 授權系統：[Evanlau1798](https://github.com/Evanlau1798) ![image](https://github.com/ZeltFrei/KrabbeRewrite/assets/89194114/dd9eabc4-dcfc-4a93-b567-9930adfa8362)
+
+>>> 此機器人的代碼是公開的，但未經開發人員授權禁止使用，僅供閱讀查看。
+The Repository is public but cannot be used without the developer's authorization and is for reading only.
