@@ -212,8 +212,6 @@ class Music(Cog):
         ]
     )
     async def skip(self, interaction: ApplicationCommandInteraction, target: int = None, move: bool = False):
-        await interaction.response.defer(ephemeral=True)
-
         check_passed, client, channel = await music_check(self.server, interaction)
 
         if not check_passed:
@@ -249,8 +247,6 @@ class Music(Cog):
         ]
     )
     async def remove(self, interaction: ApplicationCommandInteraction, target: int):
-        await interaction.response.defer(ephemeral=True)
-
         check_passed, client, channel = await music_check(self.server, interaction)
 
         if not check_passed:
@@ -278,8 +274,6 @@ class Music(Cog):
         description="清除播放序列",
     )
     async def clean(self, interaction: ApplicationCommandInteraction):
-        await interaction.response.defer(ephemeral=True)
-
         check_passed, client, channel = await music_check(self.server, interaction)
 
         if not check_passed:
@@ -307,8 +301,6 @@ class Music(Cog):
         description="暫停當前播放的歌曲"
     )
     async def pause(self, interaction: ApplicationCommandInteraction):
-        await interaction.response.defer(ephemeral=True)
-
         check_passed, client, channel = await music_check(self.server, interaction)
 
         if not check_passed:
@@ -336,8 +328,6 @@ class Music(Cog):
         description="恢復當前播放的歌曲"
     )
     async def resume(self, interaction: ApplicationCommandInteraction):
-        await interaction.response.defer(ephemeral=True)
-
         check_passed, client, channel = await music_check(self.server, interaction)
 
         if not check_passed:
@@ -365,8 +355,6 @@ class Music(Cog):
         description="停止播放並清空播放序列",
     )
     async def stop(self, interaction: ApplicationCommandInteraction):
-        await interaction.response.defer(ephemeral=True)
-
         check_passed, client, channel = await music_check(self.server, interaction)
 
         if not check_passed:
