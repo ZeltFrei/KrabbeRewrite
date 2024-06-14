@@ -1206,7 +1206,7 @@ class MusicSettingsPanel(Panel):
         channel_settings.volume = int(volume)
 
         if active_channel:
-            await active_channel.apply_setting_and_permissions()
+            active_channel.apply_setting_and_permissions()
 
             if client := get_active_client_in(bot.kava_server, active_channel):
                 await client.request("volume", channel_id=active_channel.channel_id, vol=int(volume))
@@ -1218,11 +1218,13 @@ class MusicSettingsPanel(Panel):
                 )
             )
 
-            await interaction.response.send_message(embed=SuccessEmbed(f"已設定預設音量為 {volume}"), ephemeral=True)
-
             await active_channel.guild_settings.log_event(
                 f"{interaction.author.mention} 設定了 {active_channel.channel.name} 的預設音量為 {volume}"
             )
+
+        await channel_settings.upsert()
+
+        await interaction.response.send_message(embed=SuccessEmbed(f"已設定預設音量為 {volume}"), ephemeral=True)
 
 
 class LockChannelNotification(Panel):
