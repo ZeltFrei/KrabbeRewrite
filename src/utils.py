@@ -6,6 +6,8 @@ from aiohttp import ClientResponseError
 from disnake import PermissionOverwrite, Member, Role, Guild, User, Embed, utils
 from tzlocal import get_localzone
 
+from src.kava.utils import get_clients_in
+
 if TYPE_CHECKING:
     from src.bot import Krabbe
 
@@ -115,8 +117,8 @@ def generate_permission_overwrites(
                 connect=True
             )
 
-        for kava_id in bot.kava_server.clients:
-            overwrites[guild_settings.guild.get_member(kava_id)] = PermissionOverwrite(
+        for kava in get_clients_in(bot.kava_server, guild_settings.guild):
+            overwrites[guild_settings.guild.get_member(kava.bot_user_id)] = PermissionOverwrite(
                 connect=True,
                 speak=True
             )
@@ -149,8 +151,8 @@ def generate_permission_overwrites(
             }
         )
 
-        for kava_id in bot.kava_server.clients:
-            overwrites[guild_settings.guild.get_member(kava_id)] = PermissionOverwrite(
+        for kava in get_clients_in(bot.kava_server, guild_settings.guild):
+            overwrites[guild_settings.guild.get_member(kava.bot_user_id)] = PermissionOverwrite(
                 connect=True,
                 speak=True
             )
