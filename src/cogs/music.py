@@ -108,9 +108,8 @@ class Music(Cog):
             idle_clients = get_idle_clients_in(bot.kava_server, channel.channel.guild)
 
             if not idle_clients:
-                await interaction.response.send_message(
-                    embed=ErrorEmbed("目前沒有可用的音樂機器人，請稍後再試"),
-                    ephemeral=True
+                await interaction.edit_original_response(
+                    embed=ErrorEmbed("目前沒有可用的音樂機器人，請稍後再試")
                 )
                 return
 
