@@ -9,7 +9,7 @@ from disnake.ui import Button
 from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
 from src.classes.voice_channel import VoiceChannel
-from src.embeds import ErrorEmbed, WarningEmbed
+from src.embeds import ErrorEmbed
 from src.panels import LockChannelNotification, ChannelRestoredNotification
 
 
@@ -31,19 +31,12 @@ class Channels(Cog):
                 continue
 
             if active_voice_channel.channel.guild.id != guild_settings.guild_id:
-                await member.move_to(None)
+                if active_voice_channel.channel.members:
+                    await active_voice_channel.transfer_ownership(active_voice_channel.channel.members[0])
+                else:
+                    await active_voice_channel.remove()
 
-                await active_voice_channel.notify(
-                    content=member.mention,
-                    embed=WarningEmbed(
-                        "您已經在這裡擁有語音頻道",
-                        "請先刪除頻道/轉移所有權或等待系統自動刪除後再次建立新頻道。"
-                    )
-                )
-                return
-
-            await member.move_to(active_voice_channel.channel)
-            return
+                break
 
         voice_channel = await VoiceChannel.new(
             bot=self.bot,
