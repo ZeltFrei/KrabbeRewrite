@@ -206,7 +206,7 @@ class GuildSettings(MongoObject):
                 locked=True
             )
 
-            thread = await self.event_logging_channel.create_thread(
+            thread, _message = await self.event_logging_channel.create_thread(
                 name=now.strftime("%Y-%m-%d"),
                 auto_archive_duration=ThreadArchiveDuration.day,
                 embed=InfoEmbed(
