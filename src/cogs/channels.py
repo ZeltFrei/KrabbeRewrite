@@ -38,6 +38,8 @@ class Channels(Cog):
 
                 break
 
+            return await member.move_to(active_voice_channel.channel)
+
         voice_channel = await VoiceChannel.new(
             bot=self.bot,
             database=self.bot.database,
