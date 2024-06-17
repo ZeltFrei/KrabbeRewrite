@@ -9,3 +9,8 @@ services:
         - action: sync+restart
           path: .
           target: /app
+    healthcheck:
+      test: [ "CMD-SHELL", "ss -ltn | grep ':8090' || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
