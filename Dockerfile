@@ -29,6 +29,6 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD ss -ltn | grep ':8080' || exit 1
+  CMD ss -ltn | grep ':8090' || exit 1
 
 CMD python main.py
