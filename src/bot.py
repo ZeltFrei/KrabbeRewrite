@@ -140,9 +140,9 @@ class Krabbe(InteractionBot):
 
         setup_views(self)
 
-        await self.__load_channels()
-
         await self.__setup_kava_server()
+
+        await self.__load_channels()
 
     async def __on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState) -> None:
         """
