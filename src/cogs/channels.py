@@ -27,7 +27,7 @@ class Channels(Cog):
         if guild_settings is None:
             return
 
-        for active_voice_channel in VoiceChannel.active_channels.values():
+        for active_voice_channel in VoiceChannel.active_channels.copy().values():
             if not active_voice_channel.owner.id == member.id:
                 continue
 

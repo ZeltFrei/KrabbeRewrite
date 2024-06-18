@@ -498,7 +498,7 @@ class VoiceChannel(MongoObject):
 
             if is_anyone_joined:
                 await self.find_alternative_owner(remove_original=True)
-                
+
                 await self.update_state(VoiceChannelState.ACTIVE)
 
                 await self.notify(
