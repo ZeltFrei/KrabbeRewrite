@@ -1,9 +1,9 @@
 from typing import Union
 
 import disnake
-from disnake import ButtonStyle, VoiceState, Member, Event
+from disnake import ButtonStyle, VoiceState, Member, Event, ApplicationCommandInteraction
 from disnake.abc import GuildChannel
-from disnake.ext.commands import Cog
+from disnake.ext.commands import Cog, slash_command
 from disnake.ui import Button
 
 from src.bot import Krabbe
@@ -11,12 +11,24 @@ from src.classes.guild_settings import GuildSettings
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed
 from src.errors import AlternativeOwnerNotFound
-from src.panels import LockChannelNotification, ChannelRestoredNotification
+from src.panels import LockChannelNotification, ChannelRestoredNotification, ensure_owned_channel
 
 
 class Channels(Cog):
     def __init__(self, bot: Krabbe):
         self.bot: Krabbe = bot
+
+    @slash_command(
+        name="voice_set",
+        description="顯示語音頻道的設定"
+    )
+    async def show_voice_settings(self, interaction: ApplicationCommandInteraction):
+        if not (channel := await ensure_owned_channel(interaction)):
+            return
+
+        await interaction.response.send_message(
+            embed=channel.channel_settings.as_embed()
+        )
 
     @Cog.listener(name="on_voice_channel_join")
     async def on_voice_channel_join(self, member: Member, voice_state: VoiceState) -> None:
