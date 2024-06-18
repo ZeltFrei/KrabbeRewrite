@@ -13,7 +13,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.voice_channel import VoiceChannel
 from src.cogs.music import Music
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
-from src.exceptions import OwnedChannel
+from src.errors import OwnedChannel
 from src.kava.utils import get_active_client_in
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal, quick_long_modal
 from src.utils import max_bitrate, is_authorized

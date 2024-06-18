@@ -17,8 +17,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
-from src.errors import FailedToResolve
-from src.exceptions import OwnedChannel
+from src.errors import FailedToResolve, OwnedChannel
 from src.utils import generate_channel_metadata, remove_image, snowflake_time
 
 if TYPE_CHECKING:
@@ -256,6 +255,21 @@ class VoiceChannel(MongoObject):
                 description="頻道已被解鎖"
             )
         )
+
+    async def find_alternative_owner(self) -> None:
+        """
+        Find an alternative owner for the channel.
+        This is usually called when the original owner no longer can be the owner of the channel.
+        This will remove the channel if no alternative owner is found.
+        """
+        for member in self.non_bot_members:
+            try:
+                await self.transfer_ownership(member)
+                return
+            except OwnedChannel:
+                continue
+
+        await self.remove()
 
     async def transfer_ownership(self, new_owner: Member) -> None:
         """
