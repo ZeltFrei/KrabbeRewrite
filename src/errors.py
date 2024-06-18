@@ -1,6 +1,9 @@
+from typing import TYPE_CHECKING
+
 from disnake import Member
 
-from src.classes.voice_channel import VoiceChannel
+if TYPE_CHECKING:
+    from src.classes.voice_channel import VoiceChannel
 
 
 class FailedToResolve(Exception):
@@ -15,9 +18,9 @@ class OwnedChannel(Exception):
     Raised when the new owner already owns a channel.
     """
 
-    def __init__(self, member: Member, channel: VoiceChannel):
+    def __init__(self, member: Member, channel: "VoiceChannel"):
         self.member: Member = member
-        self.channel: VoiceChannel = channel
+        self.channel: "VoiceChannel" = channel
 
 
 class AlternativeOwnerNotFound(Exception):
