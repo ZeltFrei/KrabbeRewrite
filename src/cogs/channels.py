@@ -10,6 +10,7 @@ from src.bot import Krabbe
 from src.classes.guild_settings import GuildSettings
 from src.classes.voice_channel import VoiceChannel
 from src.embeds import ErrorEmbed
+from src.errors import AlternativeOwnerNotFound
 from src.panels import LockChannelNotification, ChannelRestoredNotification
 
 
@@ -30,15 +31,15 @@ class Channels(Cog):
             if not active_voice_channel.owner.id == member.id:
                 continue
 
-            if active_voice_channel.channel.guild.id != guild_settings.guild_id:
-                if active_voice_channel.channel.members:
-                    await active_voice_channel.transfer_ownership(active_voice_channel.channel.members[0])
-                else:
-                    await active_voice_channel.remove()
+            if active_voice_channel.channel.guild.id == voice_state.channel.guild.id:
+                return await member.move_to(
+                    active_voice_channel.channel
+                )  # If the member moved the the same guild, move them back
 
-                break
-
-            return await member.move_to(active_voice_channel.channel)
+            try:
+                await active_voice_channel.find_alternative_owner(remove_original=False)
+            except AlternativeOwnerNotFound:
+                await active_voice_channel.remove()
 
         voice_channel = await VoiceChannel.new(
             bot=self.bot,

@@ -17,7 +17,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
-from src.errors import FailedToResolve, OwnedChannel
+from src.errors import FailedToResolve, OwnedChannel, AlternativeOwnerNotFound
 from src.utils import generate_channel_metadata, remove_image, snowflake_time
 
 if TYPE_CHECKING:
@@ -256,20 +256,26 @@ class VoiceChannel(MongoObject):
             )
         )
 
-    async def find_alternative_owner(self) -> None:
+    async def find_alternative_owner(self, remove_original: bool = False) -> None:
         """
         Find an alternative owner for the channel.
         This is usually called when the original owner no longer can be the owner of the channel.
-        This will remove the channel if no alternative owner is found.
+        :param remove_original: Whether to remove the original channel if the new owner already owned one.
+        :raise AlternativeOwnerNotFound: If no alternative owner is found.
         """
         for member in self.non_bot_members:
             try:
                 await self.transfer_ownership(member)
                 return
-            except OwnedChannel:
+            except OwnedChannel as error:
+                if remove_original:
+                    await error.channel.remove()
+                    await self.transfer_ownership(member)
+                    break
+
                 continue
 
-        await self.remove()
+        raise AlternativeOwnerNotFound("No alternative owner found.")
 
     async def transfer_ownership(self, new_owner: Member) -> None:
         """
@@ -466,17 +472,10 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-            transferred = False
+            try:
+                await self.find_alternative_owner(remove_original=False)
 
-            for member in self.non_bot_members:
-                try:
-                    await self.transfer_ownership(member)
-                    transferred = True
-                    break
-                except OwnedChannel:
-                    continue
-
-            if not transferred:
+            except AlternativeOwnerNotFound:
                 await self.notify(
                     embed=ChannelNotificationEmbed(
                         left_message=f"語音頻道 {self.channel.name} 權限轉移失敗",
@@ -485,7 +484,6 @@ class VoiceChannel(MongoObject):
                     )
                 )
                 await self.remove()
-                return
 
         elif new_state == VoiceChannelState.EMPTY:
             await self.notify(
@@ -499,20 +497,14 @@ class VoiceChannel(MongoObject):
             is_anyone_joined = await self.wait_for_user(None, timeout=self.default_timeout)
 
             if is_anyone_joined:
-                while True:
-                    try:
-                        await self.transfer_ownership(self.non_bot_members[0])
-                        break
-                    except OwnedChannel as error:
-                        await error.channel.remove()
-                        continue
-
+                await self.find_alternative_owner(remove_original=True)
+                
                 await self.update_state(VoiceChannelState.ACTIVE)
 
                 await self.notify(
                     embed=ChannelNotificationEmbed(
                         left_message=f"語音頻道 {self.channel.mention} 繼續運作中",
-                        right_message=f"{self.non_bot_members[0].mention} 加入語音頻道並成為新的頻道擁有者",
+                        right_message=f"{self.owner.mention} 加入語音頻道並成為新的頻道擁有者",
                         image_url="https://i.imgur.com/R3Rl1e2.png"
                     )
                 )
