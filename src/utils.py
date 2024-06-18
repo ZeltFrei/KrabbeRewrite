@@ -8,8 +8,6 @@ from tzlocal import get_localzone
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
-
-if TYPE_CHECKING:
     from src.classes.guild_settings import GuildSettings
     from src.classes.channel_settings import ChannelSettings
 

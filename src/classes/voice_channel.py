@@ -18,6 +18,7 @@ from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
 from src.errors import FailedToResolve
+from src.exceptions import OwnedChannel
 from src.utils import generate_channel_metadata, remove_image, snowflake_time
 
 if TYPE_CHECKING:
@@ -268,6 +269,10 @@ class VoiceChannel(MongoObject):
         if new_owner.bot:
             raise ValueError("Bots cannot be the owner of a voice channel.")
 
+        for channel in self.active_channels.values():
+            if channel.owner_id == new_owner.id:
+                raise OwnedChannel(new_owner, channel)
+
         self.owner_id = new_owner.id
 
         await self.upsert()
@@ -447,7 +452,26 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-            await self.transfer_ownership(self.non_bot_members[0])
+            transferred = False
+
+            for member in self.non_bot_members:
+                try:
+                    await self.transfer_ownership(member)
+                    transferred = True
+                    break
+                except OwnedChannel:
+                    continue
+
+            if not transferred:
+                await self.notify(
+                    embed=ChannelNotificationEmbed(
+                        left_message=f"語音頻道 {self.channel.name} 權限轉移失敗",
+                        right_message="沒有其他成員可以成為新的擁有者",
+                        image_url="https://i.imgur.com/24YsyvX.png"
+                    )
+                )
+                await self.remove()
+                return
 
         elif new_state == VoiceChannelState.EMPTY:
             await self.notify(
@@ -461,6 +485,16 @@ class VoiceChannel(MongoObject):
             is_anyone_joined = await self.wait_for_user(None, timeout=self.default_timeout)
 
             if is_anyone_joined:
+                while True:
+                    try:
+                        await self.transfer_ownership(self.non_bot_members[0])
+                        break
+                    except OwnedChannel as error:
+                        await error.channel.remove()
+                        continue
+
+                await self.update_state(VoiceChannelState.ACTIVE)
+
                 await self.notify(
                     embed=ChannelNotificationEmbed(
                         left_message=f"語音頻道 {self.channel.mention} 繼續運作中",
@@ -469,8 +503,6 @@ class VoiceChannel(MongoObject):
                     )
                 )
 
-                await self.transfer_ownership(self.non_bot_members[0])
-                await self.update_state(VoiceChannelState.ACTIVE)
                 return
 
             await self.remove()

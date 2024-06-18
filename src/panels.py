@@ -13,6 +13,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.voice_channel import VoiceChannel
 from src.cogs.music import Music
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
+from src.exceptions import OwnedChannel
 from src.kava.utils import get_active_client_in
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal, quick_long_modal
 from src.utils import max_bitrate, is_authorized
@@ -545,7 +546,14 @@ class ChannelSettingsPanel(Panel):
         if not confirmed:
             return await interaction.response.edit_message(embed=ErrorEmbed("已取消"))
 
-        await channel.transfer_ownership(new_owner)
+        try:
+            await channel.transfer_ownership(new_owner)
+        except OwnedChannel:
+            await interaction.response.edit_message(
+                embed=ErrorEmbed("該成員已經擁有了一個頻道，這可能是因為他剛從其他頻道轉移過來，請稍候再試一次"),
+                components=[]
+            )
+            return
 
         await interaction.response.edit_message(embed=SuccessEmbed(f"已移交所有權給 {new_owner.name}"), components=[])
 
