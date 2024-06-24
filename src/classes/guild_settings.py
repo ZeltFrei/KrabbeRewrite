@@ -2,15 +2,14 @@ import datetime
 from logging import getLogger
 from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator
 
-from disnake import Guild, CategoryChannel, VoiceChannel, Role, Webhook, ForumChannel, Message, ThreadArchiveDuration, \
-    Thread, AllowedMentions, Embed, Color
+from disnake import Guild, CategoryChannel, VoiceChannel, Role, Webhook, ForumChannel, Message, Thread, AllowedMentions, \
+    Embed, Color
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
 
 from src.classes.mongo_object import MongoObject
-from src.embeds import InfoEmbed
 from src.errors import FailedToResolve
-from src.utils import is_same_day, snowflake_time
+from src.utils import is_same_day
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -31,6 +30,8 @@ class GuildSettings(MongoObject):
             root_channel_id: int,
             base_role_id: int,
             event_logging_channel_id: int,
+            settings_event_logging_thread_id: int,
+            voice_event_logging_thread_id: int,
             message_logging_channel_id: int,
             message_logging_webhook_url: str,
             allow_nsfw: bool,
@@ -42,9 +43,14 @@ class GuildSettings(MongoObject):
         self.category_channel_id: int = category_channel_id
         self.root_channel_id: int = root_channel_id
         self.base_role_id: int = base_role_id
+
         self.event_logging_channel_id: int = event_logging_channel_id
+        self.settings_event_logging_thread_id: int = settings_event_logging_thread_id
+        self.voice_event_logging_thread_id: int = voice_event_logging_thread_id
+
         self.message_logging_channel_id: int = message_logging_channel_id
         self.message_logging_webhook_url: str = message_logging_webhook_url
+
         self.allow_nsfw: bool = allow_nsfw
         self.lock_message_dm: bool = lock_message_dm
 
@@ -66,6 +72,8 @@ class GuildSettings(MongoObject):
             "root_channel_id": self.root_channel_id,
             "base_role_id": self.base_role_id,
             "event_logging_channel_id": self.event_logging_channel_id,
+            "settings_event_logging_thread_id": self.settings_event_logging_thread_id,
+            "voice_event_logging_thread_id": self.voice_event_logging_thread_id,
             "message_logging_channel_id": self.message_logging_channel_id,
             "message_logging_webhook_url": self.message_logging_webhook_url,
             "allow_nsfw": self.allow_nsfw,
@@ -158,6 +166,32 @@ class GuildSettings(MongoObject):
 
         raise FailedToResolve(f"Failed to resolve event logging channel {self.event_logging_channel_id}")
 
+    @property
+    def settings_event_logging_thread(self) -> Optional[Thread]:
+        if self.settings_event_logging_thread_id is None:
+            return None
+
+        thread = self.guild.get_thread(self.settings_event_logging_thread_id)
+
+        if thread:
+            return thread
+
+        raise FailedToResolve(
+            f"Failed to resolve settings event logging thread {self.settings_event_logging_thread_id}"
+        )
+
+    @property
+    def voice_event_logging_thread(self) -> Optional[Thread]:
+        if self.voice_event_logging_thread_id is None:
+            return None
+
+        thread = self.guild.get_thread(self.voice_event_logging_thread_id)
+
+        if thread:
+            return thread
+
+        raise FailedToResolve(f"Failed to resolve voice event logging thread {self.voice_event_logging_thread_id}")
+
     def as_embed(self) -> Embed:
         """
         Generate a visual presentation as an embed for this guild settings object.
@@ -174,69 +208,75 @@ class GuildSettings(MongoObject):
         embed.add_field(name="➕ 根頻道", value=self.root_channel.mention)
         embed.add_field(name="👥 基礎身分組", value=self.base_role.mention)
         embed.add_field(name="📃 事件紀錄頻道", value=self.event_logging_channel.mention)
+        embed.add_field(name="📃 設定事件紀錄討論串", value=self.settings_event_logging_thread.mention)
+        embed.add_field(name="📃 語音事件紀錄討論串", value=self.voice_event_logging_thread.mention)
         embed.add_field(name="💬 訊息紀錄頻道", value=self.message_logging_channel.mention)
         embed.add_field(name="🔞 NSFW 允許", value="是" if self.allow_nsfw else "否")
         embed.add_field(name="🔒 鎖定訊息 DM", value="是" if self.lock_message_dm else "否")
 
         return embed
 
-    async def ensure_event_logging_thread(self) -> Thread:
+    @staticmethod
+    async def ensure_divider(thread: Thread) -> Optional[Message]:
         """
-        Ensure the event logging thread is active.
-        Create one if not found or expired.
+        Ensure the divider of the day is created in the specific logging thread.
 
-        :return: The event logging thread.
+        :param thread: The event logging thread.
+        :return: The divider message.
         """
-        thread = self.event_logging_channel.last_thread
         now = datetime.datetime.now()
 
-        if not thread:
-            thread, _message = await self.event_logging_channel.create_thread(
-                name=now.strftime("%Y-%m-%d"),
-                auto_archive_duration=ThreadArchiveDuration.day,
-                embed=InfoEmbed(
-                    title="事件紀錄",
-                    description=f"這是 {now.strftime('%Y-%m-%d')} 的事件紀錄"
-                )
-            )
+        if is_same_day(thread.last_message.created_at, now):
+            return None
 
-        if not is_same_day(snowflake_time(thread.id), now):
-            await thread.edit(
-                archived=True,
-                locked=True
-            )
+        message = await thread.send(
+            f"> 以下為 **{now.strftime('%Y-%m-%d')}** 的事件記錄",
+            allowed_mentions=AllowedMentions.none()
+        )
 
-            thread, _message = await self.event_logging_channel.create_thread(
-                name=now.strftime("%Y-%m-%d"),
-                auto_archive_duration=ThreadArchiveDuration.day,
-                embed=InfoEmbed(
-                    title="事件紀錄",
-                    description=f"這是 {now.strftime('%Y-%m-%d')} 的事件紀錄"
-                )
-            )
+        return message
 
-        return thread
-
-    async def log_event(self, message: str, wait: bool = False) -> Optional[Message]:
+    async def log_settings_event(self, message: str, wait: bool = False) -> Optional[Message]:
         """
-        Log a message to the event logging channel.
+        Log a message to the settings logging thread.
 
         :param wait: Whether to wait for the message to be sent.
         :param message: The message to log.
         """
-        thread = await self.ensure_event_logging_thread()
+        await self.ensure_divider(self.settings_event_logging_thread)
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_string = f"**{timestamp}**: {message}"
 
         if wait:
-            return await thread.send(log_string, allowed_mentions=AllowedMentions.none())
+            return await self.settings_event_logging_thread.send(log_string, allowed_mentions=AllowedMentions.none())
 
         _ = self.bot.loop.create_task(
-            thread.send(log_string, allowed_mentions=AllowedMentions.none())
+            self.settings_event_logging_thread.send(log_string, allowed_mentions=AllowedMentions.none())
         )
 
-        return
+        return None
+
+    async def log_voice_event(self, message: str, wait: bool = False) -> Optional[Message]:
+        """
+        Log a message to the voice logging thread.
+
+        :param wait: Whether to wait for the message to be sent.
+        :param message: The message to log.
+        """
+        await self.ensure_divider(self.voice_event_logging_thread)
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_string = f"**{timestamp}**: {message}"
+
+        if wait:
+            return await self.voice_event_logging_thread.send(log_string, allowed_mentions=AllowedMentions.none())
+
+        _ = self.bot.loop.create_task(
+            self.voice_event_logging_thread.send(log_string, allowed_mentions=AllowedMentions.none())
+        )
+
+        return None
 
     async def upsert(self) -> UpdateResult:
         """

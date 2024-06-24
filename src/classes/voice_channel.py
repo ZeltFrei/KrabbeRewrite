@@ -321,7 +321,7 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-        await self.guild_settings.log_event(
+        await self.guild_settings.log_settings_event(
             f"{new_owner.mention} 成為了 {self.channel.name} 的新擁有者"
         )
 
@@ -528,7 +528,7 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-        await self.guild_settings.log_event(
+        await self.guild_settings.log_settings_event(
             f"{member.mention} 加入了 {self.channel.name}"
         )
 
@@ -539,7 +539,7 @@ class VoiceChannel(MongoObject):
         if member.id == self.owner_id:
             await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)
 
-            await self.guild_settings.log_event(
+            await self.guild_settings.log_settings_event(
                 f"{self.channel.name} 的擁有者 {member.mention} 離開了頻道"
             )
             return
@@ -554,7 +554,7 @@ class VoiceChannel(MongoObject):
 
         await self.apply_setting_and_permissions()
 
-        await self.guild_settings.log_event(
+        await self.guild_settings.log_settings_event(
             f"{member.mention} 離開了 {self.channel.name}"
         )
 
@@ -692,7 +692,7 @@ class VoiceChannel(MongoObject):
 
         self.bot.dispatch("voice_channel_created", self)
 
-        await self.guild_settings.log_event(
+        await self.guild_settings.log_settings_event(
             f"{self.channel.name} 已建立"
         )
 
@@ -758,7 +758,7 @@ class VoiceChannel(MongoObject):
 
         self.logger.info(f"Voice channel {self.channel_id} removed.")
 
-        await self.guild_settings.log_event(
+        await self.guild_settings.log_settings_event(
             f"{self.channel.name} 已被刪除"
         )
 

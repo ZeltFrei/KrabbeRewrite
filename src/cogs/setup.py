@@ -137,6 +137,8 @@ class Setup(Cog):
             root_channel_id=channels_and_webhooks_task.result()["root_channel"].id,
             base_role_id=interaction.guild.default_role.id,
             event_logging_channel_id=channels_and_webhooks_task.result()["event_logging_channel"].id,
+            settings_event_logging_thread_id=channels_and_webhooks_task.result()["settings_event_logging_thread"].id,
+            voice_event_logging_thread_id=channels_and_webhooks_task.result()["voice_event_logging_thread"].id,
             message_logging_channel_id=channels_and_webhooks_task.result()["message_logging_channel"].id,
             message_logging_webhook_url=channels_and_webhooks_task.result()["message_logging_webhook"].url,
             allow_nsfw=nsfw == "yes",
@@ -325,11 +327,19 @@ class Setup(Cog):
             overwrites=category.overwrites
         )
         event_logging_channel = await category.create_forum_channel(
-            "語音事件記錄",
+            "事件記錄",
             overwrites=category.overwrites
         )
-        message_logging_channel = await category.create_forum_channel(
-            "語音訊息記錄",
+        settings_event_logging_thread = await event_logging_channel.create_thread(
+            name="設定事件記錄",
+            content="這裡是設定事件記錄討論串，用於紀錄成員對於頻道設定的更新"
+        )
+        voice_event_logging_thread, _ = await event_logging_channel.create_thread(
+            name="語音事件記錄",
+            content="這裡是語音事件記錄頻道，用於紀錄語音頻道的動態，如成員加入、離開等"
+        )
+        message_logging_channel, _ = await category.create_forum_channel(
+            "訊息記錄",
             overwrites=category.overwrites
         )
         message_logging_webhook = await message_logging_channel.create_webhook(name="Krabbe Logging")
@@ -354,6 +364,8 @@ class Setup(Cog):
             "category": category,
             "root_channel": root_channel,
             "event_logging_channel": event_logging_channel,
+            "settings_event_logging_thread": settings_event_logging_thread,
+            "voice_event_logging_thread": voice_event_logging_thread,
             "message_logging_channel": message_logging_channel,
             "message_logging_webhook": message_logging_webhook,
             "control_panel_channel": control_panel_channel
