@@ -39,7 +39,7 @@ class Music(Cog):
         self.server = self.bot.kava_server
 
     @slash_command(
-        name="nowplaying",
+        name="np",
         description="顯示目前正在播放的歌曲"
     )
     async def nowplaying(self, interaction: ApplicationCommandInteraction):
