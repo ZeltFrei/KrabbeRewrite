@@ -39,7 +39,7 @@ class Music(Cog):
         self.server = self.bot.kava_server
 
     @slash_command(
-        name="np",
+        name="nowplaying",
         description="顯示目前正在播放的歌曲"
     )
     async def nowplaying(self, interaction: ApplicationCommandInteraction):
@@ -151,7 +151,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="p",
+        name="py",
         description="播放音樂",
         options=[
             Option(
@@ -193,7 +193,7 @@ class Music(Cog):
         return [OptionChoice.from_dict(choice) for choice in response['results']]
 
     @slash_command(
-        name="s",
+        name="sk",
         description="跳過當前播放的歌曲",
         options=[
             Option(
@@ -377,7 +377,7 @@ class Music(Cog):
             )
 
     @slash_command(
-        name="q",
+        name="qe",
         description="顯示播放序列",
     )
     async def queue(self, interaction: ApplicationCommandInteraction):
