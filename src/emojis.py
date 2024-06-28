@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Emoji(Enum, str):
+class Emoji(Enum):
     USER_LEAVE = "<:user_leave:1256043658990456934>"
     USER_JOIN = "<:user_add:1256043815140200529>"
     CLOWN = "<:crown:1256046324906856468>"
