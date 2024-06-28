@@ -120,10 +120,10 @@ class ChannelSettings(MongoObject):
         embed.add_field(name="🔞 NSFW", value=self.nsfw or "未設定", inline=True)
         embed.add_field(name="🔊 音效板", value=self.soundboard_enabled or "未設定", inline=True)
         embed.add_field(name="🎥 媒體允許", value=self.media_allowed or "未設定", inline=True)
-        embed.add_field(name="⏳ 慢速模式延遲", value=self.slowmode_delay or "未設定", inline=True),
+        embed.add_field(name="⏳ 慢速模式延遲", value=self.slowmode_delay or "未設定", inline=True)
         embed.add_field(name="🔴 直播 / 視訊", value=self.stream or "未設定", inline=True)
         embed.add_field(name="🎮 嵌入式活動", value=self.use_embedded_activities or "未設定", inline=True)
-        embed.add_field(name="🔒 共享音樂控制", value=self.shared_music_control or "未設定", inline=True),
+        embed.add_field(name="🔒 共享音樂控制", value=self.shared_music_control or "未設定", inline=True)
         embed.add_field(name="🔊 預設播放音量", value=self.volume or "未設定", inline=True)
 
         return embed
