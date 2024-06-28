@@ -330,7 +330,7 @@ class Setup(Cog):
             "事件記錄",
             overwrites=category.overwrites
         )
-        settings_event_logging_thread = await event_logging_channel.create_thread(
+        settings_event_logging_thread, _ = await event_logging_channel.create_thread(
             name="設定事件記錄",
             content="這裡是設定事件記錄討論串，用於紀錄成員對於頻道設定的更新"
         )
@@ -338,7 +338,7 @@ class Setup(Cog):
             name="語音事件記錄",
             content="這裡是語音事件記錄頻道，用於紀錄語音頻道的動態，如成員加入、離開等"
         )
-        message_logging_channel, _ = await category.create_forum_channel(
+        message_logging_channel = await category.create_forum_channel(
             "訊息記錄",
             overwrites=category.overwrites
         )
