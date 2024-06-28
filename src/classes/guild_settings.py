@@ -8,7 +8,6 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
 
 from src.classes.mongo_object import MongoObject
-from src.emojis import Emoji
 from src.errors import FailedToResolve
 from src.utils import is_same_day
 
@@ -228,7 +227,12 @@ class GuildSettings(MongoObject):
         """
         now = datetime.datetime.now()
 
-        if is_same_day(thread.last_message.created_at, now):
+        if thread.last_message is None:
+            last_created_at = thread.created_at
+        else:
+            last_created_at = thread.last_message.created_at
+
+        if is_same_day(last_created_at, now):
             return None
 
         message = await thread.send(
@@ -239,7 +243,7 @@ class GuildSettings(MongoObject):
         return message
 
     async def log_settings_event(
-            self, prefix: Union[str, Emoji], channel: "KrabbeVoiceChannel", message: str, wait: bool = False
+            self, prefix: str, channel: "KrabbeVoiceChannel", message: str, wait: bool = False
     ) -> Optional[Message]:
         """
         Log a message to the settings logging thread.
@@ -263,7 +267,7 @@ class GuildSettings(MongoObject):
         return None
 
     async def log_voice_event(
-            self, prefix: Union[str, Emoji], channel: "KrabbeVoiceChannel", message: str, wait: bool = False
+            self, prefix: str, channel: "KrabbeVoiceChannel", message: str, wait: bool = False
     ) -> Optional[Message]:
         """
         Log a message to the voice logging thread.

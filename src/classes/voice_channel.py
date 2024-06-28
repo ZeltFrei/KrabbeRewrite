@@ -17,7 +17,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
-from src.emojis import Emoji
+from src.emojis import CLOWN, USER_JOIN, USER_LEAVE, CREATE, TRASH
 from src.errors import FailedToResolve, OwnedChannel, AlternativeOwnerNotFound
 from src.utils import generate_channel_metadata, remove_image, snowflake_time
 
@@ -323,7 +323,7 @@ class VoiceChannel(MongoObject):
             )
 
         await self.guild_settings.log_voice_event(
-            prefix=Emoji.CLOWN,
+            prefix=CLOWN,
             channel=self,
             message=f"{new_owner.mention} 成為了新的擁有者"
         )
@@ -532,7 +532,7 @@ class VoiceChannel(MongoObject):
             )
 
         await self.guild_settings.log_voice_event(
-            prefix=Emoji.USER_JOIN,
+            prefix=USER_JOIN,
             channel=self,
             message=f"{member.mention} 加入了"
         )
@@ -545,9 +545,9 @@ class VoiceChannel(MongoObject):
             await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)
 
             await self.guild_settings.log_voice_event(
-                prefix=Emoji.USER_LEAVE,
+                prefix=USER_LEAVE,
                 channel=self,
-                message=f"{Emoji.CLOWN} {member.mention} 離開了"
+                message=f"{CLOWN} {member.mention} 離開了"
             )
 
             return
@@ -563,7 +563,7 @@ class VoiceChannel(MongoObject):
         await self.apply_setting_and_permissions()
 
         await self.guild_settings.log_voice_event(
-            prefix=Emoji.USER_LEAVE,
+            prefix=USER_LEAVE,
             channel=self,
             message=f"{member.mention} 離開了"
         )
@@ -703,7 +703,7 @@ class VoiceChannel(MongoObject):
         self.bot.dispatch("voice_channel_created", self)
 
         await self.guild_settings.log_voice_event(
-            prefix=Emoji.CREATE,
+            prefix=CREATE,
             channel=self,
             message="已建立"
         )
@@ -771,7 +771,7 @@ class VoiceChannel(MongoObject):
         self.logger.info(f"Voice channel {self.channel_id} removed.")
 
         await self.guild_settings.log_voice_event(
-            prefix=Emoji.TRASH,
+            prefix=TRASH,
             channel=self,
             message=f"已被刪除"
         )
