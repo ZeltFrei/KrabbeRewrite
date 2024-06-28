@@ -13,6 +13,7 @@ from src.utils import is_same_day
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
+    from src.classes.voice_channel import VoiceChannel as KrabbeVoiceChannel
 
 
 class GuildSettings(MongoObject):
@@ -236,17 +237,20 @@ class GuildSettings(MongoObject):
 
         return message
 
-    async def log_settings_event(self, message: str, wait: bool = False) -> Optional[Message]:
+    async def log_settings_event(
+            self, prefix: str, channel: "KrabbeVoiceChannel", message: str, wait: bool = False
+    ) -> Optional[Message]:
         """
         Log a message to the settings logging thread.
 
+        :param prefix: The prefix of the message. Usually a emoji.
+        :param channel: The voice channel.
         :param wait: Whether to wait for the message to be sent.
         :param message: The message to log.
         """
         await self.ensure_divider(self.settings_event_logging_thread)
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_string = f"**{timestamp}**: {message}"
+        log_string = f"{prefix} | **{channel.channel.name}** | {message}"
 
         if wait:
             return await self.settings_event_logging_thread.send(log_string, allowed_mentions=AllowedMentions.none())
@@ -257,17 +261,20 @@ class GuildSettings(MongoObject):
 
         return None
 
-    async def log_voice_event(self, message: str, wait: bool = False) -> Optional[Message]:
+    async def log_voice_event(
+            self, prefix: str, channel: "KrabbeVoiceChannel", message: str, wait: bool = False
+    ) -> Optional[Message]:
         """
         Log a message to the voice logging thread.
 
+        :param prefix: The prefix of the message. Usually a emoji.
+        :param channel: The voice channel.
         :param wait: Whether to wait for the message to be sent.
         :param message: The message to log.
         """
         await self.ensure_divider(self.voice_event_logging_thread)
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_string = f"**{timestamp}**: {message}"
+        log_string = f"{prefix} | **{channel.channel.name}** | {message}"
 
         if wait:
             return await self.voice_event_logging_thread.send(log_string, allowed_mentions=AllowedMentions.none())
