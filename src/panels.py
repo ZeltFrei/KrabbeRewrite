@@ -13,6 +13,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.voice_channel import VoiceChannel
 from src.cogs.music import Music
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
+from src.emojis import SETTINGS
 from src.errors import OwnedChannel
 from src.kava.utils import get_active_client_in
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal, quick_long_modal
@@ -484,8 +485,10 @@ class ChannelSettingsPanel(Panel):
                 embed=SuccessEmbed(f"頻道已重新命名為 {new_name}" if new_name else "已重設頻道名稱"),
             )
 
-            await channel.guild_settings.log_event(
-                f"{interaction.author.mention} 重新命名了頻道為 {new_name}"
+            await channel.guild_settings.log_settings_event(
+                prefix=SETTINGS,
+                channel=channel,
+                message=f"重新命名：{new_name}"
             )
 
             return
@@ -717,8 +720,10 @@ class MemberSettingsPanel(Panel):
             components=[]
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 鎖定了頻道 {channel.channel.name}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"頻道鎖定"
         )
 
     @staticmethod
@@ -763,8 +768,10 @@ class MemberSettingsPanel(Panel):
 
         await interaction.response.send_message(embed=SuccessEmbed(f"已設定人數限制為 {limit}"), ephemeral=True)
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的人數上限為 {limit}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"人數上限：{limit}"
         )
 
     @staticmethod
@@ -789,8 +796,10 @@ class MemberSettingsPanel(Panel):
             ephemeral=True
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的進出通知為 {channel.channel_settings.join_notifications}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"進出通知：{channel.channel_settings.join_notifications}"
         )
 
 
@@ -878,8 +887,10 @@ class VoiceSettingsPanel(Panel):
             ephemeral=True
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的比特率為 {int(selected_bitrate[0]) // 1000} Kbps"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"比特率：{int(selected_bitrate[0]) // 1000} Kbps"
         )
 
     @staticmethod
@@ -893,8 +904,10 @@ class VoiceSettingsPanel(Panel):
         await channel.apply_setting_and_permissions()
 
         if channel.guild_settings.allow_nsfw:
-            await channel.guild_settings.log_event(
-                f"{interaction.author.mention} 設定了 {channel.channel.name} 的 NSFW 為 {channel.channel_settings.nsfw}"
+            await channel.guild_settings.log_settings_event(
+                prefix=SETTINGS,
+                channel=channel,
+                message=f"NSFW：{channel.channel_settings.nsfw}"
             )
 
             await channel.notify(
@@ -947,8 +960,10 @@ class VoiceSettingsPanel(Panel):
 
         await interaction.response.edit_message(embed=SuccessEmbed(f"已設定語音區域為 {rtc_region[0]}"))
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的語音區域為 {rtc_region[0]}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"語音區域：{rtc_region[0]}"
         )
 
     @staticmethod
@@ -973,8 +988,10 @@ class VoiceSettingsPanel(Panel):
             ephemeral=True
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的音效板為 {channel.channel_settings.soundboard_enabled}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"音效板：{channel.channel_settings.soundboard_enabled}"
         )
 
     @staticmethod
@@ -999,8 +1016,10 @@ class VoiceSettingsPanel(Panel):
             ephemeral=True
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的媒體傳送許可為 {channel.channel_settings.media_allowed}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"媒體傳送許可：{channel.channel_settings.media_allowed}"
         )
 
     @staticmethod
@@ -1047,8 +1066,10 @@ class VoiceSettingsPanel(Panel):
             embed=SuccessEmbed(f"已設定慢速模式為 {slowmode_delay} 秒"), ephemeral=True
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的慢速模式為 {slowmode_delay} 秒"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"慢速模式：{slowmode_delay} 秒"
         )
 
     @staticmethod
@@ -1073,8 +1094,10 @@ class VoiceSettingsPanel(Panel):
             ephemeral=True
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的直播 / 視訊許可為 {channel.channel_settings.stream}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"直播 / 視訊許可：{channel.channel_settings.stream}"
         )
 
     @staticmethod
@@ -1099,8 +1122,10 @@ class VoiceSettingsPanel(Panel):
             ephemeral=True
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的使用活動許可為 {channel.channel_settings.use_embedded_activities}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"使用活動許可：{channel.channel_settings.use_embedded_activities}"
         )
 
 
@@ -1169,8 +1194,10 @@ class MusicSettingsPanel(Panel):
             ephemeral=True
         )
 
-        await channel.guild_settings.log_event(
-            f"{interaction.author.mention} 設定了 {channel.channel.name} 的共享音樂控制為為 {channel.channel_settings.shared_music_control}"
+        await channel.guild_settings.log_settings_event(
+            prefix=SETTINGS,
+            channel=channel,
+            message=f"共享音樂控制：{channel.channel_settings.shared_music_control}"
         )
 
     @staticmethod
@@ -1226,8 +1253,10 @@ class MusicSettingsPanel(Panel):
                 )
             )
 
-            await active_channel.guild_settings.log_event(
-                f"{interaction.author.mention} 設定了 {active_channel.channel.name} 的預設音量為 {volume}"
+            await active_channel.guild_settings.log_settings_event(
+                prefix=SETTINGS,
+                channel=active_channel,
+                message=f"預設音量：{volume}"
             )
 
         await channel_settings.upsert()

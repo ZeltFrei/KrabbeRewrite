@@ -17,6 +17,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.guild_settings import GuildSettings
 from src.classes.mongo_object import MongoObject
 from src.embeds import SuccessEmbed, InfoEmbed, ErrorEmbed, ChannelNotificationEmbed
+from src.emojis import CLOWN, USER_JOIN, USER_LEAVE, CREATE, TRASH
 from src.errors import FailedToResolve, OwnedChannel, AlternativeOwnerNotFound
 from src.utils import generate_channel_metadata, remove_image, snowflake_time
 
@@ -321,8 +322,10 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-        await self.guild_settings.log_event(
-            f"{new_owner.mention} 成為了 {self.channel.name} 的新擁有者"
+        await self.guild_settings.log_voice_event(
+            prefix=CLOWN,
+            channel=self,
+            message=f"{new_owner.mention} 成為了新的擁有者"
         )
 
     async def notify(self, wait: bool = False, *args, **kwargs) -> Optional[Message]:
@@ -528,8 +531,10 @@ class VoiceChannel(MongoObject):
                 )
             )
 
-        await self.guild_settings.log_event(
-            f"{member.mention} 加入了 {self.channel.name}"
+        await self.guild_settings.log_voice_event(
+            prefix=USER_JOIN,
+            channel=self,
+            message=f"{member.mention} 加入了"
         )
 
     async def on_member_leave(self, member: Member, voice_state: VoiceState) -> None:
@@ -539,9 +544,12 @@ class VoiceChannel(MongoObject):
         if member.id == self.owner_id:
             await self.update_state(VoiceChannelState.OWNER_DISCONNECTED)
 
-            await self.guild_settings.log_event(
-                f"{self.channel.name} 的擁有者 {member.mention} 離開了頻道"
+            await self.guild_settings.log_voice_event(
+                prefix=USER_LEAVE,
+                channel=self,
+                message=f"{CLOWN} {member.mention} 離開了"
             )
+
             return
 
         if self.channel_settings.join_notifications:
@@ -554,8 +562,10 @@ class VoiceChannel(MongoObject):
 
         await self.apply_setting_and_permissions()
 
-        await self.guild_settings.log_event(
-            f"{member.mention} 離開了 {self.channel.name}"
+        await self.guild_settings.log_voice_event(
+            prefix=USER_LEAVE,
+            channel=self,
+            message=f"{member.mention} 離開了"
         )
 
     async def on_message(self, message: Message) -> None:
@@ -692,8 +702,10 @@ class VoiceChannel(MongoObject):
 
         self.bot.dispatch("voice_channel_created", self)
 
-        await self.guild_settings.log_event(
-            f"{self.channel.name} 已建立"
+        await self.guild_settings.log_voice_event(
+            prefix=CREATE,
+            channel=self,
+            message="已建立"
         )
 
     def start_listeners(self) -> None:
@@ -758,8 +770,10 @@ class VoiceChannel(MongoObject):
 
         self.logger.info(f"Voice channel {self.channel_id} removed.")
 
-        await self.guild_settings.log_event(
-            f"{self.channel.name} 已被刪除"
+        await self.guild_settings.log_voice_event(
+            prefix=TRASH,
+            channel=self,
+            message=f"已被刪除"
         )
 
     @classmethod
