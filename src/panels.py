@@ -11,7 +11,7 @@ from disnake.ui import View, Button, Select, Modal, TextInput
 
 from src.classes.channel_settings import ChannelSettings
 from src.classes.voice_channel import VoiceChannel
-from src.cogs.music import Music
+from src.cogs.music import Music, music_check
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
 from src.emojis import SETTINGS
 from src.errors import OwnedChannel
@@ -419,6 +419,28 @@ class JoinChannelPanel(Panel):
         await interaction.response.send_message("Loading...", ephemeral=True)
 
         await Music.radio(self.bot, interaction)
+
+    @ui.button(
+        label="顯示歌曲資訊",
+        emoji="🎵",
+        custom_id="show_song_info",
+        style=ButtonStyle.green
+    )
+    async def show_song_info(self, _button: Button, interaction: MessageInteraction) -> None:
+        check_passed, client, channel = await music_check(self.bot.kava_server, interaction)
+
+        if not check_passed:
+            return
+
+        response = await client.request("song_info_embed", channel_id=channel.channel_id)
+
+        if response["status"] != "success":
+            return await interaction.response.send_message(
+                embed=ErrorEmbed(response["message"]),
+                ephemeral=True
+            )
+
+        await interaction.response.send_message(embed=Embed.from_dict(response["embed"]), ephemeral=True)
 
     @ui.button(
         label="回報問題&提供建議",
