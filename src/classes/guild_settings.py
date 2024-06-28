@@ -1,6 +1,6 @@
 import datetime
 from logging import getLogger
-from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator
+from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator, Union
 
 from disnake import Guild, CategoryChannel, VoiceChannel, Role, Webhook, ForumChannel, Message, Thread, AllowedMentions, \
     Embed, Color
@@ -8,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo.results import UpdateResult, DeleteResult
 
 from src.classes.mongo_object import MongoObject
+from src.emojis import Emoji
 from src.errors import FailedToResolve
 from src.utils import is_same_day
 
@@ -238,7 +239,7 @@ class GuildSettings(MongoObject):
         return message
 
     async def log_settings_event(
-            self, prefix: str, channel: "KrabbeVoiceChannel", message: str, wait: bool = False
+            self, prefix: Union[str, Emoji], channel: "KrabbeVoiceChannel", message: str, wait: bool = False
     ) -> Optional[Message]:
         """
         Log a message to the settings logging thread.
@@ -262,7 +263,7 @@ class GuildSettings(MongoObject):
         return None
 
     async def log_voice_event(
-            self, prefix: str, channel: "KrabbeVoiceChannel", message: str, wait: bool = False
+            self, prefix: Union[str, Emoji], channel: "KrabbeVoiceChannel", message: str, wait: bool = False
     ) -> Optional[Message]:
         """
         Log a message to the voice logging thread.
