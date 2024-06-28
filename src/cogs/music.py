@@ -109,7 +109,11 @@ class Music(Cog):
 
             if not idle_clients:
                 await interaction.edit_original_response(
-                    embed=ErrorEmbed("目前沒有可用的音樂機器人，請稍後再試")
+                    embed=ErrorEmbed(
+                        title="目前沒有可用的音樂機器人，請稍後再試",
+                        description="這可能是因為這個伺服器沒有邀請任何本系統專屬的音樂機器人\n"
+                                    "或是所有的音樂機器人都已在使用中"
+                    )
                 )
                 return
 
