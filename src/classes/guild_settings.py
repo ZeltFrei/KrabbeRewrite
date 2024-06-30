@@ -1,6 +1,5 @@
-import datetime
 from logging import getLogger
-from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator, Union
+from typing import Optional, TYPE_CHECKING, Dict, AsyncIterator
 
 from disnake import Guild, CategoryChannel, VoiceChannel, Role, Webhook, ForumChannel, Message, Thread, AllowedMentions, \
     Embed, Color
@@ -9,7 +8,6 @@ from pymongo.results import UpdateResult, DeleteResult
 
 from src.classes.mongo_object import MongoObject
 from src.errors import FailedToResolve
-from src.utils import is_same_day
 
 if TYPE_CHECKING:
     from src.bot import Krabbe
@@ -217,31 +215,6 @@ class GuildSettings(MongoObject):
 
         return embed
 
-    @staticmethod
-    async def ensure_divider(thread: Thread) -> Optional[Message]:
-        """
-        Ensure the divider of the day is created in the specific logging thread.
-
-        :param thread: The event logging thread.
-        :return: The divider message.
-        """
-        now = datetime.datetime.now()
-
-        if thread.last_message is None:
-            last_created_at = thread.created_at
-        else:
-            last_created_at = thread.last_message.created_at
-
-        if is_same_day(last_created_at, now):
-            return None
-
-        message = await thread.send(
-            f"> 以下為 **{now.strftime('%Y-%m-%d')}** 的事件記錄",
-            allowed_mentions=AllowedMentions.none()
-        )
-
-        return message
-
     async def log_settings_event(
             self, prefix: str, channel: "KrabbeVoiceChannel", message: str, wait: bool = False
     ) -> Optional[Message]:
@@ -253,8 +226,6 @@ class GuildSettings(MongoObject):
         :param wait: Whether to wait for the message to be sent.
         :param message: The message to log.
         """
-        await self.ensure_divider(self.settings_event_logging_thread)
-
         log_string = f"{prefix} | **{channel.channel.name}** | {message}"
 
         if wait:
@@ -277,8 +248,6 @@ class GuildSettings(MongoObject):
         :param wait: Whether to wait for the message to be sent.
         :param message: The message to log.
         """
-        await self.ensure_divider(self.voice_event_logging_thread)
-
         log_string = f"{prefix} | **{channel.channel.name}** | {message}"
 
         if wait:
