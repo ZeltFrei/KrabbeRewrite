@@ -13,7 +13,7 @@ from src.classes.channel_settings import ChannelSettings
 from src.classes.voice_channel import VoiceChannel
 from src.cogs.music import Music, music_check
 from src.embeds import ErrorEmbed, SuccessEmbed, WarningEmbed, InfoEmbed, ChannelNotificationEmbed
-from src.emojis import SETTINGS
+from src.emojis import SETTINGS, LOCK
 from src.errors import OwnedChannel
 from src.kava.utils import get_active_client_in
 from src.quick_ui import confirm_button, string_select, user_select, quick_modal, confirm_modal, quick_long_modal
@@ -508,7 +508,7 @@ class ChannelSettingsPanel(Panel):
             )
 
             await channel.guild_settings.log_settings_event(
-                prefix=SETTINGS,
+                prefix=f"命名 {SETTINGS}",
                 channel=channel,
                 message=f"重新命名：{new_name}"
             )
@@ -720,6 +720,13 @@ class MemberSettingsPanel(Panel):
                 await channel.unlock()
 
                 await interaction.response.edit_message(embed=SuccessEmbed("已解鎖頻道"), components=[])
+
+                await channel.guild_settings.log_settings_event(
+                    prefix=f"鎖定 {LOCK}",
+                    channel=channel,
+                    message=f"頻道解鎖"
+                )
+
             else:
                 await interaction.response.edit_message(embed=ErrorEmbed("已取消"), components=[])
 
@@ -743,7 +750,7 @@ class MemberSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"鎖定 {LOCK}",
             channel=channel,
             message=f"頻道鎖定"
         )
@@ -791,7 +798,7 @@ class MemberSettingsPanel(Panel):
         await interaction.response.send_message(embed=SuccessEmbed(f"已設定人數限制為 {limit}"), ephemeral=True)
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"人數上限：{limit}"
         )
@@ -819,7 +826,7 @@ class MemberSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"進出通知：{channel.channel_settings.join_notifications}"
         )
@@ -910,7 +917,7 @@ class VoiceSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"比特率：{int(selected_bitrate[0]) // 1000} Kbps"
         )
@@ -927,7 +934,7 @@ class VoiceSettingsPanel(Panel):
 
         if channel.guild_settings.allow_nsfw:
             await channel.guild_settings.log_settings_event(
-                prefix=SETTINGS,
+                prefix=f"設定 {SETTINGS}",
                 channel=channel,
                 message=f"NSFW：{channel.channel_settings.nsfw}"
             )
@@ -983,7 +990,7 @@ class VoiceSettingsPanel(Panel):
         await interaction.response.edit_message(embed=SuccessEmbed(f"已設定語音區域為 {rtc_region[0]}"))
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"語音區域：{rtc_region[0]}"
         )
@@ -1011,7 +1018,7 @@ class VoiceSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"音效板：{channel.channel_settings.soundboard_enabled}"
         )
@@ -1039,7 +1046,7 @@ class VoiceSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"媒體傳送許可：{channel.channel_settings.media_allowed}"
         )
@@ -1089,7 +1096,7 @@ class VoiceSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"慢速模式：{slowmode_delay} 秒"
         )
@@ -1117,7 +1124,7 @@ class VoiceSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"直播 / 視訊許可：{channel.channel_settings.stream}"
         )
@@ -1145,7 +1152,7 @@ class VoiceSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"使用活動許可：{channel.channel_settings.use_embedded_activities}"
         )
@@ -1217,7 +1224,7 @@ class MusicSettingsPanel(Panel):
         )
 
         await channel.guild_settings.log_settings_event(
-            prefix=SETTINGS,
+            prefix=f"設定 {SETTINGS}",
             channel=channel,
             message=f"共享音樂控制：{channel.channel_settings.shared_music_control}"
         )
@@ -1276,7 +1283,7 @@ class MusicSettingsPanel(Panel):
             )
 
             await active_channel.guild_settings.log_settings_event(
-                prefix=SETTINGS,
+                prefix=f"設定 {SETTINGS}",
                 channel=active_channel,
                 message=f"預設音量：{volume}"
             )

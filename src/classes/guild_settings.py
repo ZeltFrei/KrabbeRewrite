@@ -221,12 +221,12 @@ class GuildSettings(MongoObject):
         """
         Log a message to the settings logging thread.
 
-        :param prefix: The prefix of the message. Usually a emoji.
+        :param prefix: The prefix of the message. Usually a emoji with the action.
         :param channel: The voice channel.
         :param wait: Whether to wait for the message to be sent.
         :param message: The message to log.
         """
-        log_string = f"{prefix} | **{channel.channel.name}** | {message}"
+        log_string = f"{prefix} | 語音頻道：【**{channel.channel.name}**】 | {message}"
 
         if wait:
             return await self.settings_event_logging_thread.send(log_string, allowed_mentions=AllowedMentions.none())
@@ -243,12 +243,12 @@ class GuildSettings(MongoObject):
         """
         Log a message to the voice logging thread.
 
-        :param prefix: The prefix of the message. Usually a emoji.
+        :param prefix: The prefix of the message. Usually a emoji with the action.
         :param channel: The voice channel.
         :param wait: Whether to wait for the message to be sent.
         :param message: The message to log.
         """
-        log_string = f"{prefix} | **{channel.channel.name}** | {message}"
+        log_string = f"{prefix} | 語音頻道：【**{channel.channel.name}**】 | {message}"
 
         if wait:
             return await self.voice_event_logging_thread.send(log_string, allowed_mentions=AllowedMentions.none())
